@@ -1,0 +1,84 @@
+[versions]
+## AboutBits Libraries ##
+checkstyleConfig = "2.0.0"
+
+## Libraries ##
+jooq = "3.20.10"
+jSpecify = "1.0.0"
+lombok = "1.18.42"
+postgresql = "42.7.8"
+quarkiverse-helm = "1.2.7"
+scram-client = "3.2"
+
+## Testing ##
+assertj = "3.27.6"
+checkstyle = "12.2.0"
+datafaker = "2.5.3"
+
+[plugins]
+# https://www.jooq.org/doc/latest/manual/code-generation/codegen-execution/codegen-gradle/
+# https://github.com/jOOQ/jOOQ/tree/main/jOOQ-codegen-gradle
+# https://mvnrepository.com/artifact/org.jooq.jooq-codegen-gradle/org.jooq.jooq-codegen-gradle.gradle.plugin
+jooqPlugin = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq" }
+
+[libraries]
+## AboutBits Libraries ##
+
+# https://github.com/aboutbits/java-checkstyle-config
+checkstyleConfig = { group = "it.aboutbits", name = "java-checkstyle-config", version.ref = "checkstyleConfig" }
+
+## Libraries ##
+
+# jOOQ #
+# https://www.jooq.org/
+# https://www.jooq.org/download/versions
+# https://github.com/jOOQ/jOOQ
+# https://mvnrepository.com/artifact/org.jooq/jooq
+jooq = { group = "org.jooq", name = "jooq", version.ref = "jooq" }
+jooqMeta = { group = "org.jooq", name = "jooq-meta", version.ref = "jooq" }
+
+# jSpecify #
+# https://jspecify.dev/
+# https://github.com/jspecify/jspecify
+# https://mvnrepository.com/artifact/org.jspecify/jspecify
+jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jSpecify" }
+
+# Lombok #
+# https://projectlombok.org/
+# https://github.com/projectlombok/lombok
+# https://mvnrepository.com/artifact/org.projectlombok/lombok
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+
+# PostgreSQL #
+# https://jdbc.postgresql.org/
+# https://github.com/pgjdbc/pgjdbc
+# https://mvnrepository.com/artifact/org.postgresql/postgresql
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+
+# Quarkiverse Helm #
+# https://docs.quarkiverse.io/quarkus-helm/dev/
+# https://github.com/quarkiverse/quarkus-helm
+# https://mvnrepository.com/artifact/io.quarkiverse.helm/quarkus-helm
+quarkiverse-helm = { group = "io.quarkiverse.helm", name = "quarkus-helm", version.ref = "quarkiverse-helm" }
+
+# SCRAM - Salted Challenge Response Authentication Mechanism #
+# https://github.com/ongres/scram
+# https://mvnrepository.com/artifact/com.ongres.scram/scram-client
+scram-client = { group = "com.ongres.scram", name = "scram-client", version.ref = "scram-client" }
+
+## Testing ##
+
+# https://assertj.github.io/
+# https://github.com/assertj/assertj
+# https://mvnrepository.com/artifact/org.assertj/assertj-core
+assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
+
+# https://checkstyle.org/
+# https://github.com/checkstyle/checkstyle
+# https://mvnrepository.com/artifact/com.puppycrawl.tools/checkstyle
+checkstyle = { group = "com.puppycrawl.tools", name = "checkstyle", version.ref = "checkstyle" }
+
+# https://datafaker.net/
+# https://github.com/datafaker-net/datafaker
+# https://mvnrepository.com/artifact/net.datafaker/datafaker
+datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }

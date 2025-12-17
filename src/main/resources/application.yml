@@ -1,0 +1,173 @@
+quarkus:
+  kubernetes-client:
+    devservices:
+      enabled: true
+      # To not use our default kubeconfig from the home directory,
+      # which could lead to catastrophic damage if we had the permissions
+      override-kubeconfig: true
+      flavor: k3s
+      # See https://github.com/dajudge/kindcontainer/blob/master/k8s-versions.json
+      api-version: 1.34.1
+  live-reload:
+    instrumentation: true
+  micrometer:
+    enabled: true
+    export:
+      # Additionally to Prometheus, we could also consume the metrics in JSON format
+      # by calling /q/metrics with the HTTP header "Accept: application/json"
+      json:
+        enabled: true
+  datasource:
+    devservices:
+      enabled: true
+      image-name: postgres:17.7
+      username: root
+      password: password
+      reuse: false
+    jdbc:
+      metrics:
+        enabled: true
+  operator-sdk:
+    crd:
+      generate: true
+      # NOTE that this option is only considered when *not* in production mode
+      # as applying the CRD to a production cluster could be dangerous if done automatically.
+      apply: true
+    # Whether controllers should only process events if the associated resource generation
+    # has increased since the last reconciliation, otherwise will process all events.
+    generation-aware: true
+  test:
+    hang-detection-timeout: PT1M
+  #log:
+  #  category:
+  #    "io.javaoperatorsdk":
+  #      level: DEBUG
+  #    "io.quarkiverse.operatorsdk":
+  #      level: DEBUG
+
+  # Config for the generated Helm chart #
+  # Container Image config for Kubernetes Helm #
+  container-image:
+    registry: ghcr.io
+    group: aboutbits/postgresql-operator
+    name: app
+    tag: ${quarkus.application.version}
+  helm:
+    app-version: ${quarkus.application.version}
+    type: application
+    name: ${quarkus.kubernetes.name}
+    description: AboutBits PostgreSQL Operator Helm Chart
+    # Keep the map-system-properties flag below on false (else it will map all ${ENV_VARS} we define in the application.yml or application-prod.yml files
+    # as in Kubernetes the env entries take precedence over envFrom entries as we want to consume all ENV vars from the postgresql-operator-config secret
+    # This started working with Gradle since Quarkus Helm 1.2.5
+    map-system-properties: false
+    home: http://github.com/aboutbits/postgresql-operator
+    sources:
+      - http://github.com/aboutbits/postgresql-operator
+    annotations:
+      "catalog.cattle.io/os": linux
+    keywords:
+      - aboutbits
+      - postgresql
+      - operator
+    maintainers:
+      "AboutBits":
+        name: AboutBits
+        email: info@aboutbits.it
+        url: https://aboutbits.it/
+    create-tar-file: true
+    extension: tgz
+    values:
+      replicas:
+        property: replicas
+        value: 1
+        paths:
+          - (kind == Deployment).spec.replicas
+      image-pull-policy:
+        property: imagePullPolicy
+        value: IfNotPresent
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).imagePullPolicy
+      resource-requests-cpu:
+        property: resources.requests.cpu
+        value: ${quarkus.kubernetes.resources.requests.cpu}
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).resources.requests.cpu
+      resource-requests-memory:
+        property: resources.requests.memory
+        value: ${quarkus.kubernetes.resources.requests.memory}
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).resources.requests.memory
+      resource-limits-memory:
+        property: resources.limits.memory
+        value: ${quarkus.kubernetes.resources.limits.memory}
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).resources.limits.memory
+      secret-name:
+        property: secret.name
+        value: ${quarkus.kubernetes.envFrom.secretRef[0].name}
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).envFrom[0].secretRef.name
+      image-pull-secret:
+        property: imagePullSecret
+        value: ${quarkus.kubernetes.image-pull-secrets[0]}
+        paths:
+          - (kind == Deployment).spec.template.spec.imagePullSecrets[0].name
+    expressions:
+      release-name-labels:
+        expression: "{{ .Release.Name }}"
+        path: metadata.labels.'app.kubernetes.io/name'
+      release-name-service-selector:
+        expression: "{{ .Release.Name }}"
+        path: (kind == Service).spec.selector.'app.kubernetes.io/name'
+      release-name-deployment-match-labels:
+        expression: "{{ .Release.Name }}"
+        path: (kind == Deployment).spec.selector.matchLabels.'app.kubernetes.io/name'
+      release-name-deployment-labels:
+        expression: "{{ .Release.Name }}"
+        path: (kind == Deployment).spec.template.metadata.labels.'app.kubernetes.io/name'
+  kubernetes:
+    name: postgresql-operator
+    version: ${quarkus.application.version}
+    add-version-to-label-selectors: false
+    image-pull-policy: IfNotPresent
+    image-pull-secrets:
+      - github-container-registry
+    replicas: 1
+    annotations:
+      "app.kubernetes.io/version": ${quarkus.application.version}
+    secret-volumes:
+      postgresql-operator-config:
+        secret-name: postgresql-operator-config
+    resources:
+      requests:
+        cpu: 50m
+        memory: 300Mi
+      limits:
+        memory: 512Mi
+    startup-probe:
+      http-action-port-name: http
+      initial-delay: PT2S
+      period: PT10S
+      timeout: PT3S
+      success-threshold: 1
+      failure-threshold: 3
+    readiness-probe:
+      http-action-port-name: http
+      initial-delay: PT0S
+      period: PT10S
+      timeout: PT3S
+      success-threshold: 1
+      failure-threshold: 3
+    liveness-probe:
+      http-action-port-name: http
+      initial-delay: PT10S
+      period: PT30S
+      timeout: PT10S
+      success-threshold: 1
+      failure-threshold: 3
+    env:
+      fields:
+        KUBERNETES_NODE_NAME: spec.nodeName
+      secrets:
+        - postgresql-operator-config
