@@ -3,7 +3,6 @@ package it.aboutbits.postgresql._support.testdata.persisted.creator;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
-import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.SecretRef;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

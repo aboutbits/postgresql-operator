@@ -53,14 +53,11 @@ class RoleReconcilerTest {
 
         var spec = role.getSpec();
 
-        spec.getClusterRef().setNamespace(kubernetesClient.getNamespace());
-
         // when: create Role referencing the ClusterConnection and expecting LOGIN (passwordSecretRef non-null)
-        role.getSpec().setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
-        role = applyRole(role);
+        spec.setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
 
         // then: wait for status and assert READY
-        var reconciled = waitForRoleStatus(role.getMetadata().getName());
+        var reconciled = applyRole(role);
 
         var expectedStatus = new CRStatus()
                 .setName(roleName)
@@ -93,18 +90,17 @@ class RoleReconcilerTest {
                 .withName("test-connection-role-nologin")
                 .returnFirst();
 
-        // when
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var roleName = "test-role-nologin";
+
         var role = buildRole(
                 roleName,
                 clusterConnection.getMetadata().getName(),
                 /*login*/ false
         );
-        role.getSpec().getClusterRef().setNamespace(kubernetesClient.getNamespace());
-        role = applyRole(role);
 
-        var reconciled = waitForRoleStatus(role.getMetadata().getName());
+        // when
+        var reconciled = applyRole(role);
 
         var expectedStatus = new CRStatus()
                 .setName(roleName)
@@ -142,10 +138,9 @@ class RoleReconcilerTest {
                 /*login*/ true
         );
         role.getSpec().getClusterRef().setNamespace(kubernetesClient.getNamespace());
-        role = applyRole(role);
 
         // when
-        var reconciled = waitForRoleStatus(role.getMetadata().getName());
+        var reconciled = applyRole(role);
 
         // then
         assertThat(reconciled).isNotNull();
@@ -197,21 +192,19 @@ class RoleReconcilerTest {
         role.getSpec().setPasswordSecretRef(secretRef);
 
         // when: create Role
-        role = applyRole(role);
-        waitForRoleStatus(role.getMetadata().getName());
+        var reconciled = applyRole(role);
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         // then: password should match the initial one
         // Wait for password to match because reconciliation might take a bit
-        var initialRole = role;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> {
                     try {
                         return PostgreSQLAuthenticationUtil.passwordMatches(
                                 dsl,
-                                initialRole.getSpec(),
+                                reconciled.getSpec(),
                                 initialPassword
                         );
                     } catch (Exception e) {
@@ -231,7 +224,83 @@ class RoleReconcilerTest {
                 .serverSideApply();
 
         // then: password should eventually match the new one
-        var updatedRole = role;
+        await().atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .until(() -> {
+                    try {
+                        return PostgreSQLAuthenticationUtil.passwordMatches(
+                                dsl,
+                                reconciled.getSpec(),
+                                newPassword
+                        );
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+    }
+
+    @Test
+    @DisplayName(
+            "When a Role (LOGIN) changes its secret reference, it should trigger a re-reconciliation"
+    )
+    void secretRefChange_triggersReconciliation() throws Exception {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-secret-ref-change")
+                .returnFirst();
+
+        var roleName = "test-role-secret-ref-change";
+
+        var initialPassword = "initial-password";
+        var newPassword = "new-password";
+
+        var initialSecretRef = given.one()
+                .secretRef()
+                .withPassword(initialPassword)
+                .returnFirst();
+
+        var newSecretRef = given.one()
+                .secretRef()
+                .withPassword(newPassword)
+                .returnFirst();
+
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ true
+        );
+
+        role.getSpec().setPasswordSecretRef(initialSecretRef);
+
+        // when: create Role
+        var reconciled = applyRole(role);
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        // then: password should match the initial one
+        var finalRole = reconciled;
+        await().atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .until(() -> {
+                    try {
+                        return PostgreSQLAuthenticationUtil.passwordMatches(
+                                dsl,
+                                finalRole.getSpec(),
+                                initialPassword
+                        );
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+
+        // when: update secret reference in the Role
+        role.getSpec().setPasswordSecretRef(newSecretRef);
+
+        reconciled = applyRole(role);
+
+        // then: password should eventually match the new one
+        var updatedRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> {
@@ -250,17 +319,14 @@ class RoleReconcilerTest {
     private Role applyRole(Role role) {
         var namespace = kubernetesClient.getNamespace();
 
-        return kubernetesClient.resources(Role.class)
+        kubernetesClient.resources(Role.class)
                 .inNamespace(namespace)
                 .resource(role)
                 .serverSideApply();
-    }
 
-    private Role waitForRoleStatus(String roleName) {
-        var namespace = kubernetesClient.getNamespace();
         return kubernetesClient.resources(Role.class)
                 .inNamespace(namespace)
-                .withName(roleName)
+                .withName(role.getName())
                 .waitUntilCondition(
                         r -> r.getStatus() != null,
                         10,

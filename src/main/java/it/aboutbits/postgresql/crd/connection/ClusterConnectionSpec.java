@@ -5,7 +5,6 @@ import it.aboutbits.postgresql.core.SecretRef;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
