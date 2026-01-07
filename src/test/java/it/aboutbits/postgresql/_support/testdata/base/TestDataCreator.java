@@ -51,7 +51,7 @@ public abstract class TestDataCreator<ITEM> {
 
         if (name.length() > 60) {
             throw new IllegalArgumentException(
-                    "The name is too long (must be <= 60 to allow '-' + at least 2 random chars, max %d total) [name=%s, lenght=%d]".formatted(
+                    "The name is too long (must be <= 60 to allow '-' + at least 2 random chars, max %d total) [name=%s, length=%d]".formatted(
                             maxLength,
                             name,
                             name.length()

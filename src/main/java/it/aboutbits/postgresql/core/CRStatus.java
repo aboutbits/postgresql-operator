@@ -13,7 +13,7 @@ import java.time.ZoneOffset;
 /**
  * Status Object for the Custom Resources.
  * <p>
- * This object captures the current state of a bucket as observed by the reconciler.
+ * This object captures the current state of a Custom Resource as observed by the reconciler.
  */
 @NullMarked
 @Getter
@@ -21,7 +21,7 @@ import java.time.ZoneOffset;
 @Accessors(chain = true)
 public class CRStatus {
     /**
-     * The actual bucket name in MinIO (may differ from metadata.name).
+     * The Custom Resource name (may differ from metadata.name).
      */
     @Nullable
     private String name = null;

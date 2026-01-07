@@ -64,11 +64,11 @@ class ClusterConnectionReconcilerTest {
                 .satisfies(status -> {
                     assertThat(status.getLastProbeTime()).isCloseTo(
                             now,
-                            within(15, ChronoUnit.SECONDS)
+                            within(10, ChronoUnit.SECONDS)
                     );
                     assertThat(status.getLastPhaseTransitionTime()).isCloseTo(
                             now,
-                            within(15, ChronoUnit.SECONDS)
+                            within(10, ChronoUnit.SECONDS)
                     );
                 })
                 .usingRecursiveComparison()

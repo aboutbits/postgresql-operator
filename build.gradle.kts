@@ -87,6 +87,7 @@ dependencies {
      * Testing
      */
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)
 }

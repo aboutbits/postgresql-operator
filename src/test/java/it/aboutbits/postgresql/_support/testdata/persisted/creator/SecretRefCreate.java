@@ -15,7 +15,6 @@ import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_TYPE_BASIC_AUTH
 @NullMarked
 public class SecretRefCreate extends TestDataCreator<SecretRef> {
     private final KubernetesClient kubernetesClient;
-    private final Given.DBConnectionDetails dbConnectionDetails;
 
     @Nullable
     private String withNamespace;
@@ -34,12 +33,10 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
 
     public SecretRefCreate(
             int numberOfItems,
-            KubernetesClient kubernetesClient,
-            Given.DBConnectionDetails dbConnectionDetails
+            KubernetesClient kubernetesClient
     ) {
         super(numberOfItems);
         this.kubernetesClient = kubernetesClient;
-        this.dbConnectionDetails = dbConnectionDetails;
     }
 
     @SuppressWarnings("unused")
@@ -95,8 +92,8 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
                 .withName(name)
                 .endMetadata()
                 .withType(SECRET_TYPE_BASIC_AUTH)
-                .addToStringData(SECRET_DATA_BASIC_AUTH_USERNAME_KEY, dbConnectionDetails.username())
-                .addToStringData(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY, dbConnectionDetails.password())
+                .addToStringData(SECRET_DATA_BASIC_AUTH_USERNAME_KEY, getUsername())
+                .addToStringData(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY, getPassword())
                 .build();
 
         kubernetesClient.secrets()
@@ -142,7 +139,7 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withUsername;
         }
 
-        return dbConnectionDetails.username();
+        return FAKER.credentials().username();
     }
 
     @Nullable
@@ -155,6 +152,6 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withPassword;
         }
 
-        return dbConnectionDetails.password();
+        return FAKER.credentials().username();
     }
 }

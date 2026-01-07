@@ -1,9 +1,16 @@
 package it.aboutbits.postgresql.crd.role;
 
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.javaoperatorsdk.operator.api.config.informer.InformerEventSourceConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
+import io.javaoperatorsdk.operator.processing.event.ResourceID;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
+import io.javaoperatorsdk.operator.processing.event.source.SecondaryToPrimaryMapper;
+import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
 import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
@@ -14,7 +21,9 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class RoleReconciler
@@ -36,13 +45,14 @@ public class RoleReconciler
 
         var clusterConnectionOptional = getReferencedClusterConnection(
                 kubernetesClient,
+                resource,
                 clusterRef
         );
 
         if (clusterConnectionOptional.isEmpty()) {
             status.setPhase(CRPhase.PENDING)
                     .setMessage("The specified ClusterConnection does not exist or is not ready yet [clusterRef=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(clusterRef.getNamespace()),
+                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
                     ));
 
@@ -56,13 +66,15 @@ public class RoleReconciler
         expectedFlags.getRole().sort(String.CASE_INSENSITIVE_ORDER);
         expectedFlags.getInRole().sort(String.CASE_INSENSITIVE_ORDER);
 
-        var loginExpected = spec.getPasswordSecretRef() != null;
+        var passwordSecretRef = spec.getPasswordSecretRef();
+        var loginExpected = passwordSecretRef != null;
 
         String password;
         if (loginExpected) {
             password = KubernetesUtil.getSecretRefCredentials(
                     kubernetesClient,
-                    clusterConnection
+                    passwordSecretRef,
+                    resource.getMetadata().getNamespace()
             ).password();
         } else {
             password = null;
@@ -140,7 +152,58 @@ public class RoleReconciler
     }
 
     @Override
+    public List<EventSource<?, Role>> prepareEventSources(EventSourceContext<Role> context) {
+        // 1. Define the Mapper
+        // We define how to find the Primary Resource (Role) when a Secret changes
+        SecondaryToPrimaryMapper<Secret> secretToRoleMapper = (Secret secret) -> {
+            // 2. Filter Roles that reference this specific Secret
+            return context.getPrimaryCache()
+                    .list()
+                    .filter(role -> isReferencedBy(role, secret))
+                    .map(ResourceID::fromResource)
+                    .collect(Collectors.toSet());
+        };
+
+        // 2. Build the Event Source Configuration which binds the InformerConfig + Mapper
+        var eventSourceConfig = InformerEventSourceConfiguration.from(Secret.class, Role.class)
+                .withSecondaryToPrimaryMapper(secretToRoleMapper)
+                // or .withWatchAllNamespaces() if we want to have the secret in another namespace than the Role CR instance
+                .withNamespacesInheritedFromController()
+                .build();
+
+        // 3. Create the Event Source
+        // This will watch for Secret changes and run the mapper
+        var secretEventSource = new InformerEventSource<>(
+                eventSourceConfig,
+                context
+        );
+
+        return List.of(secretEventSource);
+    }
+
+    @Override
     protected @NonNull CRStatus newStatus() {
         return new CRStatus();
+    }
+
+    /**
+     * Checks if the given Role's spec.passwordSecretRef points to the changed Secret.
+     */
+    private boolean isReferencedBy(
+            Role role,
+            Secret secret
+    ) {
+        var spec = role.getSpec();
+
+        if (spec.getPasswordSecretRef() == null) {
+            return false;
+        }
+
+        var ref = spec.getPasswordSecretRef();
+        var refName = ref.getName();
+        var refNamespace = getResourceNamespaceOrOwn(role, ref.getNamespace());
+
+        return refName.equals(secret.getMetadata().getName()) &&
+                refNamespace.equals(secret.getMetadata().getNamespace());
     }
 }

@@ -94,7 +94,7 @@ If you want to learn more about building native executables, please consult <htt
 ## Related Guides
 
 - Operator SDK ([guide](https://docs.quarkiverse.io/quarkus-operator-sdk/dev/index.html)): Quarkus extension for the Java Operator SDK (https://javaoperatorsdk.io)
-- Helm ([guide](https://docs.quarkiverse.io/quarkus-helm/dev/index.html)): Quarkus extension for Kubernetes Helm chars
+- Helm ([guide](https://docs.quarkiverse.io/quarkus-helm/dev/index.html)): Quarkus extension for Kubernetes Helm charts
 - SmallRye Health ([guide](https://quarkus.io/guides/smallrye-health)): Monitor service health
 - Micrometer metrics ([guide](https://quarkus.io/guides/micrometer)): Instrument the runtime and your application with dimensional metrics using Micrometer.
 - YAML Configuration ([guide](https://quarkus.io/guides/config-yaml)): Use YAML to configure your Quarkus application

@@ -65,8 +65,7 @@ public class Given {
         public SecretRefCreate secretRef() {
             return new SecretRefCreate(
                     numberOfItems,
-                    kubernetesClient,
-                    dbConnectionDetails()
+                    kubernetesClient
             );
         }
 

@@ -1,12 +1,14 @@
 package it.aboutbits.postgresql.crd.role;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.ClusterReference;
+import it.aboutbits.postgresql.core.PostgreSQLAuthenticationUtil;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.SecretRef;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,10 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
+import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.awaitility.Awaitility.await;
 
 @QuarkusTest
 @RequiredArgsConstructor
@@ -52,6 +56,7 @@ class RoleReconcilerTest {
         spec.getClusterRef().setNamespace(kubernetesClient.getNamespace());
 
         // when: create Role referencing the ClusterConnection and expecting LOGIN (passwordSecretRef non-null)
+        role.getSpec().setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
         role = applyRole(role);
 
         // then: wait for status and assert READY
@@ -152,9 +157,94 @@ class RoleReconcilerTest {
         );
         assertThat(reconciled.getStatus().getLastProbeTime()).isCloseTo(
                 now,
-                within(15, ChronoUnit.SECONDS)
+                within(10, ChronoUnit.SECONDS)
         );
         assertThat(reconciled.getStatus().getLastPhaseTransitionTime()).isNull();
+    }
+
+    @Test
+    @DisplayName(
+            "When a Role (LOGIN) references a secret and that secret changes, it should trigger a re-reconciliation"
+    )
+    void secretChange_triggersReconciliation() throws Exception {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-secret-change")
+                .returnFirst();
+
+        var roleName = "test-role-secret-change";
+
+        var initialPassword = "initial-password";
+        var newPassword = "new-password";
+
+        var secretRef = given.one()
+                .secretRef()
+                .withPassword(initialPassword)
+                .returnFirst();
+
+        var secret = kubernetesClient.secrets()
+                .inNamespace(kubernetesClient.getNamespace())
+                .withName(secretRef.getName())
+                .require();
+
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ true
+        );
+
+        role.getSpec().setPasswordSecretRef(secretRef);
+
+        // when: create Role
+        role = applyRole(role);
+        waitForRoleStatus(role.getMetadata().getName());
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        // then: password should match the initial one
+        // Wait for password to match because reconciliation might take a bit
+        var initialRole = role;
+        await().atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .until(() -> {
+                    try {
+                        return PostgreSQLAuthenticationUtil.passwordMatches(
+                                dsl,
+                                initialRole.getSpec(),
+                                initialPassword
+                        );
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+
+        // when: update secret
+        secret.getMetadata().setManagedFields(null);
+        secret = new SecretBuilder(secret)
+                .addToStringData(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY, newPassword)
+                .build();
+
+        kubernetesClient.secrets()
+                .inNamespace(kubernetesClient.getNamespace())
+                .resource(secret)
+                .serverSideApply();
+
+        // then: password should eventually match the new one
+        var updatedRole = role;
+        await().atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .until(() -> {
+                    try {
+                        return PostgreSQLAuthenticationUtil.passwordMatches(
+                                dsl,
+                                updatedRole.getSpec(),
+                                newPassword
+                        );
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
     }
 
     private Role applyRole(Role role) {
@@ -172,8 +262,8 @@ class RoleReconcilerTest {
                 .inNamespace(namespace)
                 .withName(roleName)
                 .waitUntilCondition(
-                        r -> r != null && r.getStatus() != null,
-                        30,
+                        r -> r.getStatus() != null,
+                        10,
                         TimeUnit.SECONDS
                 );
     }
@@ -189,11 +279,11 @@ class RoleReconcilerTest {
                 .satisfies(status -> {
                     assertThat(status.getLastProbeTime()).isCloseTo(
                             now,
-                            within(15, ChronoUnit.SECONDS)
+                            within(10, ChronoUnit.SECONDS)
                     );
                     assertThat(status.getLastPhaseTransitionTime()).isCloseTo(
                             now,
-                            within(15, ChronoUnit.SECONDS)
+                            within(10, ChronoUnit.SECONDS)
                     );
                 })
                 .usingRecursiveComparison()
@@ -214,7 +304,7 @@ class RoleReconcilerTest {
         spec.getClusterRef().setName(clusterConnectionName);
 
         if (login) {
-            // any non-null SecretRef will signal LOGIN expectation; the reconciler will use the ClusterConnection secret
+            // any non-null SecretRef will signal LOGIN expectation
             var secretRef = new SecretRef();
             secretRef.setName("dummy");
             spec.setPasswordSecretRef(secretRef);

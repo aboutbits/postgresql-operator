@@ -98,7 +98,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        clusterConnection -> clusterConnection != null && clusterConnection.getStatus() != null,
+                        clusterConnection -> clusterConnection.getStatus() != null,
                         10,
                         TimeUnit.SECONDS
                 );
@@ -155,6 +155,8 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
         return given.one()
                 .secretRef()
+                .withUsername(dbConnectionDetails.username())
+                .withPassword(dbConnectionDetails.password())
                 .returnFirst();
     }
 

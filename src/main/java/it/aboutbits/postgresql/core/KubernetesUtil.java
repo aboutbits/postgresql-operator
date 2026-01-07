@@ -18,15 +18,23 @@ public final class KubernetesUtil {
             KubernetesClient kubernetesClient,
             ClusterConnection clusterConnection
     ) {
-        var spec = clusterConnection.getSpec();
-        var metadata = clusterConnection.getMetadata();
+        return getSecretRefCredentials(
+                kubernetesClient,
+                clusterConnection.getSpec().getAdminSecretRef(),
+                clusterConnection.getMetadata().getNamespace()
+        );
+    }
 
-        var passwordSecretRef = spec.getAdminSecretRef();
+    public static Credentials getSecretRefCredentials(
+            KubernetesClient kubernetesClient,
+            SecretRef secretRef,
+            String defaultNamespace
+    ) {
+        var secretNamespace = secretRef.getNamespace() != null
+                ? secretRef.getNamespace()
+                : defaultNamespace;
 
-        var secretNamespace = passwordSecretRef.getNamespace() != null
-                ? passwordSecretRef.getNamespace()
-                : clusterConnection.getMetadata().getNamespace();
-        var secretName = passwordSecretRef.getName();
+        var secretName = secretRef.getName();
 
         var secret = kubernetesClient.secrets()
                 .inNamespace(secretNamespace)
@@ -34,18 +42,14 @@ public final class KubernetesUtil {
                 .get();
 
         if (secret == null) {
-            throw new IllegalStateException("ClusterConnection SecretRef not found [clusterConnection.namespace=%s, clusterConnection.name=%s, secret.namespace=%s, secret.name=%s]".formatted(
-                    metadata.getNamespace(),
-                    metadata.getName(),
+            throw new IllegalStateException("SecretRef not found [secret.namespace=%s, secret.name=%s]".formatted(
                     secretNamespace,
                     secretName
             ));
         }
 
         if (!secret.getType().equals(SECRET_TYPE_BASIC_AUTH)) {
-            throw new IllegalArgumentException("The ClusterConnection SecretRef is of the wrong type [clusterConnection.namespace=%s, clusterConnection.name=%s, secret.namespace=%s, secret.name=%s, expected.secret.type=%s, actual.secret.type=%s]".formatted(
-                    metadata.getNamespace(),
-                    metadata.getName(),
+            throw new IllegalArgumentException("The SecretRef is of the wrong type [secret.namespace=%s, secret.name=%s, expected.secret.type=%s, actual.secret.type=%s]".formatted(
                     secretNamespace,
                     secretName,
                     SECRET_TYPE_BASIC_AUTH,
@@ -55,9 +59,7 @@ public final class KubernetesUtil {
 
         var data = secret.getData();
         if (data == null || data.isEmpty()) {
-            throw new IllegalStateException("The ClusterConnection SecretRef has no data set [clusterConnection.namespace=%s, clusterConnection.name=%s, secret.namespace=%s, secret.name=%s]".formatted(
-                    metadata.getNamespace(),
-                    metadata.getName(),
+            throw new IllegalStateException("The SecretRef has no data set [secret.namespace=%s, secret.name=%s]".formatted(
                     secretNamespace,
                     secretName
             ));
@@ -72,9 +74,7 @@ public final class KubernetesUtil {
 
         var passwordBase64 = data.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
         if (passwordBase64 == null) {
-            throw new IllegalStateException("The ClusterConnection SecretRef is missing required data password [clusterConnection.namespace=%s, clusterConnection.name=%s, secret.namespace=%s, secret.name=%s]".formatted(
-                    metadata.getNamespace(),
-                    metadata.getName(),
+            throw new IllegalStateException("The SecretRef is missing required data password [secret.namespace=%s, secret.name=%s]".formatted(
                     secretNamespace,
                     secretName
             ));

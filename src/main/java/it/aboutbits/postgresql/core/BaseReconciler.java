@@ -40,21 +40,23 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     }
 
     public String getResourceNamespaceOrOwn(
+            CR resource,
             @Nullable String resourceNamespace
     ) {
         if (resourceNamespace != null) {
             return resourceNamespace;
         }
 
-        return ((HasMetadata) this).getMetadata().getNamespace();
+        return resource.getMetadata().getNamespace();
     }
 
     public Optional<ClusterConnection> getReferencedClusterConnection(
             KubernetesClient kubernetesClient,
+            CR resource,
             ClusterReference clusterRef
     ) {
         var connectionName = clusterRef.getName();
-        var connectionNamespace = getResourceNamespaceOrOwn(clusterRef.getNamespace());
+        var connectionNamespace = getResourceNamespaceOrOwn(resource, clusterRef.getNamespace());
 
         var clusterConnection = kubernetesClient.resources(ClusterConnection.class)
                 .inNamespace(connectionNamespace)
