@@ -18,6 +18,7 @@ import java.util.Objects;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTH_MEMBERS;
+import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.keyword;
 import static org.jooq.impl.DSL.multiset;
 import static org.jooq.impl.DSL.name;
@@ -127,7 +128,7 @@ public final class RoleUtil {
                         PG_AUTHID.ROLREPLICATION.as("replication"),
                         PG_AUTHID.ROLBYPASSRLS.as("bypassrls"),
                         PG_AUTHID.ROLCONNLIMIT.as("connectionLimit"),
-                        PG_AUTHID.ROLVALIDUNTIL.as("validUntil"),
+                        field("nullif({0}, 'infinity')", PG_AUTHID.ROLVALIDUNTIL.getDataType(), PG_AUTHID.ROLVALIDUNTIL).as("validUntil"),
                         multiset(
                                 select(parent.ROLNAME)
                                         .from(PG_AUTH_MEMBERS)
@@ -194,7 +195,7 @@ public final class RoleUtil {
         }
         if (flags.getValidUntil() != null) {
             options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
-            options.add(val(flags.getValidUntil()));
+            options.add(val(flags.getValidUntil().toString()));
         }
         if (!flags.getInRole().isEmpty()) {
             options.add(keyword(RoleFlags.IN_ROLE.flag()));
@@ -281,9 +282,11 @@ public final class RoleUtil {
         options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
         options.add(val(flags.getConnectionLimit()));
 
+        options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
         if (flags.getValidUntil() != null) {
-            options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
-            options.add(val(flags.getValidUntil()));
+            options.add(val(flags.getValidUntil().toString()));
+        } else {
+            options.add(val("infinity"));
         }
 
         return query(
@@ -386,7 +389,7 @@ public final class RoleUtil {
                 ))
                 .from(PG_AUTHID)
                 .where(PG_AUTHID.ROLNAME.eq(roleName))
-                .fetchOneInto(String.class);
+                .fetchSingleInto(String.class);
     }
 
     private static @Nullable String normalizeComment(@Nullable String comment) {

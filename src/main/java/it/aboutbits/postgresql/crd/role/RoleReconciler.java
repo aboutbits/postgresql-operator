@@ -45,7 +45,8 @@ public class RoleReconciler
         var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
 
-        log.info("Reconciling Role [resource={}/{}, status.phase={}]",
+        log.info(
+                "Reconciling Role [resource={}/{}, status.phase={}]",
                 namespace,
                 name,
                 status.getPhase()
@@ -102,7 +103,8 @@ public class RoleReconciler
 
                 // Create the role if it doesn't exist yet
                 if (!RoleUtil.roleExists(tx, spec)) {
-                    log.info("Creating Role [resource={}/{}]",
+                    log.info(
+                            "Creating Role [resource={}/{}]",
                             namespace,
                             name
                     );
@@ -133,7 +135,8 @@ public class RoleReconciler
                 }
 
                 if (roleLoginMatches && passwordMatches && flagsMatch) {
-                    log.info("Role up-to-date [resource={}/{}]",
+                    log.info(
+                            "Role up-to-date [resource={}/{}]",
                             namespace,
                             name
                     );
@@ -143,7 +146,8 @@ public class RoleReconciler
 
                 var changePassword = loginExpected && !passwordMatches;
 
-                log.info("Updating Role flags [resource={}/{}]",
+                log.info(
+                        "Updating Role flags [resource={}/{}]",
                         namespace,
                         name
                 );
@@ -155,7 +159,8 @@ public class RoleReconciler
                         password
                 );
 
-                log.info("Updating Role membership [resource={}/{}]",
+                log.info(
+                        "Updating Role membership [resource={}/{}]",
                         namespace,
                         name
                 );

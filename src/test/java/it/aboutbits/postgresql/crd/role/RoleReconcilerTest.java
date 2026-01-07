@@ -425,6 +425,77 @@ class RoleReconcilerTest {
         ).isEqualTo(-1);
     }
 
+    @Test
+    @DisplayName("When the VALID UNTIL is changed, it should be updated in the database")
+    void validUntil_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-valid-until")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var roleName = "test-role-valid-until";
+
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        var expiry = OffsetDateTime.now(ZoneOffset.UTC)
+                .plusDays(1)
+                .truncatedTo(ChronoUnit.SECONDS);
+
+        // 1. Set a valid until date
+        role.getSpec().getFlags().setValidUntil(expiry);
+
+        // when
+        var reconciled = applyRole(role);
+        var initialGeneration = reconciled.getStatus().getObservedGeneration();
+
+        var currentFlags = RoleUtil.fetchCurrentFlags(dsl, role.getSpec());
+
+        // then
+        assertThat(
+                currentFlags.getValidUntil()
+        ).isEqualTo(expiry);
+
+        // 2. Change valid until date
+        var newExpiry = expiry.plusDays(1);
+        role.getSpec().getFlags().setValidUntil(newExpiry);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
+        );
+
+        currentFlags = RoleUtil.fetchCurrentFlags(dsl, role.getSpec());
+
+        // then
+        assertThat(
+                currentFlags.getValidUntil()
+        ).isEqualTo(newExpiry);
+
+        // 3. Reset valid until to null (infinity)
+        role.getSpec().getFlags().setValidUntil(null);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
+        );
+
+        currentFlags = RoleUtil.fetchCurrentFlags(dsl, role.getSpec());
+
+        // then
+        assertThat(
+                currentFlags.getValidUntil()
+        ).isNull();
+    }
+
     private <T> T getRoleFlagValue(
             DSLContext dsl,
             String roleName,
@@ -433,7 +504,7 @@ class RoleReconcilerTest {
         return dsl.select(field)
                 .from(PG_AUTHID)
                 .where(PG_AUTHID.ROLNAME.eq(roleName))
-                .fetchSingleInto(field.getType());
+                .fetchSingle(field);
     }
 
     private static Stream<Arguments> provideBooleanFlags() {
