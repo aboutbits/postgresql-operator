@@ -201,7 +201,7 @@ public final class RoleUtil {
             options.add(joinWithComma(
                     flags.getInRole()
                             .stream()
-                            .map(DSL::name)
+                            .map(DSL::role)
                             .toList()
             ));
         }
@@ -210,7 +210,7 @@ public final class RoleUtil {
             options.add(joinWithComma(
                     flags.getRole()
                             .stream()
-                            .map(DSL::name)
+                            .map(DSL::role)
                             .toList()
             ));
         }
@@ -277,10 +277,10 @@ public final class RoleUtil {
                 ? RoleFlags.BYPASSRLS.flag()
                 : RoleFlags.NO_BYPASSRLS.flag()
         ));
-        if (flags.getConnectionLimit() >= 0) {
-            options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
-            options.add(val(flags.getConnectionLimit()));
-        }
+
+        options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
+        options.add(val(flags.getConnectionLimit()));
+
         if (flags.getValidUntil() != null) {
             options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
             options.add(val(flags.getValidUntil()));

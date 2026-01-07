@@ -365,10 +365,70 @@ class RoleReconcilerTest {
         ).isFalse();
     }
 
-    private Boolean getRoleFlagValue(
+    @Test
+    @DisplayName("When the CONNECTION LIMIT is changed, it should be updated in the database")
+    void connectionLimit_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-conn-limit")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var roleName = "test-role-conn-limit";
+
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        // 1. Set a connection limit
+        role.getSpec().getFlags().setConnectionLimit(10);
+
+        // when
+        var reconciled = applyRole(role);
+        var initialGeneration = reconciled.getStatus().getObservedGeneration();
+
+        // then
+        assertThat(
+                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCONNLIMIT)
+        ).isEqualTo(10);
+
+        // 2. Change connection limit
+        role.getSpec().getFlags().setConnectionLimit(20);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
+        );
+
+        // then
+        assertThat(
+                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCONNLIMIT)
+        ).isEqualTo(20);
+
+        // 3. Reset connection limit to -1
+        role.getSpec().getFlags().setConnectionLimit(-1);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
+        );
+
+        // then
+        assertThat(
+                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCONNLIMIT)
+        ).isEqualTo(-1);
+    }
+
+    private <T> T getRoleFlagValue(
             DSLContext dsl,
             String roleName,
-            Field<Boolean> field
+            Field<T> field
     ) {
         return dsl.select(field)
                 .from(PG_AUTHID)
