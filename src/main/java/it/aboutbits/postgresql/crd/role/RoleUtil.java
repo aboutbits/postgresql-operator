@@ -221,7 +221,7 @@ public final class RoleUtil {
 
         return query(
                 "create role {0}{1}",
-                name(roleName),
+                role(roleName),
                 optionsSql
         );
     }
@@ -288,7 +288,7 @@ public final class RoleUtil {
 
         return query(
                 "alter role {0} with {1}",
-                name(roleName),
+                role(roleName),
                 joinWithSpaces(options)
         );
     }

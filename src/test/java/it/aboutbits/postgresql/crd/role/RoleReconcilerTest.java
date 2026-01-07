@@ -13,15 +13,24 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.SecretRef;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
+import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.awaitility.Awaitility.await;
@@ -161,7 +170,7 @@ class RoleReconcilerTest {
     @DisplayName(
             "When a Role (LOGIN) references a secret and that secret changes, it should trigger a re-reconciliation"
     )
-    void secretChange_triggersReconciliation() throws Exception {
+    void secretChange_triggersReconciliation() throws SQLException {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -200,17 +209,11 @@ class RoleReconcilerTest {
         // Wait for password to match because reconciliation might take a bit
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> {
-                    try {
-                        return PostgreSQLAuthenticationUtil.passwordMatches(
-                                dsl,
-                                reconciled.getSpec(),
-                                initialPassword
-                        );
-                    } catch (Exception e) {
-                        return false;
-                    }
-                });
+                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                        dsl,
+                        reconciled.getSpec(),
+                        initialPassword
+                ));
 
         // when: update secret
         secret.getMetadata().setManagedFields(null);
@@ -226,24 +229,18 @@ class RoleReconcilerTest {
         // then: password should eventually match the new one
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> {
-                    try {
-                        return PostgreSQLAuthenticationUtil.passwordMatches(
-                                dsl,
-                                reconciled.getSpec(),
-                                newPassword
-                        );
-                    } catch (Exception e) {
-                        return false;
-                    }
-                });
+                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                        dsl,
+                        reconciled.getSpec(),
+                        newPassword
+                ));
     }
 
     @Test
     @DisplayName(
             "When a Role (LOGIN) changes its secret reference, it should trigger a re-reconciliation"
     )
-    void secretRefChange_triggersReconciliation() throws Exception {
+    void secretRefChange_triggersReconciliation() throws SQLException {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -282,17 +279,11 @@ class RoleReconcilerTest {
         var finalRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> {
-                    try {
-                        return PostgreSQLAuthenticationUtil.passwordMatches(
-                                dsl,
-                                finalRole.getSpec(),
-                                initialPassword
-                        );
-                    } catch (Exception e) {
-                        return false;
-                    }
-                });
+                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                        dsl,
+                        finalRole.getSpec(),
+                        initialPassword
+                ));
 
         // when: update secret reference in the Role
         role.getSpec().setPasswordSecretRef(newSecretRef);
@@ -303,20 +294,110 @@ class RoleReconcilerTest {
         var updatedRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> {
-                    try {
-                        return PostgreSQLAuthenticationUtil.passwordMatches(
-                                dsl,
-                                updatedRole.getSpec(),
-                                newPassword
-                        );
-                    } catch (Exception e) {
-                        return false;
-                    }
-                });
+                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                        dsl,
+                        updatedRole.getSpec(),
+                        newPassword
+                ));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBooleanFlags")
+    @DisplayName("When a boolean Role flag is toggled, it should be updated in the database")
+    void roleFlag_togglesCorrectly(
+            Field<Boolean> field,
+            BiConsumer<RoleSpec.Flags, Boolean> setter
+    ) throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-flags")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var roleName = "test-role-" + field.getName();
+
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        // 1. Enable flag (true)
+        setter.accept(
+                role.getSpec().getFlags(),
+                true
+        );
+
+        // when
+        var reconciled = applyRole(role);
+        var initialGeneration = reconciled.getStatus().getObservedGeneration();
+
+        // then
+        assertThat(
+                getRoleFlagValue(
+                        dsl,
+                        roleName,
+                        field
+                )
+        ).isTrue();
+
+        // 2. Disable flag (false)
+        setter.accept(
+                role.getSpec().getFlags(),
+                false
+        );
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
+        );
+
+        // then
+        assertThat(
+                getRoleFlagValue(
+                        dsl,
+                        roleName,
+                        field
+                )
+        ).isFalse();
+    }
+
+    private Boolean getRoleFlagValue(
+            DSLContext dsl,
+            String roleName,
+            Field<Boolean> field
+    ) {
+        return dsl.select(field)
+                .from(PG_AUTHID)
+                .where(PG_AUTHID.ROLNAME.eq(roleName))
+                .fetchSingleInto(field.getType());
+    }
+
+    private static Stream<Arguments> provideBooleanFlags() {
+        return Stream.of(
+                Arguments.of(PG_AUTHID.ROLSUPER, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setSuperuser),
+                Arguments.of(PG_AUTHID.ROLCREATEDB, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreatedb),
+                Arguments.of(PG_AUTHID.ROLCREATEROLE, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreaterole),
+                Arguments.of(PG_AUTHID.ROLINHERIT, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setInherit),
+                Arguments.of(PG_AUTHID.ROLREPLICATION, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
+                Arguments.of(PG_AUTHID.ROLBYPASSRLS, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setBypassrls)
+        );
     }
 
     private Role applyRole(Role role) {
+        return applyRole(
+                role,
+                r -> r.getStatus() != null
+        );
+    }
+
+    private Role applyRole(
+            Role role,
+            Predicate<Role> condition
+    ) {
         var namespace = kubernetesClient.getNamespace();
 
         kubernetesClient.resources(Role.class)
@@ -328,7 +409,7 @@ class RoleReconcilerTest {
                 .inNamespace(namespace)
                 .withName(role.getName())
                 .waitUntilCondition(
-                        r -> r.getStatus() != null,
+                        condition,
                         10,
                         TimeUnit.SECONDS
                 );

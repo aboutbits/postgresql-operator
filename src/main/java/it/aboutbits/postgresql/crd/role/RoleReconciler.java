@@ -18,6 +18,7 @@ import it.aboutbits.postgresql.core.KubernetesUtil;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationUtil;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
 import java.sql.SQLException;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 public class RoleReconciler
         extends BaseReconciler<Role, CRStatus>
@@ -39,6 +41,15 @@ public class RoleReconciler
     ) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
+
+        var name = resource.getMetadata().getName();
+        var namespace = resource.getMetadata().getNamespace();
+
+        log.info("Reconciling Role [resource={}/{}, status.phase={}]",
+                namespace,
+                name,
+                status.getPhase()
+        );
 
         var clusterRef = spec.getClusterRef();
         var expectedFlags = spec.getFlags();
@@ -74,7 +85,7 @@ public class RoleReconciler
             password = KubernetesUtil.getSecretRefCredentials(
                     kubernetesClient,
                     passwordSecretRef,
-                    resource.getMetadata().getNamespace()
+                    namespace
             ).password();
         } else {
             password = null;
@@ -91,6 +102,11 @@ public class RoleReconciler
 
                 // Create the role if it doesn't exist yet
                 if (!RoleUtil.roleExists(tx, spec)) {
+                    log.info("Creating Role [resource={}/{}]",
+                            namespace,
+                            name
+                    );
+
                     RoleUtil.createRole(
                             tx,
                             spec,
@@ -117,16 +133,31 @@ public class RoleReconciler
                 }
 
                 if (roleLoginMatches && passwordMatches && flagsMatch) {
+                    log.info("Role up-to-date [resource={}/{}]",
+                            namespace,
+                            name
+                    );
+
                     return UpdateControl.noUpdate();
                 }
 
                 var changePassword = loginExpected && !passwordMatches;
+
+                log.info("Updating Role flags [resource={}/{}]",
+                        namespace,
+                        name
+                );
 
                 RoleUtil.alterRole(
                         tx,
                         spec,
                         changePassword,
                         password
+                );
+
+                log.info("Updating Role membership [resource={}/{}]",
+                        namespace,
+                        name
                 );
 
                 RoleUtil.reconcileRoleMembership(
@@ -136,7 +167,8 @@ public class RoleReconciler
                         currentFlags
                 );
 
-                status.setPhase(CRPhase.READY);
+                status.setPhase(CRPhase.READY)
+                        .setMessage(null);
 
                 return UpdateControl.patchStatus(resource);
             });
