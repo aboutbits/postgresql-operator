@@ -1,7 +1,4 @@
 quarkus:
-  datasource:
-    devservices:
-      port: 5433
   operator-sdk:
     activate-leader-election-for-profiles:
       - test

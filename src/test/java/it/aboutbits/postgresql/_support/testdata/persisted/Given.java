@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
 
+import java.net.URI;
+
 @NullMarked
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -21,12 +23,12 @@ public class Given {
     @ConfigProperty(name = "quarkus.datasource.devservices.password")
     String password;
 
-    @ConfigProperty(name = "quarkus.datasource.devservices.port")
-    Integer port;
+    @ConfigProperty(name = "quarkus.datasource.jdbc.url")
+    String jdbcUrl;
 
     DBConnectionDetails dbConnectionDetails() {
         return new DBConnectionDetails(
-                port,
+                parsePortFromJdbcUrl(jdbcUrl),
                 username,
                 password
         );
@@ -84,5 +86,13 @@ public class Given {
             String username,
             String password
     ) {
+    }
+
+    private int parsePortFromJdbcUrl(String url) {
+        // Typical format: jdbc:postgresql://localhost:5432/db
+        // We strip "jdbc:" so URI.create can handle the "postgresql://..." part
+        return URI.create(
+                url.replace("jdbc:", "")
+        ).getPort();
     }
 }
