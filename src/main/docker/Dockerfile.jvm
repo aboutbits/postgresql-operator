@@ -78,8 +78,8 @@
 #   accessed directly. (example: "foo.example.com,bar.example.com")
 #
 ###
-# https://container-registry.oracle.com/ords/ocr/ba/graalvm/jdk
-FROM container-registry.oracle.com/graalvm/jdk:25-ol10
+# https://catalog.redhat.com/en/software/containers/ubi9/openjdk-25-runtime/69204990c46419100ce30a5b
+FROM registry.redhat.io/ubi9/openjdk-25-runtime:1.24
 
 ENV LANGUAGE='en_US:en'
 
