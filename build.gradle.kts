@@ -20,7 +20,7 @@ val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
-val checkstyleConfig by configurations.creating {
+val checkstyleConfig: Configuration by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
 }
