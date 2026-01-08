@@ -10,6 +10,11 @@ import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 import org.jspecify.annotations.NullMarked;
 
+/**
+ * MicroProfile readiness health check that verifies connectivity to all
+ * configured PostgreSQL instances. Each instance is probed with a lightweight
+ * operation, and the aggregated status is exposed.
+ */
 @NullMarked
 @Readiness
 @RequiredArgsConstructor
