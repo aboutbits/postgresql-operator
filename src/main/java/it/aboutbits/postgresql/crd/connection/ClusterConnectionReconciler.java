@@ -9,11 +9,7 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.DSLContext;
-import org.jooq.exception.DataAccessException;
 import org.jspecify.annotations.NonNull;
-
-import java.sql.SQLException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,26 +25,13 @@ public class ClusterConnectionReconciler
     ) {
         var status = initializeStatus(resource);
 
-        DSLContext dsl;
-        try {
-            dsl = contextFactory.getDSLContext(resource);
-        } catch (SQLException e) {
-            log.error("Failed to create DSL context", e);
-
-            return handleError(
-                    resource,
-                    status,
-                    e
-            );
-        }
-
-        try {
+        try (var dsl = contextFactory.getDSLContext(resource)) {
             var version = dsl.fetchSingle("select version()").into(String.class);
 
             status.setPhase(CRPhase.READY).setMessage(version);
 
             return UpdateControl.patchStatus(resource);
-        } catch (DataAccessException e) {
+        } catch (Exception e) {
             log.error("Failed to check database connectivity", e);
 
             return handleError(

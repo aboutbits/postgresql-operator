@@ -19,9 +19,9 @@ import it.aboutbits.postgresql.core.PostgreSQLAuthenticationUtil;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
 import org.jspecify.annotations.NonNull;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -94,104 +94,17 @@ public class RoleReconciler
 
         UpdateControl<Role> updateControl;
 
-        try {
+        try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
             // Run everything in a single transaction
-            updateControl = contextFactory.getDSLContext(
-                    clusterConnection
-            ).transactionResult(cfg -> {
-                // Get the transactional DSL context
-                var tx = cfg.dsl();
-
-                // Create and return the role if it doesn't exist yet
-                if (!RoleUtil.roleExists(tx, spec)) {
-                    log.info(
-                            "Creating Role [resource={}/{}]",
-                            namespace,
-                            name
-                    );
-
-                    RoleUtil.createRole(
-                            tx,
-                            spec,
+            updateControl = dsl.transactionResult(
+                    cfg -> reconcileInTransaction(
+                            cfg.dsl(),
+                            resource,
+                            status,
                             password
-                    );
-
-                    status.setPhase(CRPhase.READY)
-                            .setMessage(null);
-
-                    return UpdateControl.patchStatus(resource);
-                }
-
-                // When there is NOLOGIN, we set no password
-                var passwordMatches = true;
-                var roleLoginMatches = RoleUtil.roleLoginMatches(tx, spec);
-                var currentFlags = RoleUtil.fetchCurrentFlags(tx, spec);
-                var flagsMatch = expectedFlags.equals(currentFlags);
-                var commentMatches = RoleUtil.roleCommentMatches(tx, spec);
-
-                if (loginExpected) {
-                    passwordMatches = PostgreSQLAuthenticationUtil.passwordMatches(
-                            tx,
-                            spec,
-                            password
-                    );
-                }
-
-                if (roleLoginMatches && passwordMatches && flagsMatch && commentMatches) {
-                    log.info(
-                            "Role up-to-date [resource={}/{}]",
-                            namespace,
-                            name
-                    );
-
-                    return UpdateControl.noUpdate();
-                }
-
-                var changePassword = loginExpected && !passwordMatches;
-
-                log.info(
-                        "Updating Role [resource={}/{}]",
-                        namespace,
-                        name
-                );
-
-                if (!roleLoginMatches || !passwordMatches || !flagsMatch) {
-                    RoleUtil.alterRole(
-                            tx,
-                            spec,
-                            changePassword,
-                            password
-                    );
-                }
-
-                if (!flagsMatch) {
-                    log.info(
-                            "Updating Role membership [resource={}/{}]",
-                            namespace,
-                            name
-                    );
-
-                    RoleUtil.reconcileRoleMembership(
-                            tx,
-                            spec,
-                            expectedFlags,
-                            currentFlags
-                    );
-                }
-
-                if (!commentMatches) {
-                    RoleUtil.updateComment(
-                            tx,
-                            spec
-                    );
-                }
-
-                status.setPhase(CRPhase.READY)
-                        .setMessage(null);
-
-                return UpdateControl.patchStatus(resource);
-            });
-        } catch (SQLException e) {
+                    )
+            );
+        } catch (Exception e) {
             return handleError(
                     resource,
                     status,
@@ -235,6 +148,111 @@ public class RoleReconciler
         return List.of(secretEventSource);
     }
 
+    private UpdateControl<Role> reconcileInTransaction(
+            DSLContext tx,
+            Role resource,
+            CRStatus status,
+            String password
+    ) {
+        var name = resource.getMetadata().getName();
+        var namespace = resource.getMetadata().getNamespace();
+
+        var spec = resource.getSpec();
+        var expectedFlags = spec.getFlags();
+
+        // Create and return the role if it doesn't exist yet
+        if (!RoleUtil.roleExists(tx, spec)) {
+            log.info(
+                    "Creating Role [resource={}/{}]",
+                    namespace,
+                    name
+            );
+
+            RoleUtil.createRole(
+                    tx,
+                    spec,
+                    password
+            );
+
+            status.setPhase(CRPhase.READY)
+                    .setMessage(null);
+
+            return UpdateControl.patchStatus(resource);
+        }
+
+        // When there is NOLOGIN, we set no password
+        var passwordMatches = true;
+        var roleLoginMatches = RoleUtil.roleLoginMatches(tx, spec);
+        var currentFlags = RoleUtil.fetchCurrentFlags(tx, spec);
+        var flagsMatch = expectedFlags.equals(currentFlags);
+        var commentMatches = RoleUtil.roleCommentMatches(tx, spec);
+
+        var passwordSecretRef = spec.getPasswordSecretRef();
+        var loginExpected = passwordSecretRef != null;
+
+        if (loginExpected) {
+            passwordMatches = PostgreSQLAuthenticationUtil.passwordMatches(
+                    tx,
+                    spec,
+                    password
+            );
+        }
+
+        if (roleLoginMatches && passwordMatches && flagsMatch && commentMatches) {
+            log.info(
+                    "Role up-to-date [resource={}/{}]",
+                    namespace,
+                    name
+            );
+
+            return UpdateControl.noUpdate();
+        }
+
+        var changePassword = loginExpected && !passwordMatches;
+
+        log.info(
+                "Updating Role [resource={}/{}]",
+                namespace,
+                name
+        );
+
+        if (!roleLoginMatches || !passwordMatches || !flagsMatch) {
+            RoleUtil.alterRole(
+                    tx,
+                    spec,
+                    changePassword,
+                    password
+            );
+        }
+
+        if (!flagsMatch) {
+            log.info(
+                    "Updating Role membership [resource={}/{}]",
+                    namespace,
+                    name
+            );
+
+            RoleUtil.reconcileRoleMembership(
+                    tx,
+                    spec,
+                    expectedFlags,
+                    currentFlags
+            );
+        }
+
+        if (!commentMatches) {
+            RoleUtil.updateComment(
+                    tx,
+                    spec
+            );
+        }
+
+        status.setPhase(CRPhase.READY)
+                .setMessage(null);
+
+        return UpdateControl.patchStatus(resource);
+    }
+
     @Override
     protected @NonNull CRStatus newStatus() {
         return new CRStatus();
@@ -257,7 +275,7 @@ public class RoleReconciler
         var refName = ref.getName();
         var refNamespace = getResourceNamespaceOrOwn(role, ref.getNamespace());
 
-        return refName.equals(secret.getMetadata().getName()) &&
-                refNamespace.equals(secret.getMetadata().getNamespace());
+        return refName.equals(secret.getMetadata().getName())
+                && refNamespace.equals(secret.getMetadata().getNamespace());
     }
 }

@@ -3,13 +3,10 @@ package it.aboutbits.postgresql.core;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.connection.ClusterConnection;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
+import org.jooq.CloseableDSLContext;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Properties;
 
 @NullMarked
@@ -24,7 +21,7 @@ public class PostgreSQLContextFactory {
         this.kubernetesClient = kubernetesClient;
     }
 
-    public DSLContext getDSLContext(ClusterConnection clusterConnection) throws SQLException {
+    public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) {
         var credentials = KubernetesUtil.getSecretRefCredentials(
                 kubernetesClient,
                 clusterConnection
@@ -55,14 +52,9 @@ public class PostgreSQLContextFactory {
             );
         }
 
-        var connection = DriverManager.getConnection(
+        return DSL.using(
                 jdbcUrl,
                 properties
-        );
-
-        return DSL.using(
-                connection,
-                SQLDialect.POSTGRES
         );
     }
 }

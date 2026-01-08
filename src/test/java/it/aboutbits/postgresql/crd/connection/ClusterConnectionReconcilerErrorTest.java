@@ -6,13 +6,12 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import jakarta.inject.Inject;
-import org.jooq.DSLContext;
+import org.jooq.CloseableDSLContext;
 import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,12 +55,12 @@ class ClusterConnectionReconcilerErrorTest {
 
     @Test
     @DisplayName("Should handle SQLException during DSL context creation")
-    void reconcile_whenDslCreationFails_shouldReturnErrorStatus() throws SQLException {
+    void reconcile_whenDslCreationFails_shouldReturnErrorStatus() {
         // given
         var errorMessage = "Connection refused to database";
 
         when(contextFactory.getDSLContext(resource)).thenThrow(
-                new SQLException(errorMessage)
+                new RuntimeException(errorMessage)
         );
 
         // when
@@ -79,10 +78,10 @@ class ClusterConnectionReconcilerErrorTest {
 
     @Test
     @DisplayName("Should handle DataAccessException during version check")
-    void reconcile_whenVersionQueryFails_shouldReturnErrorStatus() throws SQLException {
+    void reconcile_whenVersionQueryFails_shouldReturnErrorStatus() {
         // given
         var errorMessage = "Query execution failed";
-        var dslContext = mock(DSLContext.class);
+        var dslContext = mock(CloseableDSLContext.class);
 
         when(contextFactory.getDSLContext(resource)).thenReturn(
                 dslContext

@@ -1,8 +1,6 @@
 package it.aboutbits.postgresql.crd.role;
 
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.QueryPart;
@@ -30,7 +28,6 @@ import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.val;
 
 @NullMarked
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RoleUtil {
     public static boolean roleExists(
             DSLContext tx,
@@ -457,5 +454,8 @@ public final class RoleUtil {
 
     private static QueryPart joinWithComma(List<? extends QueryPart> parts) {
         return join(parts, ", ");
+    }
+
+    private RoleUtil() {
     }
 }

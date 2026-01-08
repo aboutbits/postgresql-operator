@@ -2,13 +2,11 @@ package it.aboutbits.postgresql.core;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.connection.ClusterConnection;
-import jakarta.enterprise.context.RequestScoped;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Base64;
 
 @NullMarked
-@RequestScoped
 public final class KubernetesUtil {
     public static final String SECRET_TYPE_BASIC_AUTH = "kubernetes.io/basic-auth";
     public static final String SECRET_DATA_BASIC_AUTH_USERNAME_KEY = "username";
@@ -87,5 +85,8 @@ public final class KubernetesUtil {
                 username,
                 password
         );
+    }
+
+    private KubernetesUtil() {
     }
 }

@@ -47,7 +47,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When a Role (LOGIN) is created, it should be reconciled to READY and present in pg_authid")
-    void createRole_withLogin_andStatusReady() throws SQLException {
+    void createRole_withLogin_andStatusReady() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -89,7 +89,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When a Role (NOLOGIN) is created, it should be reconciled to READY and present with NOLOGIN")
-    void createRole_withoutLogin_andStatusReady() throws SQLException {
+    void createRole_withoutLogin_andStatusReady() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -127,7 +127,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When a Role login state is changed, it should be updated correctly in pg_authid")
-    void toggleRoleLogin_updatesCorrectly() throws SQLException {
+    void toggleRoleLogin_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -232,7 +232,7 @@ class RoleReconcilerTest {
     @DisplayName(
             "When a Role (LOGIN) references a secret and that secret changes, it should trigger a re-reconciliation"
     )
-    void secretChange_triggersReconciliation() throws SQLException {
+    void secretChange_triggersReconciliation() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -302,7 +302,7 @@ class RoleReconcilerTest {
     @DisplayName(
             "When a Role (LOGIN) changes its secret reference, it should trigger a re-reconciliation"
     )
-    void secretRefChange_triggersReconciliation() throws SQLException {
+    void secretRefChange_triggersReconciliation() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -367,7 +367,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When the comment is changed, it should be updated in the database")
-    void comment_updatesCorrectly() throws SQLException {
+    void comment_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -435,7 +435,7 @@ class RoleReconcilerTest {
     void roleFlag_togglesCorrectly(
             Field<Boolean> field,
             BiConsumer<RoleSpec.Flags, Boolean> setter
-    ) throws SQLException {
+    ) {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -497,7 +497,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When the CONNECTION LIMIT is changed, it should be updated in the database")
-    void connectionLimit_updatesCorrectly() throws SQLException {
+    void connectionLimit_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -559,7 +559,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When the VALID UNTIL is changed, it should be updated in the database")
-    void validUntil_updatesCorrectly() throws SQLException {
+    void validUntil_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -632,7 +632,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When IN ROLE membership is changed, it should be updated in the database")
-    void inRole_updatesCorrectly() throws SQLException {
+    void inRole_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -705,7 +705,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When ROLE membership is changed, it should be updated in the database")
-    void role_updatesCorrectly() throws SQLException {
+    void role_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -778,7 +778,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When multiple ROLE memberships are added, they should be sorted and updated correctly")
-    void role_multipleMemberships_updatesCorrectly() throws SQLException {
+    void role_multipleMemberships_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()

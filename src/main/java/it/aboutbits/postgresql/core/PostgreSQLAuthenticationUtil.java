@@ -2,8 +2,6 @@ package it.aboutbits.postgresql.core;
 
 import com.ongres.scram.common.StringPreparation;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
@@ -22,7 +20,6 @@ import java.util.Locale;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 
 @NullMarked
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PostgreSQLAuthenticationUtil {
     private static final String MD5 = "MD5";
     private static final String SHA_256 = "SHA-256";
@@ -211,5 +208,8 @@ public final class PostgreSQLAuthenticationUtil {
         } catch (Exception e) {
             throw new IllegalStateException("%s not available".formatted(SHA_256), e);
         }
+    }
+
+    private PostgreSQLAuthenticationUtil() {
     }
 }
