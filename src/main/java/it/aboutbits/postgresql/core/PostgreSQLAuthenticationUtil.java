@@ -2,6 +2,7 @@ package it.aboutbits.postgresql.core;
 
 import com.ongres.scram.common.StringPreparation;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
@@ -20,6 +21,7 @@ import java.util.Locale;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 
 @NullMarked
+@Slf4j
 public final class PostgreSQLAuthenticationUtil {
     private static final String MD5 = "MD5";
     private static final String SHA_256 = "SHA-256";
@@ -89,7 +91,8 @@ public final class PostgreSQLAuthenticationUtil {
         int iterations;
         try {
             iterations = Integer.parseInt(iterationsAndSalt.substring(0, colonIterationsAndSalt));
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException e) {
+            log.error("Invalid iterations format in PostgreSQL verifier: %s".formatted(postgresVerifier), e);
             return false;
         }
         if (iterations <= 0) {
@@ -110,7 +113,8 @@ public final class PostgreSQLAuthenticationUtil {
         try {
             salt = Base64.getDecoder().decode(saltB64);
             currentStoredKey = Base64.getDecoder().decode(storedKeyB64);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid salt or stored key format in PostgreSQL verifier: %s".formatted(postgresVerifier), e);
             return false;
         }
 
@@ -119,7 +123,7 @@ public final class PostgreSQLAuthenticationUtil {
         byte[] expectedStoredKey = null;
         try {
             // RFC 5802/7677:
-            // saltedPassword := Hi(password, salt, iterations)  (PBKDF2-HMAC-SHA-256, 32 bytes)
+            // saltedPassword := Hi(password, salt, iterations) (PBKDF2-HMAC-SHA-256, 32 bytes)
             // clientKey      := HMAC(saltedPassword, "Client Key")
             // storedKey      := H(clientKey)  (SHA-256)
             saltedPassword = pbkdf2HmacSha256(preparedPassword, salt, iterations, 32);
@@ -160,7 +164,8 @@ public final class PostgreSQLAuthenticationUtil {
                     3,
                     postgresMd5.length()
             );
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid MD5 format in PostgreSQL verifier: %s".formatted(postgresMd5), e);
             return false; // not valid hex
         }
 

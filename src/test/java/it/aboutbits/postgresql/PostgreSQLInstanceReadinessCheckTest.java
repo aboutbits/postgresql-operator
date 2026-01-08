@@ -7,11 +7,15 @@ import it.aboutbits.postgresql.crd.connection.ClusterConnection;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+@NullMarked
 @QuarkusTest
 class PostgreSQLInstanceReadinessCheckTest {
     @Inject
@@ -47,7 +51,14 @@ class PostgreSQLInstanceReadinessCheckTest {
                 .get()
                 .satisfies(data -> {
                     assertThat(data).containsKey("test-db");
-                    assertThat(data.get("test-db").toString()).startsWith("UP (PostgreSQL");
+
+                    var dbStatus = Objects.requireNonNull(
+                            data.get("test-db")
+                    );
+
+                    assertThat(
+                            dbStatus.toString()
+                    ).startsWith("UP (PostgreSQL");
                 });
     }
 
@@ -75,7 +86,13 @@ class PostgreSQLInstanceReadinessCheckTest {
                 .get()
                 .satisfies(data -> {
                     assertThat(data).containsKey("db-1");
-                    assertThat(data.get("db-1").toString()).startsWith("UP (PostgreSQL");
+
+                    var dbStatus = Objects.requireNonNull(
+                            data.get("db-1")
+                    );
+
+                    assertThat(dbStatus.toString()).startsWith("UP (PostgreSQL");
+
                     assertThat(data).containsEntry("db-2", "DOWN");
                 });
     }

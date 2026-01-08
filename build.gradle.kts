@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
@@ -6,11 +8,12 @@ plugins {
     java
     checkstyle
     id("io.quarkus")
+    alias(libs.plugins.errorPronePlugin)
     alias(libs.plugins.jooqPlugin)
 }
 
 description = "AboutBits PostgreSQL Operator"
-group = "com.aboutbits.postgresql"
+group = "it.aboutbits.postgresql"
 version = "0.0.1-SNAPSHOT"
 
 val quarkusPlatformGroupId: String by project
@@ -91,6 +94,12 @@ dependencies {
     testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)
+
+    /**
+     * NullAway
+     */
+    errorprone(libs.errorProne)
+    errorprone(libs.nullAway)
 }
 
 sourceSets {
@@ -114,6 +123,11 @@ java {
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
+
+    options.errorprone {
+        check("NullAway", CheckSeverity.ERROR)
+        option("NullAway:AnnotatedPackages", "it.aboutbits.postgresql")
+    }
 }
 
 tasks.quarkusDev {

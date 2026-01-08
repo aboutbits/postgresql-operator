@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import it.aboutbits.postgresql.crd.connection.ClusterConnection;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -18,12 +17,12 @@ import java.util.Optional;
 @NullMarked
 @Slf4j
 public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S extends CRStatus> {
-    @NonNull
     protected abstract S newStatus();
 
     public S initializeStatus(CR resource) {
         S status = resource.getStatus();
 
+        //noinspection ConstantConditions
         if (status == null) {
             status = newStatus();
 
@@ -62,6 +61,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                 .withName(connectionName)
                 .get();
 
+        //noinspection ConstantConditions
         if (clusterConnection == null) {
             log.error(
                     "The specified ClusterConnection does not exist [clusterConnection={}/{}]",

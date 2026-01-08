@@ -225,10 +225,13 @@ public final class RoleUtil {
             options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
             options.add(val(flags.getConnectionLimit()));
         }
-        if (flags.getValidUntil() != null) {
+
+        var validUntil = flags.getValidUntil();
+        if (validUntil != null) {
             options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
-            options.add(val(flags.getValidUntil().toString()));
+            options.add(val(validUntil.toString()));
         }
+
         if (!flags.getInRole().isEmpty()) {
             options.add(keyword(RoleFlags.IN_ROLE.flag()));
             options.add(joinWithComma(
@@ -314,9 +317,10 @@ public final class RoleUtil {
         options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
         options.add(val(flags.getConnectionLimit()));
 
+        var validUntil = flags.getValidUntil();
         options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
-        if (flags.getValidUntil() != null) {
-            options.add(val(flags.getValidUntil().toString()));
+        if (validUntil != null) {
+            options.add(val(validUntil.toString()));
         } else {
             options.add(val("infinity"));
         }

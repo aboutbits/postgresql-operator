@@ -9,8 +9,9 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 @Slf4j
 @RequiredArgsConstructor
 public class ClusterConnectionReconciler
@@ -43,7 +44,7 @@ public class ClusterConnectionReconciler
     }
 
     @Override
-    protected @NonNull CRStatus newStatus() {
+    protected CRStatus newStatus() {
         return new CRStatus();
     }
 }

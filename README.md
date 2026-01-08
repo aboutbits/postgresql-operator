@@ -50,7 +50,7 @@ make test
 1. Open the `Services` tool on the left side of the IDE
 2. Click on "+" and select "Quarkus"
 
-Afterwards, the project can be started in IntelliJ by navigating to `Run` -> `Run '...'`.
+Afterward, the project can be started in IntelliJ by navigating to `Run` -> `Run '...'`.
 
 ## Packaging and running the application
 

@@ -7,18 +7,22 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.within;
 
+@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
 class ClusterConnectionReconcilerTest {
@@ -36,12 +40,14 @@ class ClusterConnectionReconcilerTest {
                 .returnFirst();
 
         // then
-        AtomicReference<DSLContext> dsl = new AtomicReference<>();
+        AtomicReference<@Nullable DSLContext> dslAtomic = new AtomicReference<>();
         assertThatNoException().isThrownBy(
-                () -> dsl.set(postgreSQLContextFactory.getDSLContext(customResource))
+                () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
         );
 
-        var version = dsl.get().fetchSingle("select version()").into(String.class);
+        var dsl = Objects.requireNonNull(dslAtomic.get());
+
+        var version = dsl.fetchSingle("select version()").into(String.class);
 
         var expectedStatus = getInitialClusterConnectionStatus(customResource);
         expectedStatus.setMessage(version);

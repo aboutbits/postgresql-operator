@@ -14,8 +14,15 @@ scram-client = "3.2"
 assertj = "3.27.6"
 checkstyle = "12.2.0"
 datafaker = "2.5.3"
+errorProne = "2.45.0"
+errorPronePlugin = "4.2.0"
+nullAway = "0.12.15"
 
 [plugins]
+# https://github.com/tbroyer/gradle-errorprone-plugin
+# https://mvnrepository.com/artifact/net.ltgt.errorprone/net.ltgt.errorprone.gradle.plugin
+errorPronePlugin = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
+
 # https://www.jooq.org/doc/latest/manual/code-generation/codegen-execution/codegen-gradle/
 # https://github.com/jOOQ/jOOQ/tree/main/jOOQ-codegen-gradle
 # https://mvnrepository.com/artifact/org.jooq.jooq-codegen-gradle/org.jooq.jooq-codegen-gradle.gradle.plugin
@@ -82,3 +89,12 @@ checkstyle = { group = "com.puppycrawl.tools", name = "checkstyle", version.ref 
 # https://github.com/datafaker-net/datafaker
 # https://mvnrepository.com/artifact/net.datafaker/datafaker
 datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }
+
+# https://errorprone.info/
+# https://github.com/google/error-prone
+# https://mvnrepository.com/artifact/com.google.errorprone/error_prone_core
+errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
+
+# https://github.com/uber/NullAway
+# https://mvnrepository.com/artifact/com.uber.nullaway/nullaway
+nullAway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullAway" }

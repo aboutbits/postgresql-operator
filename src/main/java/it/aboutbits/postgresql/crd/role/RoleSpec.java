@@ -34,10 +34,11 @@ public class RoleSpec {
     @io.fabric8.generator.annotation.Nullable
     private Flags flags = new Flags();
 
-    @NullMarked
     @Getter
     @Setter
     @EqualsAndHashCode
+    // The Fabric8 @Nullable annotation is relevant for generating nullable annotations in the resulting CRD YAML JSON Schema
+    @SuppressWarnings({"NullablePrimitive"})
     public static class Flags {
         @io.fabric8.generator.annotation.Nullable
         private boolean superuser = false;

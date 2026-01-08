@@ -61,9 +61,9 @@ quarkus:
     # as in Kubernetes the env entries take precedence over envFrom entries as we want to consume all ENV vars from the postgresql-operator-config secret
     # This started working with Gradle since Quarkus Helm 1.2.5
     map-system-properties: false
-    home: http://github.com/aboutbits/postgresql-operator
+    home: https://github.com/aboutbits/postgresql-operator
     sources:
-      - http://github.com/aboutbits/postgresql-operator
+      - https://github.com/aboutbits/postgresql-operator
     annotations:
       "catalog.cattle.io/os": linux
     keywords:

@@ -8,6 +8,7 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import jakarta.inject.Inject;
 import org.jooq.CloseableDSLContext;
 import org.jooq.exception.DataAccessException;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,8 +20,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@NullMarked
 @QuarkusTest
 class ClusterConnectionReconcilerErrorTest {
+    @SuppressWarnings("NullAway.Init")
     @InjectMock
     PostgreSQLContextFactory contextFactory;
 
@@ -71,9 +74,9 @@ class ClusterConnectionReconcilerErrorTest {
                 .isPresent()
                 .get()
                 .extracting(ClusterConnection::getStatus)
-                .satisfies(status -> {
-                    assertThat(status.getMessage()).contains(errorMessage);
-                });
+                .satisfies(status ->
+                        assertThat(status.getMessage()).contains(errorMessage)
+                );
     }
 
     @Test
@@ -99,8 +102,8 @@ class ClusterConnectionReconcilerErrorTest {
                 .isPresent()
                 .get()
                 .extracting(ClusterConnection::getStatus)
-                .satisfies(status -> {
-                    assertThat(status.getMessage()).contains(errorMessage);
-                });
+                .satisfies(status ->
+                        assertThat(status.getMessage()).contains(errorMessage)
+                );
     }
 }

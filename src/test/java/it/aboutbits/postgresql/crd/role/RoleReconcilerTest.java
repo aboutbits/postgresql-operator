@@ -14,6 +14,8 @@ import it.aboutbits.postgresql.core.SecretRef;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,6 +38,7 @@ import static org.assertj.core.api.Assertions.within;
 import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.role;
 
+@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
 class RoleReconcilerTest {
@@ -817,7 +820,7 @@ class RoleReconcilerTest {
         ).containsExactly(roleA, roleB, roleC);
     }
 
-    private <T> T getRoleFlagValue(
+    private @Nullable <T> T getRoleFlagValue(
             DSLContext dsl,
             String roleName,
             Field<T> field
@@ -840,6 +843,7 @@ class RoleReconcilerTest {
     }
 
     private Role applyRole(Role role) {
+        //noinspection ConstantConditions
         return applyRole(
                 role,
                 r -> r.getStatus() != null

@@ -1,13 +1,15 @@
 package it.aboutbits.postgresql._support.testdata.base;
 
 import net.datafaker.Faker;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class TestDataCreator<ITEM> {
+@NullMarked
+public abstract class TestDataCreator<T> {
     protected static final Faker FAKER = new Faker();
 
     protected final int numberOfItems;
@@ -20,20 +22,20 @@ public abstract class TestDataCreator<ITEM> {
         create();
     }
 
-    public ITEM returnFirst() {
+    public T returnFirst() {
         return create().getFirst();
     }
 
-    public List<ITEM> returnAll() {
+    public List<T> returnAll() {
         return create();
     }
 
-    public Set<ITEM> returnSet() {
+    public Set<T> returnSet() {
         return new HashSet<>(create());
     }
 
-    protected List<ITEM> create() {
-        var result = new ArrayList<ITEM>();
+    protected List<T> create() {
+        var result = new ArrayList<T>();
 
         for (var index = 0; index < numberOfItems; index++) {
             result.add(
@@ -44,7 +46,7 @@ public abstract class TestDataCreator<ITEM> {
         return result;
     }
 
-    protected abstract ITEM create(int index);
+    protected abstract T create(int index);
 
     public static String randomKubernetesNameSuffix(String name) {
         var maxLength = 63; // Kubernetes hard enforces RFC-1123

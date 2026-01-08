@@ -93,6 +93,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
                 .resource(item)
                 .serverSideApply();
 
+        //noinspection ConstantConditions
         return kubernetesClient.resources(ClusterConnection.class)
                 .inNamespace(namespace)
                 .withName(name)

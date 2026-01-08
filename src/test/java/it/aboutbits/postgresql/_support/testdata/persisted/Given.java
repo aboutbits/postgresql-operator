@@ -17,12 +17,15 @@ import java.net.URI;
 public class Given {
     private final KubernetesClient kubernetesClient;
 
+    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.devservices.username")
     String username;
 
+    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.devservices.password")
     String password;
 
+    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.jdbc.url")
     String jdbcUrl;
 

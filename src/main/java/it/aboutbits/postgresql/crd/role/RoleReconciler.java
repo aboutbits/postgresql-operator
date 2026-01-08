@@ -20,12 +20,14 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@NullMarked
 @Slf4j
 @RequiredArgsConstructor
 public class RoleReconciler
@@ -79,10 +81,9 @@ public class RoleReconciler
         expectedFlags.getInRole().sort(String.CASE_INSENSITIVE_ORDER);
 
         var passwordSecretRef = spec.getPasswordSecretRef();
-        var loginExpected = passwordSecretRef != null;
 
         String password;
-        if (loginExpected) {
+        if (passwordSecretRef != null) {
             password = KubernetesUtil.getSecretRefCredentials(
                     kubernetesClient,
                     passwordSecretRef,
@@ -122,14 +123,12 @@ public class RoleReconciler
     public List<EventSource<?, Role>> prepareEventSources(EventSourceContext<Role> context) {
         // 1. Define the Mapper
         // We define how to find the Primary Resource (Role) when a Secret changes
-        SecondaryToPrimaryMapper<Secret> secretToRoleMapper = (Secret secret) -> {
-            // 2. Filter Roles that reference this specific Secret
-            return context.getPrimaryCache()
-                    .list()
-                    .filter(role -> isReferencedBy(role, secret))
-                    .map(ResourceID::fromResource)
-                    .collect(Collectors.toSet());
-        };
+        // Filter Roles that reference this specific Secret
+        SecondaryToPrimaryMapper<Secret> secretToRoleMapper = (Secret secret) -> context.getPrimaryCache()
+                .list()
+                .filter(role -> isReferencedBy(role, secret))
+                .map(ResourceID::fromResource)
+                .collect(Collectors.toSet());
 
         // 2. Build the Event Source Configuration which binds the InformerConfig + Mapper
         var eventSourceConfig = InformerEventSourceConfiguration.from(Secret.class, Role.class)
@@ -152,7 +151,7 @@ public class RoleReconciler
             DSLContext tx,
             Role resource,
             CRStatus status,
-            String password
+            @Nullable String password
     ) {
         var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
@@ -190,7 +189,7 @@ public class RoleReconciler
         var passwordSecretRef = spec.getPasswordSecretRef();
         var loginExpected = passwordSecretRef != null;
 
-        if (loginExpected) {
+        if (loginExpected && password != null) {
             passwordMatches = PostgreSQLAuthenticationUtil.passwordMatches(
                     tx,
                     spec,
@@ -254,7 +253,7 @@ public class RoleReconciler
     }
 
     @Override
-    protected @NonNull CRStatus newStatus() {
+    protected CRStatus newStatus() {
         return new CRStatus();
     }
 

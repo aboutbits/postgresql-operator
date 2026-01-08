@@ -11,7 +11,7 @@ import org.jspecify.annotations.Nullable;
 @Setter
 public class SecretRef {
     @Required
-    private String name;
+    private String name = "";
 
     /**
      * The namespace where the Secret is located.

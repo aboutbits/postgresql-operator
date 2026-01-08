@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.connection.ClusterConnection;
 import org.jspecify.annotations.NullMarked;
 
+import java.nio.charset.Charset;
 import java.util.Base64;
 
 @NullMarked
@@ -67,7 +68,8 @@ public final class KubernetesUtil {
         var username = usernameBase64 == null
                 ? null
                 : new String(
-                        Base64.getDecoder().decode(usernameBase64)
+                        Base64.getDecoder().decode(usernameBase64),
+                        Charset.defaultCharset()
                 );
 
         var passwordBase64 = data.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
@@ -78,7 +80,8 @@ public final class KubernetesUtil {
             ));
         }
         var password = new String(
-                Base64.getDecoder().decode(passwordBase64)
+                Base64.getDecoder().decode(passwordBase64),
+                Charset.defaultCharset()
         );
 
         return new Credentials(
