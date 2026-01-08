@@ -60,7 +60,7 @@ public final class RoleUtil {
         );
 
         // Optional comment
-        if (!comment.isBlank()) {
+        if (comment != null && !comment.isBlank()) {
             tx.execute(
                     buildCommentOnRole(roleName, comment)
             );
@@ -75,7 +75,6 @@ public final class RoleUtil {
     ) {
         var roleName = spec.getName();
         var flags = spec.getFlags();
-        var expectedComment = normalizeComment(spec.getComment());
 
         tx.execute(
                 buildAlterRole(
@@ -85,6 +84,14 @@ public final class RoleUtil {
                         password
                 )
         );
+    }
+
+    public static void updateComment(
+            DSLContext tx,
+            RoleSpec spec
+    ) {
+        var roleName = spec.getName();
+        var expectedComment = normalizeComment(spec.getComment());
 
         var currentComment = normalizeComment(
                 fetchCurrentRoleComment(tx, roleName)
@@ -95,6 +102,34 @@ public final class RoleUtil {
                     buildCommentOnRole(roleName, expectedComment)
             );
         }
+    }
+
+    public static boolean roleCommentMatches(
+            DSLContext tx,
+            RoleSpec spec
+    ) {
+        var expectedComment = spec.getComment();
+
+        var currentComment = normalizeComment(
+                fetchCurrentRoleComment(tx, spec.getName())
+        );
+
+        return Objects.equals(currentComment, expectedComment);
+    }
+
+    public static @Nullable String fetchCurrentRoleComment(
+            DSLContext tx,
+            String roleName
+    ) {
+
+        return tx
+                .select(Routines.shobjDescription(
+                        PG_AUTHID.OID,
+                        val(PG_AUTHID.getUnqualifiedName().last())
+                ))
+                .from(PG_AUTHID)
+                .where(PG_AUTHID.ROLNAME.eq(roleName))
+                .fetchOneInto(String.class);
     }
 
     public static boolean roleLoginMatches(
@@ -375,21 +410,6 @@ public final class RoleUtil {
                 name(roleName),
                 val(comment)
         );
-    }
-
-    private static @Nullable String fetchCurrentRoleComment(
-            DSLContext tx,
-            String roleName
-    ) {
-
-        return tx
-                .select(Routines.shobjDescription(
-                        PG_AUTHID.OID,
-                        val(PG_AUTHID.getUnqualifiedName().last())
-                ))
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(roleName))
-                .fetchSingleInto(String.class);
     }
 
     private static @Nullable String normalizeComment(@Nullable String comment) {

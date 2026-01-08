@@ -20,7 +20,9 @@ public class RoleSpec {
     @Required
     private String name = "";
 
-    private String comment = "";
+    @Nullable
+    @io.fabric8.generator.annotation.Nullable
+    private String comment;
 
     @Required
     private ClusterReference clusterRef = new ClusterReference();

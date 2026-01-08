@@ -93,6 +93,7 @@ public class RoleReconciler
         }
 
         UpdateControl<Role> updateControl;
+
         try {
             // Run everything in a single transaction
             updateControl = contextFactory.getDSLContext(
@@ -101,7 +102,7 @@ public class RoleReconciler
                 // Get the transactional DSL context
                 var tx = cfg.dsl();
 
-                // Create the role if it doesn't exist yet
+                // Create and return the role if it doesn't exist yet
                 if (!RoleUtil.roleExists(tx, spec)) {
                     log.info(
                             "Creating Role [resource={}/{}]",
@@ -115,7 +116,8 @@ public class RoleReconciler
                             password
                     );
 
-                    status.setPhase(CRPhase.READY);
+                    status.setPhase(CRPhase.READY)
+                            .setMessage(null);
 
                     return UpdateControl.patchStatus(resource);
                 }
@@ -125,6 +127,7 @@ public class RoleReconciler
                 var roleLoginMatches = RoleUtil.roleLoginMatches(tx, spec);
                 var currentFlags = RoleUtil.fetchCurrentFlags(tx, spec);
                 var flagsMatch = expectedFlags.equals(currentFlags);
+                var commentMatches = RoleUtil.roleCommentMatches(tx, spec);
 
                 if (loginExpected) {
                     passwordMatches = PostgreSQLAuthenticationUtil.passwordMatches(
@@ -134,7 +137,7 @@ public class RoleReconciler
                     );
                 }
 
-                if (roleLoginMatches && passwordMatches && flagsMatch) {
+                if (roleLoginMatches && passwordMatches && flagsMatch && commentMatches) {
                     log.info(
                             "Role up-to-date [resource={}/{}]",
                             namespace,
@@ -147,30 +150,41 @@ public class RoleReconciler
                 var changePassword = loginExpected && !passwordMatches;
 
                 log.info(
-                        "Updating Role flags [resource={}/{}]",
+                        "Updating Role [resource={}/{}]",
                         namespace,
                         name
                 );
 
-                RoleUtil.alterRole(
-                        tx,
-                        spec,
-                        changePassword,
-                        password
-                );
+                if (!roleLoginMatches || !passwordMatches || !flagsMatch) {
+                    RoleUtil.alterRole(
+                            tx,
+                            spec,
+                            changePassword,
+                            password
+                    );
+                }
 
-                log.info(
-                        "Updating Role membership [resource={}/{}]",
-                        namespace,
-                        name
-                );
+                if (!flagsMatch) {
+                    log.info(
+                            "Updating Role membership [resource={}/{}]",
+                            namespace,
+                            name
+                    );
 
-                RoleUtil.reconcileRoleMembership(
-                        tx,
-                        spec,
-                        expectedFlags,
-                        currentFlags
-                );
+                    RoleUtil.reconcileRoleMembership(
+                            tx,
+                            spec,
+                            expectedFlags,
+                            currentFlags
+                    );
+                }
+
+                if (!commentMatches) {
+                    RoleUtil.updateComment(
+                            tx,
+                            spec
+                    );
+                }
 
                 status.setPhase(CRPhase.READY)
                         .setMessage(null);
@@ -188,6 +202,9 @@ public class RoleReconciler
         return updateControl;
     }
 
+    /**
+     * Watches for {@code Secret} changes to trigger reconciliation for dependent {@code Role} resources.
+     */
     @Override
     public List<EventSource<?, Role>> prepareEventSources(EventSourceContext<Role> context) {
         // 1. Define the Mapper

@@ -144,6 +144,8 @@ class RoleReconcilerTest {
                 /*login*/ false
         );
 
+        var spec = role.getSpec();
+
         // when
         var reconciled = applyRole(role);
 
@@ -168,7 +170,7 @@ class RoleReconcilerTest {
         ).isFalse();
 
         // 2. Add a passwordSecretRef to make it a login role
-        role.getSpec().setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
+        spec.setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
 
         // when
         applyRole(
@@ -180,7 +182,7 @@ class RoleReconcilerTest {
         assertThat(getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)).isTrue();
 
         // 3. Remove passwordSecretRef again
-        role.getSpec().setPasswordSecretRef(null);
+        spec.setPasswordSecretRef(null);
 
         // when
         applyRole(
@@ -205,6 +207,7 @@ class RoleReconcilerTest {
                 missingClusterName,
                 /*login*/ true
         );
+
         role.getSpec().getClusterRef().setNamespace(kubernetesClient.getNamespace());
 
         // when
@@ -327,7 +330,9 @@ class RoleReconcilerTest {
                 /*login*/ true
         );
 
-        role.getSpec().setPasswordSecretRef(initialSecretRef);
+        var spec = role.getSpec();
+
+        spec.setPasswordSecretRef(initialSecretRef);
 
         // when: create Role
         var reconciled = applyRole(role);
@@ -345,7 +350,7 @@ class RoleReconcilerTest {
                 ));
 
         // when: update secret reference in the Role
-        role.getSpec().setPasswordSecretRef(newSecretRef);
+        spec.setPasswordSecretRef(newSecretRef);
 
         reconciled = applyRole(role);
 
@@ -358,6 +363,70 @@ class RoleReconcilerTest {
                         updatedRole.getSpec(),
                         newPassword
                 ));
+    }
+
+    @Test
+    @DisplayName("When the comment is changed, it should be updated in the database")
+    void comment_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-comment")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var roleName = "test-role-comment";
+
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        var spec = role.getSpec();
+
+        // 1. Set a comment
+        var comment = "This is a test comment";
+        spec.setComment(comment);
+
+        // when
+        var reconciled = applyRole(role);
+        var initialGeneration = reconciled.getStatus().getObservedGeneration();
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentRoleComment(dsl, roleName)
+        ).isEqualTo(comment);
+
+        // 2. Change comment
+        var newComment = "Updated comment";
+        spec.setComment(newComment);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
+        );
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentRoleComment(dsl, roleName)
+        ).isEqualTo(newComment);
+
+        // 3. Remove comment
+        spec.setComment(null);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
+        );
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentRoleComment(dsl, roleName)
+        ).isNull();
     }
 
     @ParameterizedTest
@@ -383,9 +452,11 @@ class RoleReconcilerTest {
                 /*login*/ false
         );
 
+        var spec = role.getSpec();
+
         // 1. Enable flag (true)
         setter.accept(
-                role.getSpec().getFlags(),
+                spec.getFlags(),
                 true
         );
 
@@ -404,7 +475,7 @@ class RoleReconcilerTest {
 
         // 2. Disable flag (false)
         setter.accept(
-                role.getSpec().getFlags(),
+                spec.getFlags(),
                 false
         );
 
@@ -443,8 +514,10 @@ class RoleReconcilerTest {
                 /*login*/ false
         );
 
+        var spec = role.getSpec();
+
         // 1. Set a connection limit
-        role.getSpec().getFlags().setConnectionLimit(10);
+        spec.getFlags().setConnectionLimit(10);
 
         // when
         var reconciled = applyRole(role);
@@ -456,7 +529,7 @@ class RoleReconcilerTest {
         ).isEqualTo(10);
 
         // 2. Change connection limit
-        role.getSpec().getFlags().setConnectionLimit(20);
+        spec.getFlags().setConnectionLimit(20);
 
         // when
         applyRole(
@@ -470,7 +543,7 @@ class RoleReconcilerTest {
         ).isEqualTo(20);
 
         // 3. Reset connection limit to -1
-        role.getSpec().getFlags().setConnectionLimit(-1);
+        spec.getFlags().setConnectionLimit(-1);
 
         // when
         applyRole(
@@ -503,18 +576,20 @@ class RoleReconcilerTest {
                 /*login*/ false
         );
 
+        var spec = role.getSpec();
+
         var expiry = OffsetDateTime.now(ZoneOffset.UTC)
                 .plusDays(1)
                 .truncatedTo(ChronoUnit.SECONDS);
 
         // 1. Set a valid until date
-        role.getSpec().getFlags().setValidUntil(expiry);
+        spec.getFlags().setValidUntil(expiry);
 
         // when
         var reconciled = applyRole(role);
         var initialGeneration = reconciled.getStatus().getObservedGeneration();
 
-        var currentFlags = RoleUtil.fetchCurrentFlags(dsl, role.getSpec());
+        var currentFlags = RoleUtil.fetchCurrentFlags(dsl, spec);
 
         // then
         assertThat(
@@ -523,7 +598,7 @@ class RoleReconcilerTest {
 
         // 2. Change valid until date
         var newExpiry = expiry.plusDays(1);
-        role.getSpec().getFlags().setValidUntil(newExpiry);
+        spec.getFlags().setValidUntil(newExpiry);
 
         // when
         applyRole(
@@ -531,7 +606,7 @@ class RoleReconcilerTest {
                 r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
         );
 
-        currentFlags = RoleUtil.fetchCurrentFlags(dsl, role.getSpec());
+        currentFlags = RoleUtil.fetchCurrentFlags(dsl, spec);
 
         // then
         assertThat(
@@ -539,7 +614,7 @@ class RoleReconcilerTest {
         ).isEqualTo(newExpiry);
 
         // 3. Reset valid until to null (infinity)
-        role.getSpec().getFlags().setValidUntil(null);
+        spec.getFlags().setValidUntil(null);
 
         // when
         applyRole(
@@ -547,7 +622,7 @@ class RoleReconcilerTest {
                 r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
         );
 
-        currentFlags = RoleUtil.fetchCurrentFlags(dsl, role.getSpec());
+        currentFlags = RoleUtil.fetchCurrentFlags(dsl, spec);
 
         // then
         assertThat(
@@ -700,7 +775,7 @@ class RoleReconcilerTest {
                 RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
         ).isEmpty();
     }
-    
+
     @Test
     @DisplayName("When multiple ROLE memberships are added, they should be sorted and updated correctly")
     void role_multipleMemberships_updatesCorrectly() throws SQLException {
