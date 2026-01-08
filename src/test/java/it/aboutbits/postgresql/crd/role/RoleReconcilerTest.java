@@ -45,7 +45,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When a Role (LOGIN) is created, it should be reconciled to READY and present in pg_authid")
-    void createRole_withLogin_andStatusReady() {
+    void createRole_withLogin_andStatusReady() throws SQLException {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -79,12 +79,7 @@ class RoleReconcilerTest {
                 now
         );
 
-        DSLContext dsl;
-        try {
-            dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
-        } catch (Exception e) {
-            throw new AssertionError("Failed to obtain DSLContext", e);
-        }
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         assertThat(RoleUtil.roleExists(dsl, reconciled.getSpec())).isTrue();
         assertThat(RoleUtil.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
@@ -92,7 +87,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName("When a Role (NOLOGIN) is created, it should be reconciled to READY and present with NOLOGIN")
-    void createRole_withoutLogin_andStatusReady() {
+    void createRole_withoutLogin_andStatusReady() throws SQLException {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -122,15 +117,77 @@ class RoleReconcilerTest {
                 now
         );
 
-        DSLContext dsl;
-        try {
-            dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
-        } catch (Exception e) {
-            throw new AssertionError("Failed to obtain DSLContext", e);
-        }
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         assertThat(RoleUtil.roleExists(dsl, reconciled.getSpec())).isTrue();
         assertThat(RoleUtil.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
+    }
+
+    @Test
+    @DisplayName("When a Role login state is changed, it should be updated correctly in pg_authid")
+    void toggleRoleLogin_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-toggle-login")
+                .returnFirst();
+
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        var roleName = "test-role-toggle-login";
+
+        // 1. Create a Role without a login (no passwordSecretRef)
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        // when
+        var reconciled = applyRole(role);
+
+        // then
+        assertThatRoleHasExpectedStatus(
+                reconciled,
+                new CRStatus()
+                        .setName(roleName)
+                        .setPhase(CRPhase.READY)
+                        .setObservedGeneration(1L),
+                now
+        );
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        assertThat(
+                RoleUtil.roleExists(dsl, reconciled.getSpec())
+        ).isTrue();
+
+        assertThat(
+                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)
+        ).isFalse();
+
+        // 2. Add a passwordSecretRef to make it a login role
+        role.getSpec().setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == 2L
+        );
+
+        // then
+        assertThat(getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)).isTrue();
+
+        // 3. Remove passwordSecretRef again
+        role.getSpec().setPasswordSecretRef(null);
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == 3L
+        );
+
+        // then
+        assertThat(getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)).isFalse();
     }
 
     @Test
