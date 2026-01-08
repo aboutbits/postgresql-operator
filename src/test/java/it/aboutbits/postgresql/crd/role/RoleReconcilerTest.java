@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -34,6 +35,7 @@ import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.awaitility.Awaitility.await;
+import static org.jooq.impl.DSL.role;
 
 @QuarkusTest
 @RequiredArgsConstructor
@@ -551,6 +553,194 @@ class RoleReconcilerTest {
         assertThat(
                 currentFlags.getValidUntil()
         ).isNull();
+    }
+
+    @Test
+    @DisplayName("When IN ROLE membership is changed, it should be updated in the database")
+    void inRole_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-in-role")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var parentRole1 = "parent_role_1";
+        var parentRole2 = "parent_role_2";
+
+        dsl.execute("create role {0}", role(parentRole1));
+        dsl.execute("create role {0}", role(parentRole2));
+
+        var roleName = "test-role-in-role";
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        var spec = role.getSpec();
+
+        // 1. Add a parent role
+        spec.getFlags().setInRole(
+                List.of(parentRole1)
+        );
+
+        // when
+        var reconciled = applyRole(role);
+        var initialGeneration = reconciled.getStatus().getObservedGeneration();
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+        ).containsExactly(parentRole1);
+
+        // 2. Add another parent role and remove the first one
+        spec.getFlags().setInRole(
+                List.of(parentRole2)
+        );
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
+        );
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+        ).containsExactly(parentRole2);
+
+        // 3. Remove all parent roles
+        spec.getFlags().setInRole(
+                List.of()
+        );
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
+        );
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+        ).isEmpty();
+    }
+
+    @Test
+    @DisplayName("When ROLE membership is changed, it should be updated in the database")
+    void role_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-role")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var memberRole1 = "member_role_1";
+        var memberRole2 = "member_role_2";
+
+        dsl.execute("create role {0}", role(memberRole1));
+        dsl.execute("create role {0}", role(memberRole2));
+
+        var roleName = "test-role-role";
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        var spec = role.getSpec();
+
+        // 1. Add a member role
+        spec.getFlags().setRole(
+                List.of(memberRole1)
+        );
+
+        // when
+        var reconciled = applyRole(role);
+        var initialGeneration = reconciled.getStatus().getObservedGeneration();
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
+        ).containsExactly(memberRole1);
+
+        // 2. Add another member role and remove the first one
+        spec.getFlags().setRole(
+                List.of(memberRole2)
+        );
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
+        );
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
+        ).containsExactly(memberRole2);
+
+        // 3. Remove all member roles
+        spec.getFlags().setRole(
+                List.of()
+        );
+
+        // when
+        applyRole(
+                role,
+                r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
+        );
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
+        ).isEmpty();
+    }
+    
+    @Test
+    @DisplayName("When multiple ROLE memberships are added, they should be sorted and updated correctly")
+    void role_multipleMemberships_updatesCorrectly() throws SQLException {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-role-multiple")
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var roleA = "role_a";
+        var roleB = "role_b";
+        var roleC = "role_c";
+
+        dsl.execute("create role {0}", role(roleA));
+        dsl.execute("create role {0}", role(roleB));
+        dsl.execute("create role {0}", role(roleC));
+
+        var roleName = "test-role-multiple";
+        var role = buildRole(
+                roleName,
+                clusterConnection.getMetadata().getName(),
+                /*login*/ false
+        );
+
+        var spec = role.getSpec();
+
+        // Add multiple roles out of order
+        spec.getFlags().setInRole(
+                List.of(roleC, roleA, roleB)
+        );
+
+        // when
+        applyRole(role);
+
+        // then
+        assertThat(
+                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+        ).containsExactly(roleA, roleB, roleC);
     }
 
     private <T> T getRoleFlagValue(
