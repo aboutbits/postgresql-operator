@@ -93,19 +93,8 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
             S status,
             E exception
     ) {
-        return handleError(
-                resource,
-                status,
-                exception.getMessage()
-        );
-    }
-
-    public UpdateControl<CR> handleError(
-            CR resource,
-            S status,
-            @Nullable String message
-    ) {
-        status.setPhase(CRPhase.ERROR).setMessage(message);
+        status.setPhase(CRPhase.ERROR)
+                .setMessage(exception.getMessage());
 
         return UpdateControl.patchStatus(resource)
                 .rescheduleAfter(Duration.ofSeconds(30));

@@ -349,14 +349,14 @@ public final class RoleUtil {
         }
     }
 
-    public static Query buildGrantRoleToMember(
+    private static Query buildGrantRoleToMember(
             String role,
             String member
     ) {
         return query("grant {0} to {1}", role(role), role(member));
     }
 
-    public static Query buildRevokeRoleFromMember(
+    private static Query buildRevokeRoleFromMember(
             String role,
             String member
     ) {

@@ -87,6 +87,7 @@ dependencies {
      * Testing
      */
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.quarkus:quarkus-junit5-mockito")
     testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)
@@ -127,6 +128,13 @@ tasks.withType<Test> {
 
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
     jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+
+    val mockitoAgent = configurations.testRuntimeClasspath.get().find {
+        it.name.contains("mockito-core")
+    }
+    if (mockitoAgent != null) {
+        jvmArgs("-javaagent:${mockitoAgent.absolutePath}")
+    }
 
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL
