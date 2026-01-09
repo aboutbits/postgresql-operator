@@ -52,6 +52,93 @@ make test
 
 Afterward, the project can be started in IntelliJ by navigating to `Run` -> `Run '...'`.
 
+## Test the CRD on the Dev Services cluster and AI assistance
+
+This example demonstrates how to set up a local development environment using Quarkus Dev Services and AI assistance to generate Kubernetes resources.
+
+### 1. Configure Kubeconfig from Dev Services
+
+When running in dev mode (`make run` or via IntelliJ), Quarkus starts the pre-configured K3s and PostgreSQL Dev Services.
+
+1.  Access the Quarkus Dev UI at [http://localhost:8080/q/dev-ui/dev-services](http://localhost:8080/q/dev-ui/dev-services).
+2.  Locate the properties for the `kubernetes-client` Dev Service.
+3.  Ask an AI to convert these properties into a **Kubeconfig YAML** format.
+4.  Merge this configuration into your local `~/.kube/config`. This allows your local environment to communicate with the ephemeral Kubernetes cluster provided by Dev Services.
+
+### 2. Create PostgreSQL Connection and Secret
+
+For the `postgresql` Dev Service, you can generate the necessary Custom Resources to test the operator:
+
+1.  From the Dev UI, get the `postgresql` Dev Service properties (username, password, host, port).
+2.  Ask the AI to convert the `postgresql` Dev Service properties to a **Basic Auth Secret** and a **ClusterConnection** CR instance.
+3.  Provide the AI with the `ClusterConnection` CRD definition from `build/kubernetes/clusterconnections.postgresql.aboutbits.it-v1.yml` as a reference.
+4.  Apply the generated files using IntelliJ or `kubectl`.
+    ![Apply Cluster Connection](docs/apply-cluster-connection.png)
+
+**Example Secret (`secret.yml`):**
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quarkus-db-secret
+  labels:
+    app.kubernetes.io/name: quarkus-postgres
+type: kubernetes.io/basic-auth
+stringData:
+  # extracted from quarkus.datasource.username
+  username: root
+  # extracted from quarkus.datasource.password
+  password: password
+```
+
+**Example ClusterConnection (`cluster-connection.yml`):**
+
+```yaml
+apiVersion: postgresql.aboutbits.it/v1
+kind: ClusterConnection
+metadata:
+  name: quarkus-postgres-connection
+spec:
+  adminSecretRef:
+    name: quarkus-db-secret
+  host: localhost
+  port: 5432
+  maintenanceDatabase: postgres
+```
+
+![Established Cluster Connection](docs/established-cluster-connection.png)
+
+### 3. Create a Role
+
+Similarly, you can create a `Role` resource:
+
+1.  Ask the AI to convert the desired role properties to a **Role** CR instance.
+2.  Provide the AI with the `Role` CRD definition from `build/kubernetes/roles.postgresql.aboutbits.it-v1.yml` as a reference.
+3.  Apply the file using IntelliJ or `kubectl`.
+
+**Example Role (`role.yml`):**
+
+```yaml
+apiVersion: postgresql.aboutbits.it/v1
+kind: Role
+metadata:
+  name: test-role-from-crd
+spec:
+  # The actual name of the role to be created in the PostgreSQL database
+  name: test-role-from-crd
+  comment: It simply works
+  # Connects this role definition to the specific Postgres ClusterConnection CR instance
+  clusterRef:
+    name: quarkus-postgres-connection
+  flags:
+    createdb: true
+    validUntil: "2026-12-31T23:59:59Z"
+```
+
+![Created Role](docs/created-role.png)
+![Role in pg_authid](docs/role-in-table-pg-authid.png)
+
 ## Packaging and running the application
 
 The application can be packaged using:
