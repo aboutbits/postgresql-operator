@@ -8,11 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @NullMarked
 @Slf4j
@@ -97,6 +97,6 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                 .setMessage(exception.getMessage());
 
         return UpdateControl.patchStatus(resource)
-                .rescheduleAfter(Duration.ofSeconds(30));
+                .rescheduleAfter(60, TimeUnit.SECONDS);
     }
 }

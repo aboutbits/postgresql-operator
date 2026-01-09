@@ -1,6 +1,7 @@
 package it.aboutbits.postgresql.crd.role;
 
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.ClusterReference;
 import it.aboutbits.postgresql.core.SecretRef;
 import lombok.EqualsAndHashCode;
@@ -18,6 +19,10 @@ import java.util.List;
 @Setter
 public class RoleSpec {
     @Required
+    @ValidationRule(
+            value = "self == oldSelf",
+            message = "The Role name must not be changed once it is created"
+    )
     private String name = "";
 
     @Nullable
