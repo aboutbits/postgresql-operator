@@ -56,6 +56,10 @@ public class ClusterConnection
                 spec.getMaintenanceDatabase()
         );
 
+        if (spec.getParameters().isEmpty()) {
+            return jdbcUrl;
+        }
+
         var stringJoiner = new StringJoiner("&", jdbcUrl + "?", "");
 
         spec.getParameters().forEach((key, value) ->
