@@ -833,6 +833,41 @@ class RoleReconcilerTest {
         dsl.execute("drop role if exists {0}", role(roleC));
     }
 
+    @Test
+    @DisplayName("When a Role is deleted, it should be dropped from the database")
+    void deleteRole_removesFromDatabase() {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-delete")
+                .returnFirst();
+
+        var roleName = "test-role-delete";
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        // Verify it exists initially
+        assertThat(roleService.roleExists(dsl, role.getSpec())).isTrue();
+
+        // when
+        kubernetesClient.resources(Role.class)
+                .inNamespace(role.getMetadata().getNamespace())
+                .withName(role.getMetadata().getName())
+                .withTimeout(5, TimeUnit.SECONDS)
+                .delete();
+
+        // then
+        await().atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .until(() -> !roleService.roleExists(dsl, role.getSpec()));
+    }
+
     private @Nullable <T> T getRoleFlagValue(
             DSLContext dsl,
             String roleName,
