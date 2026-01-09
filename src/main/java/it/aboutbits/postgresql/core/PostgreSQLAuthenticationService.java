@@ -2,6 +2,7 @@ package it.aboutbits.postgresql.core;
 
 import com.ongres.scram.common.StringPreparation;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
+import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
@@ -22,13 +23,14 @@ import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_
 
 @NullMarked
 @Slf4j
-public final class PostgreSQLAuthenticationUtil {
+@Singleton
+public final class PostgreSQLAuthenticationService {
     private static final String MD5 = "MD5";
     private static final String SHA_256 = "SHA-256";
     private static final String HMAC_SHA_256 = "HmacSHA256";
     private static final String PBKDF2_WITH_HMAC_SHA256 = "PBKDF2WithHmacSHA256";
 
-    public static boolean passwordMatches(
+    public boolean passwordMatches(
             DSLContext dsl,
             RoleSpec spec,
             String expectedPassword
@@ -213,8 +215,5 @@ public final class PostgreSQLAuthenticationUtil {
         } catch (Exception e) {
             throw new IllegalStateException("%s not available".formatted(SHA_256), e);
         }
-    }
-
-    private PostgreSQLAuthenticationUtil() {
     }
 }

@@ -3,7 +3,9 @@ package it.aboutbits.postgresql.crd.role;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.config.informer.InformerEventSourceConfiguration;
+import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
@@ -14,8 +16,8 @@ import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEven
 import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
-import it.aboutbits.postgresql.core.KubernetesUtil;
-import it.aboutbits.postgresql.core.PostgreSQLAuthenticationUtil;
+import it.aboutbits.postgresql.core.KubernetesService;
+import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +34,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoleReconciler
         extends BaseReconciler<Role, CRStatus>
-        implements Reconciler<Role> {
+        implements Reconciler<Role>, Cleaner<Role> {
+    private final RoleService roleService;
+    private final KubernetesService kubernetesService;
+    private final PostgreSQLAuthenticationService postgreSQLAuthenticationService;
+
     private final KubernetesClient kubernetesClient;
     private final PostgreSQLContextFactory contextFactory;
 
@@ -84,7 +90,7 @@ public class RoleReconciler
 
         String password;
         if (passwordSecretRef != null) {
-            password = KubernetesUtil.getSecretRefCredentials(
+            password = kubernetesService.getSecretRefCredentials(
                     kubernetesClient,
                     passwordSecretRef,
                     namespace
@@ -114,6 +120,70 @@ public class RoleReconciler
         }
 
         return updateControl;
+    }
+
+    @Override
+    public DeleteControl cleanup(
+            Role resource,
+            Context<Role> context
+    ) {
+        var spec = resource.getSpec();
+        var status = initializeStatus(resource);
+
+        var name = resource.getMetadata().getName();
+        var namespace = resource.getMetadata().getNamespace();
+
+        log.info(
+                "Deleting Role [resource={}/{}, spec.name={}, status.phase={}]",
+                namespace,
+                name,
+                spec.getName(),
+                status.getPhase()
+        );
+
+        if (status.getPhase() != CRPhase.DELETING) {
+            status.setPhase(CRPhase.DELETING)
+                    .setMessage("Role deletion in progress");
+        }
+
+        var clusterRef = spec.getClusterRef();
+
+        var clusterConnectionOptional = getReferencedClusterConnection(
+                kubernetesClient,
+                resource,
+                clusterRef
+        );
+
+        if (clusterConnectionOptional.isEmpty()) {
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [clusterRef=%s/%s]".formatted(
+                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                    clusterRef.getName()
+            ));
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(60, TimeUnit.SECONDS);
+        }
+
+        var clusterConnection = clusterConnectionOptional.get();
+
+        try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+            roleService.dropRole(dsl, spec);
+
+            return DeleteControl.defaultDelete();
+        } catch (Exception e) {
+            log.error(
+                    "Failed to delete Role [resource={}/{}, spec.name={}, status.phase={}]",
+                    namespace,
+                    name,
+                    spec.getName(),
+                    status.getPhase()
+            );
+
+            status.setMessage("Deletion failed: " + e.getMessage());
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(60, TimeUnit.SECONDS);
+        }
     }
 
     /**
@@ -160,14 +230,14 @@ public class RoleReconciler
         var expectedFlags = spec.getFlags();
 
         // Create and return the role if it doesn't exist yet
-        if (!RoleUtil.roleExists(tx, spec)) {
+        if (!roleService.roleExists(tx, spec)) {
             log.info(
                     "Creating Role [resource={}/{}]",
                     namespace,
                     name
             );
 
-            RoleUtil.createRole(
+            roleService.createRole(
                     tx,
                     spec,
                     password
@@ -181,16 +251,16 @@ public class RoleReconciler
 
         // When there is NOLOGIN, we set no password
         var passwordMatches = true;
-        var roleLoginMatches = RoleUtil.roleLoginMatches(tx, spec);
-        var currentFlags = RoleUtil.fetchCurrentFlags(tx, spec);
+        var roleLoginMatches = roleService.roleLoginMatches(tx, spec);
+        var currentFlags = roleService.fetchCurrentFlags(tx, spec);
         var flagsMatch = expectedFlags.equals(currentFlags);
-        var commentMatches = RoleUtil.roleCommentMatches(tx, spec);
+        var commentMatches = roleService.roleCommentMatches(tx, spec);
 
         var passwordSecretRef = spec.getPasswordSecretRef();
         var loginExpected = passwordSecretRef != null;
 
         if (loginExpected && password != null) {
-            passwordMatches = PostgreSQLAuthenticationUtil.passwordMatches(
+            passwordMatches = postgreSQLAuthenticationService.passwordMatches(
                     tx,
                     spec,
                     password
@@ -216,7 +286,7 @@ public class RoleReconciler
         );
 
         if (!roleLoginMatches || !passwordMatches || !flagsMatch) {
-            RoleUtil.alterRole(
+            roleService.alterRole(
                     tx,
                     spec,
                     changePassword,
@@ -231,7 +301,7 @@ public class RoleReconciler
                     name
             );
 
-            RoleUtil.reconcileRoleMembership(
+            roleService.reconcileRoleMembership(
                     tx,
                     spec,
                     expectedFlags,
@@ -240,7 +310,7 @@ public class RoleReconciler
         }
 
         if (!commentMatches) {
-            RoleUtil.updateComment(
+            roleService.updateComment(
                     tx,
                     spec
             );

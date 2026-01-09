@@ -3,6 +3,7 @@ package it.aboutbits.postgresql.core;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.connection.ClusterConnection;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.RequiredArgsConstructor;
 import org.jooq.CloseableDSLContext;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
@@ -11,18 +12,16 @@ import java.util.Properties;
 
 @NullMarked
 @ApplicationScoped
+@RequiredArgsConstructor
 public class PostgreSQLContextFactory {
     private static final String POSTGRESQL_AUTHENTICATION_USER_KEY = "user";
     private static final String POSTGRESQL_AUTHENTICATION_PASSWORD_KEY = "password";
 
+    private final KubernetesService kubernetesService;
     private final KubernetesClient kubernetesClient;
 
-    public PostgreSQLContextFactory(KubernetesClient kubernetesClient) {
-        this.kubernetesClient = kubernetesClient;
-    }
-
     public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) {
-        var credentials = KubernetesUtil.getSecretRefCredentials(
+        var credentials = kubernetesService.getSecretRefCredentials(
                 kubernetesClient,
                 clusterConnection
         );

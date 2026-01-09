@@ -1,6 +1,8 @@
 package it.aboutbits.postgresql.crd.role;
 
+import it.aboutbits.postgresql.core.SQLUtil;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
+import jakarta.inject.Singleton;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.QueryPart;
@@ -11,7 +13,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
@@ -28,8 +29,9 @@ import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.val;
 
 @NullMarked
-public final class RoleUtil {
-    public static boolean roleExists(
+@Singleton
+public final class RoleService {
+    public boolean roleExists(
             DSLContext tx,
             RoleSpec spec
     ) {
@@ -39,7 +41,7 @@ public final class RoleUtil {
         );
     }
 
-    public static void createRole(
+    public void createRole(
             DSLContext tx,
             RoleSpec spec,
             @Nullable String password
@@ -64,7 +66,7 @@ public final class RoleUtil {
         }
     }
 
-    public static void alterRole(
+    public void alterRole(
             DSLContext tx,
             RoleSpec spec,
             boolean changePassword,
@@ -83,7 +85,7 @@ public final class RoleUtil {
         );
     }
 
-    public static void updateComment(
+    public void updateComment(
             DSLContext tx,
             RoleSpec spec
     ) {
@@ -101,7 +103,7 @@ public final class RoleUtil {
         }
     }
 
-    public static boolean roleCommentMatches(
+    public boolean roleCommentMatches(
             DSLContext tx,
             RoleSpec spec
     ) {
@@ -114,7 +116,7 @@ public final class RoleUtil {
         return Objects.equals(currentComment, expectedComment);
     }
 
-    public static @Nullable String fetchCurrentRoleComment(
+    public @Nullable String fetchCurrentRoleComment(
             DSLContext tx,
             String roleName
     ) {
@@ -129,7 +131,7 @@ public final class RoleUtil {
                 .fetchOneInto(String.class);
     }
 
-    public static boolean roleLoginMatches(
+    public boolean roleLoginMatches(
             DSLContext tx,
             RoleSpec spec
     ) {
@@ -144,7 +146,7 @@ public final class RoleUtil {
         return loginExpected == canLogin;
     }
 
-    public static RoleSpec.Flags fetchCurrentFlags(
+    public RoleSpec.Flags fetchCurrentFlags(
             DSLContext tx,
             RoleSpec spec
     ) {
@@ -183,156 +185,7 @@ public final class RoleUtil {
                 .fetchSingleInto(RoleSpec.Flags.class);
     }
 
-    /**
-     * Build: CREATE ROLE <name> [ [ WITH ] option [ ... ] ]
-     * See <a href="https://www.postgresql.org/docs/current/sql-createrole.html">
-     * PostgreSQL: Documentation: CREATE ROLE
-     * </a>
-     */
-    private static Query buildCreateRole(
-            String roleName,
-            RoleSpec.Flags flags,
-            @Nullable String password
-    ) {
-        var options = new ArrayList<QueryPart>();
-
-        // Only allow the user to log in if a password is specified.
-        if (password != null) {
-            options.add(keyword(RoleFlags.LOGIN.flag()));
-            options.add(keyword(RoleFlags.PASSWORD.flag()));
-            options.add(val(password));
-        }
-
-        if (flags.isSuperuser()) {
-            options.add(keyword(RoleFlags.SUPERUSER.flag()));
-        }
-        if (flags.isCreatedb()) {
-            options.add(keyword(RoleFlags.CREATEDB.flag()));
-        }
-        if (flags.isCreaterole()) {
-            options.add(keyword(RoleFlags.CREATEROLE.flag()));
-        }
-        if (flags.isInherit()) {
-            options.add(keyword(RoleFlags.INHERIT.flag()));
-        }
-        if (flags.isReplication()) {
-            options.add(keyword(RoleFlags.REPLICATION.flag()));
-        }
-        if (flags.isBypassrls()) {
-            options.add(keyword(RoleFlags.BYPASSRLS.flag()));
-        }
-        if (flags.getConnectionLimit() >= 0) {
-            options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
-            options.add(val(flags.getConnectionLimit()));
-        }
-
-        var validUntil = flags.getValidUntil();
-        if (validUntil != null) {
-            options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
-            options.add(val(validUntil.toString()));
-        }
-
-        if (!flags.getInRole().isEmpty()) {
-            options.add(keyword(RoleFlags.IN_ROLE.flag()));
-            options.add(joinWithComma(
-                    flags.getInRole()
-                            .stream()
-                            .map(DSL::role)
-                            .toList()
-            ));
-        }
-        if (!flags.getRole().isEmpty()) {
-            options.add(keyword(RoleFlags.ROLE.flag()));
-            options.add(joinWithComma(
-                    flags.getRole()
-                            .stream()
-                            .map(DSL::role)
-                            .toList()
-            ));
-        }
-
-        var optionsSql = options.isEmpty()
-                ? sql("") // nothing
-                : sql(" with {0}", joinWithSpaces(options));
-
-        return query(
-                "create role {0}{1}",
-                role(roleName),
-                optionsSql
-        );
-    }
-
-    private static Query buildAlterRole(
-            String roleName,
-            RoleSpec.Flags flags,
-            boolean changePassword,
-            @Nullable String password
-    ) {
-        var options = new ArrayList<QueryPart>();
-        var loginExpected = password != null;
-
-        // LOGIN / NOLOGIN
-        options.add(keyword(loginExpected
-                ? RoleFlags.LOGIN.flag()
-                : RoleFlags.NO_LOGIN.flag()
-        ));
-
-        // Password handling
-        // - if NOLOGIN, remove the password
-        // - if LOGIN and passwordChanged, set the new password
-        if (!loginExpected) {
-            options.add(keyword(RoleFlags.PASSWORD.flag()));
-            options.add(keyword("NULL"));
-        } else if (changePassword) {
-            options.add(keyword(RoleFlags.PASSWORD.flag()));
-            options.add(val(password));
-        }
-
-        // Explicitly set the expected state to make the statement idempotent
-        options.add(keyword(flags.isSuperuser()
-                ? RoleFlags.SUPERUSER.flag()
-                : RoleFlags.NO_SUPERUSER.flag()
-        ));
-        options.add(keyword(flags.isCreatedb()
-                ? RoleFlags.CREATEDB.flag()
-                : RoleFlags.NO_CREATEDB.flag()
-        ));
-        options.add(keyword(flags.isCreaterole()
-                ? RoleFlags.CREATEROLE.flag()
-                : RoleFlags.NO_CREATEROLE.flag()
-        ));
-        options.add(keyword(flags.isInherit()
-                ? RoleFlags.INHERIT.flag()
-                : RoleFlags.NO_INHERIT.flag()
-        ));
-        options.add(keyword(flags.isReplication()
-                ? RoleFlags.REPLICATION.flag()
-                : RoleFlags.NO_REPLICATION.flag()
-        ));
-        options.add(keyword(flags.isBypassrls()
-                ? RoleFlags.BYPASSRLS.flag()
-                : RoleFlags.NO_BYPASSRLS.flag()
-        ));
-
-        options.add(keyword(RoleFlags.CONNECTION_LIMIT.flag()));
-        options.add(val(flags.getConnectionLimit()));
-
-        var validUntil = flags.getValidUntil();
-        options.add(keyword(RoleFlags.VALID_UNTIL.flag()));
-        if (validUntil != null) {
-            options.add(val(validUntil.toString()));
-        } else {
-            options.add(val("infinity"));
-        }
-
-        return query(
-                "alter role {0} with {1}",
-                role(roleName),
-                joinWithSpaces(options)
-        );
-    }
-
-    public static void reconcileRoleMembership(
+    public void reconcileRoleMembership(
             DSLContext tx,
             RoleSpec spec,
             RoleSpec.Flags expectedFlags,
@@ -385,6 +238,164 @@ public final class RoleUtil {
         }
     }
 
+    public void dropRole(
+            DSLContext dsl,
+            RoleSpec spec
+    ) {
+        dsl.execute(
+                query("drop role if exists {0}", role(spec.getName()))
+        );
+    }
+
+    /**
+     * Build: CREATE ROLE <name> [ [ WITH ] option [ ... ] ]
+     * See <a href="https://www.postgresql.org/docs/current/sql-createrole.html">
+     * PostgreSQL: Documentation: CREATE ROLE
+     * </a>
+     */
+    private static Query buildCreateRole(
+            String roleName,
+            RoleSpec.Flags flags,
+            @Nullable String password
+    ) {
+        var options = new ArrayList<QueryPart>();
+
+        // Only allow the user to log in if a password is specified.
+        if (password != null) {
+            options.add(keyword(RoleFlag.LOGIN.flag()));
+            options.add(keyword(RoleFlag.PASSWORD.flag()));
+            options.add(val(password));
+        }
+
+        if (flags.isSuperuser()) {
+            options.add(keyword(RoleFlag.SUPERUSER.flag()));
+        }
+        if (flags.isCreatedb()) {
+            options.add(keyword(RoleFlag.CREATEDB.flag()));
+        }
+        if (flags.isCreaterole()) {
+            options.add(keyword(RoleFlag.CREATEROLE.flag()));
+        }
+        if (flags.isInherit()) {
+            options.add(keyword(RoleFlag.INHERIT.flag()));
+        }
+        if (flags.isReplication()) {
+            options.add(keyword(RoleFlag.REPLICATION.flag()));
+        }
+        if (flags.isBypassrls()) {
+            options.add(keyword(RoleFlag.BYPASSRLS.flag()));
+        }
+        if (flags.getConnectionLimit() >= 0) {
+            options.add(keyword(RoleFlag.CONNECTION_LIMIT.flag()));
+            options.add(val(flags.getConnectionLimit()));
+        }
+
+        var validUntil = flags.getValidUntil();
+        if (validUntil != null) {
+            options.add(keyword(RoleFlag.VALID_UNTIL.flag()));
+            options.add(val(validUntil.toString()));
+        }
+
+        if (!flags.getInRole().isEmpty()) {
+            options.add(keyword(RoleFlag.IN_ROLE.flag()));
+            options.add(SQLUtil.concatenateQueryPartsWithComma(
+                    flags.getInRole()
+                            .stream()
+                            .map(DSL::role)
+                            .toList()
+            ));
+        }
+        if (!flags.getRole().isEmpty()) {
+            options.add(keyword(RoleFlag.ROLE.flag()));
+            options.add(SQLUtil.concatenateQueryPartsWithComma(
+                    flags.getRole()
+                            .stream()
+                            .map(DSL::role)
+                            .toList()
+            ));
+        }
+
+        var optionsSql = options.isEmpty()
+                ? sql("") // nothing
+                : sql(" with {0}", SQLUtil.concatenateQueryPartsWithSpaces(options));
+
+        return query(
+                "create role {0}{1}",
+                role(roleName),
+                optionsSql
+        );
+    }
+
+    private static Query buildAlterRole(
+            String roleName,
+            RoleSpec.Flags flags,
+            boolean changePassword,
+            @Nullable String password
+    ) {
+        var options = new ArrayList<QueryPart>();
+        var loginExpected = password != null;
+
+        // LOGIN / NOLOGIN
+        options.add(keyword(loginExpected
+                ? RoleFlag.LOGIN.flag()
+                : RoleFlag.NO_LOGIN.flag()
+        ));
+
+        // Password handling
+        // - if NOLOGIN, remove the password
+        // - if LOGIN and passwordChanged, set the new password
+        if (!loginExpected) {
+            options.add(keyword(RoleFlag.PASSWORD.flag()));
+            options.add(keyword("NULL"));
+        } else if (changePassword) {
+            options.add(keyword(RoleFlag.PASSWORD.flag()));
+            options.add(val(password));
+        }
+
+        // Explicitly set the expected state to make the statement idempotent
+        options.add(keyword(flags.isSuperuser()
+                ? RoleFlag.SUPERUSER.flag()
+                : RoleFlag.NO_SUPERUSER.flag()
+        ));
+        options.add(keyword(flags.isCreatedb()
+                ? RoleFlag.CREATEDB.flag()
+                : RoleFlag.NO_CREATEDB.flag()
+        ));
+        options.add(keyword(flags.isCreaterole()
+                ? RoleFlag.CREATEROLE.flag()
+                : RoleFlag.NO_CREATEROLE.flag()
+        ));
+        options.add(keyword(flags.isInherit()
+                ? RoleFlag.INHERIT.flag()
+                : RoleFlag.NO_INHERIT.flag()
+        ));
+        options.add(keyword(flags.isReplication()
+                ? RoleFlag.REPLICATION.flag()
+                : RoleFlag.NO_REPLICATION.flag()
+        ));
+        options.add(keyword(flags.isBypassrls()
+                ? RoleFlag.BYPASSRLS.flag()
+                : RoleFlag.NO_BYPASSRLS.flag()
+        ));
+
+        options.add(keyword(RoleFlag.CONNECTION_LIMIT.flag()));
+        options.add(val(flags.getConnectionLimit()));
+
+        var validUntil = flags.getValidUntil();
+        options.add(keyword(RoleFlag.VALID_UNTIL.flag()));
+        if (validUntil != null) {
+            options.add(val(validUntil.toString()));
+        } else {
+            options.add(val("infinity"));
+        }
+
+        return query(
+                "alter role {0} with {1}",
+                role(roleName),
+                SQLUtil.concatenateQueryPartsWithSpaces(options)
+        );
+    }
+
     private static Query buildGrantRoleToMember(
             String role,
             String member
@@ -419,47 +430,5 @@ public final class RoleUtil {
         }
 
         return comment;
-    }
-
-    /**
-     * Join QueryParts with the requested separator
-     */
-    private static QueryPart join(
-            List<? extends QueryPart> items,
-            String separator
-    ) {
-        int size = items.size();
-
-        if (items.isEmpty()) {
-            return sql("");
-        } else if (size == 1) {
-            return items.getFirst();
-        }
-
-        var template = new StringBuilder();
-
-        // Add the first item without a separator
-        template.append('{').append(0).append('}');
-
-        // Add the rest of the items with the leading separator
-        for (int i = 1; i < size; i++) {
-            template.append(separator).append('{').append(i).append('}');
-        }
-
-        return sql(
-                template.toString(),
-                items.toArray(QueryPart[]::new)
-        );
-    }
-
-    private static QueryPart joinWithSpaces(List<? extends QueryPart> parts) {
-        return join(parts, " ");
-    }
-
-    private static QueryPart joinWithComma(List<? extends QueryPart> parts) {
-        return join(parts, ", ");
-    }
-
-    private RoleUtil() {
     }
 }

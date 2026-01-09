@@ -8,14 +8,16 @@ import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.ClusterReference;
-import it.aboutbits.postgresql.core.PostgreSQLAuthenticationUtil;
+import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.crd.connection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,10 +33,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.role;
 
@@ -44,8 +45,22 @@ import static org.jooq.impl.DSL.role;
 class RoleReconcilerTest {
     private final Given given;
 
+    private final RoleService roleService;
     private final PostgreSQLContextFactory postgreSQLContextFactory;
+    private final PostgreSQLAuthenticationService postgreSQLAuthenticationService;
+
     private final KubernetesClient kubernetesClient;
+
+    @BeforeEach
+    void cleanUp() {
+        kubernetesClient.resources(Role.class)
+                .withTimeout(5, TimeUnit.SECONDS)
+                .delete();
+
+        kubernetesClient.resources(ClusterConnection.class)
+                .withTimeout(5, TimeUnit.SECONDS)
+                .delete();
+    }
 
     @Test
     @DisplayName("When a Role (LOGIN) is created, it should be reconciled to READY and present in pg_authid")
@@ -85,8 +100,8 @@ class RoleReconcilerTest {
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
-        assertThat(RoleUtil.roleExists(dsl, reconciled.getSpec())).isTrue();
-        assertThat(RoleUtil.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
+        assertThat(roleService.roleExists(dsl, reconciled.getSpec())).isTrue();
+        assertThat(roleService.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
     }
 
     @Test
@@ -123,8 +138,8 @@ class RoleReconcilerTest {
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
-        assertThat(RoleUtil.roleExists(dsl, reconciled.getSpec())).isTrue();
-        assertThat(RoleUtil.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
+        assertThat(roleService.roleExists(dsl, reconciled.getSpec())).isTrue();
+        assertThat(roleService.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
     }
 
     @Test
@@ -164,7 +179,7 @@ class RoleReconcilerTest {
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         assertThat(
-                RoleUtil.roleExists(dsl, reconciled.getSpec())
+                roleService.roleExists(dsl, reconciled.getSpec())
         ).isTrue();
 
         assertThat(
@@ -223,9 +238,8 @@ class RoleReconcilerTest {
         assertThat(reconciled.getStatus().getMessage()).startsWith(
                 "The specified ClusterConnection does not exist"
         );
-        assertThat(reconciled.getStatus().getLastProbeTime()).isCloseTo(
-                now,
-                within(10, ChronoUnit.SECONDS)
+        assertThat(reconciled.getStatus().getLastProbeTime()).isAfter(
+                now
         );
         assertThat(reconciled.getStatus().getLastPhaseTransitionTime()).isNull();
     }
@@ -273,7 +287,7 @@ class RoleReconcilerTest {
         // Wait for password to match because reconciliation might take a bit
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         reconciled.getSpec(),
                         initialPassword
@@ -293,7 +307,7 @@ class RoleReconcilerTest {
         // then: password should eventually match the new one
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         reconciled.getSpec(),
                         newPassword
@@ -345,7 +359,7 @@ class RoleReconcilerTest {
         var finalRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         finalRole.getSpec(),
                         initialPassword
@@ -360,7 +374,7 @@ class RoleReconcilerTest {
         var updatedRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .until(() -> PostgreSQLAuthenticationUtil.passwordMatches(
+                .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         updatedRole.getSpec(),
                         newPassword
@@ -398,7 +412,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentRoleComment(dsl, roleName)
+                roleService.fetchCurrentRoleComment(dsl, roleName)
         ).isEqualTo(comment);
 
         // 2. Change comment
@@ -413,7 +427,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentRoleComment(dsl, roleName)
+                roleService.fetchCurrentRoleComment(dsl, roleName)
         ).isEqualTo(newComment);
 
         // 3. Remove comment
@@ -427,7 +441,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentRoleComment(dsl, roleName)
+                roleService.fetchCurrentRoleComment(dsl, roleName)
         ).isNull();
     }
 
@@ -591,7 +605,7 @@ class RoleReconcilerTest {
         var reconciled = applyRole(role);
         var initialGeneration = reconciled.getStatus().getObservedGeneration();
 
-        var currentFlags = RoleUtil.fetchCurrentFlags(dsl, spec);
+        var currentFlags = roleService.fetchCurrentFlags(dsl, spec);
 
         // then
         assertThat(
@@ -608,7 +622,7 @@ class RoleReconcilerTest {
                 r -> r.getStatus().getObservedGeneration() == initialGeneration + 1
         );
 
-        currentFlags = RoleUtil.fetchCurrentFlags(dsl, spec);
+        currentFlags = roleService.fetchCurrentFlags(dsl, spec);
 
         // then
         assertThat(
@@ -624,7 +638,7 @@ class RoleReconcilerTest {
                 r -> r.getStatus().getObservedGeneration() == initialGeneration + 2
         );
 
-        currentFlags = RoleUtil.fetchCurrentFlags(dsl, spec);
+        currentFlags = roleService.fetchCurrentFlags(dsl, spec);
 
         // then
         assertThat(
@@ -669,7 +683,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+                roleService.fetchCurrentFlags(dsl, spec).getInRole()
         ).containsExactly(parentRole1);
 
         // 2. Add another parent role and remove the first one
@@ -685,7 +699,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+                roleService.fetchCurrentFlags(dsl, spec).getInRole()
         ).containsExactly(parentRole2);
 
         // 3. Remove all parent roles
@@ -701,8 +715,12 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+                roleService.fetchCurrentFlags(dsl, spec).getInRole()
         ).isEmpty();
+
+        // cleanup
+        dsl.execute("drop role if exists {0}", role(parentRole1));
+        dsl.execute("drop role if exists {0}", role(parentRole2));
     }
 
     @Test
@@ -742,7 +760,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
+                roleService.fetchCurrentFlags(dsl, spec).getRole()
         ).containsExactly(memberRole1);
 
         // 2. Add another member role and remove the first one
@@ -758,7 +776,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
+                roleService.fetchCurrentFlags(dsl, spec).getRole()
         ).containsExactly(memberRole2);
 
         // 3. Remove all member roles
@@ -774,8 +792,12 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getRole()
+                roleService.fetchCurrentFlags(dsl, spec).getRole()
         ).isEmpty();
+
+        // cleanup
+        dsl.execute("drop role if exists {0}", role(memberRole1));
+        dsl.execute("drop role if exists {0}", role(memberRole2));
     }
 
     @Test
@@ -816,8 +838,13 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                RoleUtil.fetchCurrentFlags(dsl, spec).getInRole()
+                roleService.fetchCurrentFlags(dsl, spec).getInRole()
         ).containsExactly(roleA, roleB, roleC);
+
+        // cleanup
+        dsl.execute("drop role if exists {0}", role(roleA));
+        dsl.execute("drop role if exists {0}", role(roleB));
+        dsl.execute("drop role if exists {0}", role(roleC));
     }
 
     private @Nullable <T> T getRoleFlagValue(
@@ -880,13 +907,11 @@ class RoleReconcilerTest {
                 .isNotNull()
                 .extracting(Role::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isCloseTo(
-                            now,
-                            within(10, ChronoUnit.SECONDS)
+                    assertThat(status.getLastProbeTime()).isAfter(
+                            now
                     );
-                    assertThat(status.getLastPhaseTransitionTime()).isCloseTo(
-                            now,
-                            within(10, ChronoUnit.SECONDS)
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
+                            now
                     );
                 })
                 .usingRecursiveComparison()

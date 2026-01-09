@@ -2,8 +2,9 @@ quarkus:
   kubernetes-client:
     devservices:
       enabled: true
-      # To not use our default kubeconfig from the home directory,
-      # which could lead to catastrophic damage if we had the permissions
+      # To not use our default kubeconfig from the home directory, which could lead to
+      # potential damage if we had the permissions to install the CRD in an existing configured cluster context.
+      # By setting this to true, Quarkus will use a temporary kubeconfig that will be removed after the test.
       override-kubeconfig: true
       flavor: k3s
       # See https://github.com/dajudge/kindcontainer/blob/master/k8s-versions.json
@@ -12,11 +13,6 @@ quarkus:
     instrumentation: true
   micrometer:
     enabled: true
-    export:
-      # Additionally to Prometheus, we could also consume the metrics in JSON format
-      # by calling /q/metrics with the HTTP header "Accept: application/json"
-      json:
-        enabled: true
   datasource:
     devservices:
       enabled: true
@@ -57,9 +53,8 @@ quarkus:
     type: application
     name: ${quarkus.kubernetes.name}
     description: AboutBits PostgreSQL Operator Helm Chart
-    # Keep the map-system-properties flag below on false (else it will map all ${ENV_VARS} we define in the application.yml or application-prod.yml files
-    # as in Kubernetes the env entries take precedence over envFrom entries as we want to consume all ENV vars from the postgresql-operator-config secret
-    # This started working with Gradle since Quarkus Helm 1.2.5
+    # Keep the map-system-properties flag below on false, else it will map all ${ENV_VARS} we define in the application.yml or application-prod.yml files.
+    # In Kubernetes the env entries take precedence over envFrom entries
     map-system-properties: false
     home: https://github.com/aboutbits/postgresql-operator
     sources:
@@ -103,11 +98,6 @@ quarkus:
         value: ${quarkus.kubernetes.resources.limits.memory}
         paths:
           - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).resources.limits.memory
-      secret-name:
-        property: secret.name
-        value: ${quarkus.kubernetes.envFrom.secretRef[0].name}
-        paths:
-          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).envFrom[0].secretRef.name
       image-pull-secret:
         property: imagePullSecret
         value: ${quarkus.kubernetes.image-pull-secrets[0]}
@@ -136,9 +126,6 @@ quarkus:
     replicas: 1
     annotations:
       "app.kubernetes.io/version": ${quarkus.application.version}
-    secret-volumes:
-      postgresql-operator-config:
-        secret-name: postgresql-operator-config
     resources:
       requests:
         cpu: 50m
@@ -169,5 +156,3 @@ quarkus:
     env:
       fields:
         KUBERNETES_NODE_NAME: spec.nodeName
-      secrets:
-        - postgresql-operator-config

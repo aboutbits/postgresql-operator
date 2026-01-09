@@ -2,18 +2,20 @@ package it.aboutbits.postgresql.core;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.connection.ClusterConnection;
+import jakarta.inject.Singleton;
 import org.jspecify.annotations.NullMarked;
 
 import java.nio.charset.Charset;
 import java.util.Base64;
 
 @NullMarked
-public final class KubernetesUtil {
+@Singleton
+public final class KubernetesService {
     public static final String SECRET_TYPE_BASIC_AUTH = "kubernetes.io/basic-auth";
     public static final String SECRET_DATA_BASIC_AUTH_USERNAME_KEY = "username";
     public static final String SECRET_DATA_BASIC_AUTH_PASSWORD_KEY = "password";
 
-    public static Credentials getSecretRefCredentials(
+    public Credentials getSecretRefCredentials(
             KubernetesClient kubernetesClient,
             ClusterConnection clusterConnection
     ) {
@@ -24,7 +26,7 @@ public final class KubernetesUtil {
         );
     }
 
-    public static Credentials getSecretRefCredentials(
+    public Credentials getSecretRefCredentials(
             KubernetesClient kubernetesClient,
             SecretRef secretRef,
             String defaultNamespace
@@ -88,8 +90,5 @@ public final class KubernetesUtil {
                 username,
                 password
         );
-    }
-
-    private KubernetesUtil() {
     }
 }

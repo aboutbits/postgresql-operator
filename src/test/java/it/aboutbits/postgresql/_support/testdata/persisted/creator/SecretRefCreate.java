@@ -7,9 +7,9 @@ import it.aboutbits.postgresql.core.SecretRef;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
-import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_DATA_BASIC_AUTH_USERNAME_KEY;
-import static it.aboutbits.postgresql.core.KubernetesUtil.SECRET_TYPE_BASIC_AUTH;
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_USERNAME_KEY;
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_AUTH;
 
 @NullMarked
 public class SecretRefCreate extends TestDataCreator<SecretRef> {

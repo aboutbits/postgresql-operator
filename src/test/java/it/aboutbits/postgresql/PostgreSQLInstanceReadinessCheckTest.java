@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +31,9 @@ class PostgreSQLInstanceReadinessCheckTest {
 
     @BeforeEach
     void cleanUp() {
-        kubernetesClient.resources(ClusterConnection.class).delete();
+        kubernetesClient.resources(ClusterConnection.class)
+                .withTimeout(5, TimeUnit.SECONDS)
+                .delete();
     }
 
     @Test

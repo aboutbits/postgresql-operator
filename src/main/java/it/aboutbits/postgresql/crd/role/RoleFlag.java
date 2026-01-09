@@ -9,7 +9,7 @@ import org.jspecify.annotations.NullMarked;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
-public enum RoleFlags {
+public enum RoleFlag {
     SUPERUSER("SUPERUSER"),
     NO_SUPERUSER("NOSUPERUSER"),
 
