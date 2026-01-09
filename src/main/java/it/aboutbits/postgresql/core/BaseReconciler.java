@@ -25,12 +25,10 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         //noinspection ConstantConditions
         if (status == null) {
             status = newStatus();
-
-            status.setName(resource.getName());
-
             resource.setStatus(status);
         }
 
+        status.setName(resource.getName());
         status.setLastProbeTime(OffsetDateTime.now(ZoneOffset.UTC));
         status.setObservedGeneration(resource.getMetadata().getGeneration());
 
