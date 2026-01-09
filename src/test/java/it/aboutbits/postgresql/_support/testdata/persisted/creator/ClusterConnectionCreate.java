@@ -19,7 +19,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @NullMarked
-@Getter
 @Setter
 @Accessors(fluent = true, chain = true)
 public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> {

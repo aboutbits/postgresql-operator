@@ -1,13 +1,11 @@
 package it.aboutbits.postgresql.crd.role;
 
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
-import it.aboutbits.postgresql.core.ClusterReference;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.SecretRef;
@@ -73,35 +71,31 @@ class RoleReconcilerTest {
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var roleName = "test-role-login";
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ true
-        );
 
-        var spec = role.getSpec();
+        // when
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef())
+                .returnFirst();
 
-        // when: create Role referencing the ClusterConnection and expecting LOGIN (passwordSecretRef non-null)
-        spec.setPasswordSecretRef(clusterConnection.getSpec().getAdminSecretRef());
-
-        // then: wait for status and assert READY
-        var reconciled = applyRole(role);
-
+        // then: assert READY
         var expectedStatus = new CRStatus()
                 .setName(roleName)
                 .setPhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
         assertThatRoleHasExpectedStatus(
-                reconciled,
+                role,
                 expectedStatus,
                 now
         );
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
-        assertThat(roleService.roleExists(dsl, reconciled.getSpec())).isTrue();
-        assertThat(roleService.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
+        assertThat(roleService.roleExists(dsl, role.getSpec())).isTrue();
+        assertThat(roleService.roleLoginMatches(dsl, role.getSpec())).isTrue();
     }
 
     @Test
@@ -116,14 +110,12 @@ class RoleReconcilerTest {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var roleName = "test-role-nologin";
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
-
         // when
-        var reconciled = applyRole(role);
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var expectedStatus = new CRStatus()
                 .setName(roleName)
@@ -131,15 +123,15 @@ class RoleReconcilerTest {
                 .setObservedGeneration(1L);
 
         assertThatRoleHasExpectedStatus(
-                reconciled,
+                role,
                 expectedStatus,
                 now
         );
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
-        assertThat(roleService.roleExists(dsl, reconciled.getSpec())).isTrue();
-        assertThat(roleService.roleLoginMatches(dsl, reconciled.getSpec())).isTrue();
+        assertThat(roleService.roleExists(dsl, role.getSpec())).isTrue();
+        assertThat(roleService.roleLoginMatches(dsl, role.getSpec())).isTrue();
     }
 
     @Test
@@ -154,21 +146,18 @@ class RoleReconcilerTest {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var roleName = "test-role-toggle-login";
 
-        // 1. Create a Role without a login (no passwordSecretRef)
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+        // when
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
-        // when
-        var reconciled = applyRole(role);
-
         // then
         assertThatRoleHasExpectedStatus(
-                reconciled,
+                role,
                 new CRStatus()
                         .setName(roleName)
                         .setPhase(CRPhase.READY)
@@ -179,7 +168,7 @@ class RoleReconcilerTest {
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         assertThat(
-                roleService.roleExists(dsl, reconciled.getSpec())
+                roleService.roleExists(dsl, role.getSpec())
         ).isTrue();
 
         assertThat(
@@ -219,29 +208,31 @@ class RoleReconcilerTest {
         var missingClusterName = "non-existing-cc";
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
-        var role = buildRole(
-                roleName,
-                missingClusterName,
-                /*login*/ true
-        );
 
-        role.getSpec().getClusterRef().setNamespace(kubernetesClient.getNamespace());
+        var dummySecretRef = new SecretRef();
+        dummySecretRef.setName("dummy");
 
         // when
-        var reconciled = applyRole(role);
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(missingClusterName)
+                .withClusterConnectionNamespace(kubernetesClient.getNamespace())
+                .withPasswordSecretRef(dummySecretRef)
+                .returnFirst();
 
         // then
-        assertThat(reconciled).isNotNull();
-        assertThat(reconciled.getStatus()).isNotNull();
+        assertThat(role).isNotNull();
+        assertThat(role.getStatus()).isNotNull();
 
-        assertThat(reconciled.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
-        assertThat(reconciled.getStatus().getMessage()).startsWith(
+        assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
+        assertThat(role.getStatus().getMessage()).startsWith(
                 "The specified ClusterConnection does not exist"
         );
-        assertThat(reconciled.getStatus().getLastProbeTime()).isAfter(
+        assertThat(role.getStatus().getLastProbeTime()).isAfter(
                 now
         );
-        assertThat(reconciled.getStatus().getLastPhaseTransitionTime()).isNull();
+        assertThat(role.getStatus().getLastPhaseTransitionTime()).isNull();
     }
 
     @Test
@@ -270,16 +261,13 @@ class RoleReconcilerTest {
                 .withName(secretRef.getName())
                 .require();
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ true
-        );
-
-        role.getSpec().setPasswordSecretRef(secretRef);
-
         // when: create Role
-        var reconciled = applyRole(role);
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(secretRef)
+                .returnFirst();
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
@@ -289,7 +277,7 @@ class RoleReconcilerTest {
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
-                        reconciled.getSpec(),
+                        role.getSpec(),
                         initialPassword
                 ));
 
@@ -309,7 +297,7 @@ class RoleReconcilerTest {
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
-                        reconciled.getSpec(),
+                        role.getSpec(),
                         newPassword
                 ));
     }
@@ -340,38 +328,33 @@ class RoleReconcilerTest {
                 .withPassword(newPassword)
                 .returnFirst();
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ true
-        );
+        // when: create Role
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(initialSecretRef)
+                .returnFirst();
 
         var spec = role.getSpec();
-
-        spec.setPasswordSecretRef(initialSecretRef);
-
-        // when: create Role
-        var reconciled = applyRole(role);
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         // then: password should match the initial one
-        var finalRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
-                        finalRole.getSpec(),
+                        role.getSpec(),
                         initialPassword
                 ));
 
         // when: update secret reference in the Role
         spec.setPasswordSecretRef(newSecretRef);
 
-        reconciled = applyRole(role);
+        var updatedRole = applyRole(role);
 
         // then: password should eventually match the new one
-        var updatedRole = reconciled;
         await().atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
@@ -394,11 +377,11 @@ class RoleReconcilerTest {
 
         var roleName = "test-role-comment";
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -462,11 +445,11 @@ class RoleReconcilerTest {
 
         var roleName = "test-role-" + field.getName();
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -524,11 +507,11 @@ class RoleReconcilerTest {
 
         var roleName = "test-role-conn-limit";
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -586,11 +569,11 @@ class RoleReconcilerTest {
 
         var roleName = "test-role-valid-until";
 
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -664,11 +647,12 @@ class RoleReconcilerTest {
         dsl.execute("create role {0}", role(parentRole2));
 
         var roleName = "test-role-in-role";
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -741,11 +725,12 @@ class RoleReconcilerTest {
         dsl.execute("create role {0}", role(memberRole2));
 
         var roleName = "test-role-role";
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -820,11 +805,12 @@ class RoleReconcilerTest {
         dsl.execute("create role {0}", role(roleC));
 
         var roleName = "test-role-multiple";
-        var role = buildRole(
-                roleName,
-                clusterConnection.getMetadata().getName(),
-                /*login*/ false
-        );
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
 
         var spec = role.getSpec();
 
@@ -870,11 +856,27 @@ class RoleReconcilerTest {
     }
 
     private Role applyRole(Role role) {
+        var namespace = kubernetesClient.getNamespace();
+
+        role.getMetadata().setManagedFields(null);
+        role.getMetadata().setResourceVersion(null);
+
+        var applied = kubernetesClient.resources(Role.class)
+                .inNamespace(namespace)
+                .resource(role)
+                .serverSideApply();
+
+        var generation = applied.getMetadata().getGeneration();
+
         //noinspection ConstantConditions
-        return applyRole(
-                role,
-                r -> r.getStatus() != null
-        );
+        return kubernetesClient.resources(Role.class)
+                .inNamespace(namespace)
+                .withName(applied.getMetadata().getName())
+                .waitUntilCondition(
+                        r -> r.getStatus() != null && r.getStatus().getObservedGeneration() >= generation,
+                        10,
+                        TimeUnit.SECONDS
+                );
     }
 
     private Role applyRole(
@@ -883,14 +885,17 @@ class RoleReconcilerTest {
     ) {
         var namespace = kubernetesClient.getNamespace();
 
-        kubernetesClient.resources(Role.class)
+        role.getMetadata().setManagedFields(null);
+        role.getMetadata().setResourceVersion(null);
+
+        var applied = kubernetesClient.resources(Role.class)
                 .inNamespace(namespace)
                 .resource(role)
                 .serverSideApply();
 
         return kubernetesClient.resources(Role.class)
                 .inNamespace(namespace)
-                .withName(role.getName())
+                .withName(applied.getMetadata().getName())
                 .waitUntilCondition(
                         condition,
                         10,
@@ -917,31 +922,5 @@ class RoleReconcilerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("lastProbeTime", "lastPhaseTransitionTime")
                 .isEqualTo(expectedStatus);
-    }
-
-    private static Role buildRole(
-            String roleName,
-            String clusterConnectionName,
-            boolean login
-    ) {
-        var role = new Role();
-
-        var spec = new RoleSpec();
-        spec.setName(roleName);
-        spec.setClusterRef(new ClusterReference());
-        spec.getClusterRef().setName(clusterConnectionName);
-
-        if (login) {
-            // any non-null SecretRef will signal LOGIN expectation
-            var secretRef = new SecretRef();
-            secretRef.setName("dummy");
-            spec.setPasswordSecretRef(secretRef);
-        }
-
-        role.setSpec(spec);
-        role.setMetadata(new ObjectMeta());
-        role.getMetadata().setName(roleName);
-
-        return role;
     }
 }

@@ -4,6 +4,9 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql.core.SecretRef;
+import lombok.AccessLevel;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -12,11 +15,14 @@ import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_A
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_AUTH;
 
 @NullMarked
+@Setter
+@Accessors(fluent = true, chain = true)
 public class SecretRefCreate extends TestDataCreator<SecretRef> {
     private final KubernetesClient kubernetesClient;
 
     @Nullable
     private String withNamespace;
+    @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
 
     @Nullable
@@ -24,10 +30,12 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
 
     @Nullable
     private String withUsername;
+    @Setter(AccessLevel.NONE)
     private boolean withoutUsername = false;
 
     @Nullable
     private String withPassword;
+    @Setter(AccessLevel.NONE)
     private boolean withoutPassword = false;
 
     public SecretRefCreate(
@@ -39,38 +47,14 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
     }
 
     @SuppressWarnings("unused")
-    public SecretRefCreate withNamespace(String namespace) {
-        withNamespace = namespace;
-        return this;
-    }
-
-    @SuppressWarnings("unused")
     public SecretRefCreate withoutNamespace() {
         withoutNamespace = true;
         return this;
     }
 
     @SuppressWarnings("unused")
-    public SecretRefCreate withName(String name) {
-        withName = name;
-        return this;
-    }
-
-    @SuppressWarnings("unused")
-    public SecretRefCreate withUsername(String username) {
-        withUsername = username;
-        return this;
-    }
-
-    @SuppressWarnings("unused")
     public SecretRefCreate withoutUsername() {
         withoutUsername = true;
-        return this;
-    }
-
-    @SuppressWarnings("unused")
-    public SecretRefCreate withPassword(String password) {
-        withPassword = password;
         return this;
     }
 
