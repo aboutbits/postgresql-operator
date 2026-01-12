@@ -1,7 +1,7 @@
 package it.aboutbits.postgresql.core;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnection;
+import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.NullMarked;
 

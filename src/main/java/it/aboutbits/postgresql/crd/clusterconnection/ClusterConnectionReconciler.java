@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.cluster_connection;
+package it.aboutbits.postgresql.crd.clusterconnection;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;

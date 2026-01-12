@@ -2,7 +2,7 @@ package it.aboutbits.postgresql;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnection;
+import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;

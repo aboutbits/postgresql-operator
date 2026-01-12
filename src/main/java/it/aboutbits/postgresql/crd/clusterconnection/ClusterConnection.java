@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.cluster_connection;
+package it.aboutbits.postgresql.crd.clusterconnection;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
