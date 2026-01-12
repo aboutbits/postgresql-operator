@@ -12,7 +12,7 @@ run:
 	./gradlew --console=colored :operator:quarkusDev
 
 generate-jooq:
-	./gradlew --console=colored :generate:jooqCodegen
+	./gradlew --console=colored :generated:jooqCodegen
 
 test:
 	./gradlew --console=colored :operator:clean :operator:test
