@@ -8,7 +8,6 @@ import it.aboutbits.postgresql.core.SecretRef;
 import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnection;
 import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnectionSpec;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;

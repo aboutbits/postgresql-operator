@@ -9,7 +9,6 @@ import it.aboutbits.postgresql.core.SecretRef;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
