@@ -1,5 +1,8 @@
 rootProject.name="postgresql-operator"
 
+include("operator")
+include("generated")
+
 pluginManagement {
     val quarkusPluginVersion: String by settings
     val quarkusPluginId: String by settings
