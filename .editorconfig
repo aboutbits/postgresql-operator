@@ -1,0 +1,23 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+max_line_length = 120
+tab_width = 4
+ij_continuation_indent_size = 8
+
+[*.yml]
+indent_size = 2
+
+[*.md]
+max_line_length = off
+
+[Makefile*]
+indent_style = tab
+
+[src/main/resources/default_banner.txt]
+insert_final_newline = false

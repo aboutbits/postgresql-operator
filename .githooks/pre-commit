@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+./gradlew --console=colored checkstyleMain checkstyleTest

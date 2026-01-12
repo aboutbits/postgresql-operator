@@ -1,0 +1,6 @@
+quarkus:
+  datasource:
+    devservices:
+      port: 5432
+  test:
+    continuous-testing: enabled

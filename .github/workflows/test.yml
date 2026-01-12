@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aboutbits/github-actions-java/setup-with-gradle@v4
+        with:
+          java-version: 25
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - name: Build & Test
+        run: >-
+          ./gradlew
+          --console=colored
+          test
+          --fail-fast
+        env:
+          GITHUB_USER_NAME: ${{ github.actor }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
