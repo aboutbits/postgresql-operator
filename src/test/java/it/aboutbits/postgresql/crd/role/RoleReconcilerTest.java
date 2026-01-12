@@ -9,7 +9,7 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.SecretRef;
-import it.aboutbits.postgresql.crd.connection.ClusterConnection;
+import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;

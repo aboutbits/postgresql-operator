@@ -3,7 +3,7 @@ package it.aboutbits.postgresql;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-import it.aboutbits.postgresql.crd.connection.ClusterConnection;
+import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnection;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;

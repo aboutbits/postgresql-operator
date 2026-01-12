@@ -1,7 +1,7 @@
 package it.aboutbits.postgresql.core;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-import it.aboutbits.postgresql.crd.connection.ClusterConnection;
+import it.aboutbits.postgresql.crd.cluster_connection.ClusterConnection;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import org.jooq.CloseableDSLContext;

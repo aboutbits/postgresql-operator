@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.connection;
+package it.aboutbits.postgresql.crd.cluster_connection;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;

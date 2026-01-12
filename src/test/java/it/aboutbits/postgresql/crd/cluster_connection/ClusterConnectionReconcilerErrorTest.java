@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.connection;
+package it.aboutbits.postgresql.crd.cluster_connection;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.javaoperatorsdk.operator.api.reconciler.Context;

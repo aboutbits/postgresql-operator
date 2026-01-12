@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.connection;
+package it.aboutbits.postgresql.crd.cluster_connection;
 
 import io.fabric8.generator.annotation.Required;
 import it.aboutbits.postgresql.core.SecretRef;
