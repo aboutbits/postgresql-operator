@@ -79,13 +79,6 @@ subprojects {
         systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
         jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 
-        val mockitoAgent = configurations.testRuntimeClasspath.get().find {
-            it.name.contains("mockito-core")
-        }
-        if (mockitoAgent != null) {
-            jvmArgs("-javaagent:${mockitoAgent.absolutePath}")
-        }
-
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
 

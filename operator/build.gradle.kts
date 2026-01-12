@@ -83,3 +83,12 @@ tasks.quarkusDev {
     // https://github.com/quarkusio/quarkus/pull/49920
     jvmArgs = listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
+
+tasks.withType<Test> {
+    val mockitoAgent = configurations.testRuntimeClasspath.get().find {
+        it.name.contains("mockito-core")
+    }
+    if (mockitoAgent != null) {
+        jvmArgs("-javaagent:${mockitoAgent.absolutePath}")
+    }
+}
