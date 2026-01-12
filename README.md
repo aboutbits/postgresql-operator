@@ -29,7 +29,7 @@ make run
 
 # or
 
-./gradlew quarkusDev
+./gradlew :operator:quarkusDev
 ```
 
 The app service will be available at http://localhost:8080,
@@ -42,7 +42,7 @@ make test
 
 # or
 
-./gradlew test
+./gradlew :operator:test
 ```
 
 ### Run the project as a service in IntelliJ
@@ -55,7 +55,7 @@ Afterward, the project can be started in IntelliJ by navigating to `Run` -> `Run
 ## Test the CRD on the ephemeral Dev Services cluster
 
 This example demonstrates how to set up a local development environment using Quarkus Dev Services to test the Operator manually.
-As the K3s cluster port and the secrets change on every `./gradlew quarkusDev` run, you will have to manually update the port and secrets in the `~/.kube/config` every time.
+As the K3s cluster port and the secrets change on every `./gradlew :operator:quarkusDev` run, you will have to manually update the port and secrets in the `~/.kube/config` every time.
 
 ### 1. Configure Kubeconfig from Dev Services
 
@@ -170,7 +170,7 @@ spec:
 The application can be packaged using:
 
 ```shell script
-./gradlew build
+./gradlew :operator:build
 ```
 
 It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
@@ -181,7 +181,7 @@ The application is now runnable using `java -jar build/quarkus-app/quarkus-run.j
 If you want to build an _über-jar_, execute the following command:
 
 ```shell script
-./gradlew build -Dquarkus.package.jar.type=uber-jar
+./gradlew :operator:build -Dquarkus.package.jar.type=uber-jar
 ```
 
 The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
@@ -191,13 +191,13 @@ The application, packaged as an _über-jar_, is now runnable using `java -jar bu
 You can create a native executable using:
 
 ```shell script
-./gradlew build -Dquarkus.native.enabled=true
+./gradlew :operator:build -Dquarkus.native.enabled=true
 ```
 
 Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
 
 ```shell script
-./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
+./gradlew :operator:build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
 ```
 
 You can then execute your native executable with: `./build/postgresql-operator-1.0.0-SNAPSHOT-runner`
