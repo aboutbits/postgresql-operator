@@ -65,6 +65,11 @@ dependencies {
     testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)
+
+    /**
+     * Error Prone
+     */
+    compileOnly(libs.errorProne.annotations)
 }
 
 tasks.withType<JavaCompile> {

@@ -2,6 +2,7 @@ rootProject.name="postgresql-operator"
 
 include("operator")
 include("generated")
+include("jooq-generator")
 
 pluginManagement {
     val quarkusPluginVersion: String by settings

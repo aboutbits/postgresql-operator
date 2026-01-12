@@ -4,6 +4,18 @@
 package it.aboutbits.postgresql.core.infrastructure.persistence;
 
 
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasColumnPrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasDatabasePrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasForeignDataWrapperPrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasFunctionPrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasLanguagePrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasParameterPrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasSchemaPrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasSequencePrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasServerPrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasTablePrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasTablespacePrivilege1;
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.HasTypePrivilege1;
 import it.aboutbits.postgresql.core.infrastructure.persistence.routines.ShobjDescription;
 
 import javax.annotation.processing.Generated;
@@ -24,6 +36,614 @@ import org.jooq.Field;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Routines {
+
+    /**
+     * Call <code>pg_catalog.has_column_privilege</code>
+     */
+    public static Boolean hasColumnPrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+        , String __4
+    ) {
+        HasColumnPrivilege1 f = new HasColumnPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+        f.set__4(__4);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_column_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasColumnPrivilege1(
+          String __1
+        , String __2
+        , String __3
+        , String __4
+    ) {
+        HasColumnPrivilege1 f = new HasColumnPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+        f.set__4(__4);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_column_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasColumnPrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+        , Field<String> __4
+    ) {
+        HasColumnPrivilege1 f = new HasColumnPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+        f.set__4(__4);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_database_privilege</code>
+     */
+    public static Boolean hasDatabasePrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasDatabasePrivilege1 f = new HasDatabasePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_database_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasDatabasePrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasDatabasePrivilege1 f = new HasDatabasePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_database_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasDatabasePrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasDatabasePrivilege1 f = new HasDatabasePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_foreign_data_wrapper_privilege</code>
+     */
+    public static Boolean hasForeignDataWrapperPrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasForeignDataWrapperPrivilege1 f = new HasForeignDataWrapperPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_foreign_data_wrapper_privilege</code> as a
+     * field.
+     */
+    public static Field<Boolean> hasForeignDataWrapperPrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasForeignDataWrapperPrivilege1 f = new HasForeignDataWrapperPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_foreign_data_wrapper_privilege</code> as a
+     * field.
+     */
+    public static Field<Boolean> hasForeignDataWrapperPrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasForeignDataWrapperPrivilege1 f = new HasForeignDataWrapperPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_function_privilege</code>
+     */
+    public static Boolean hasFunctionPrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasFunctionPrivilege1 f = new HasFunctionPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_function_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasFunctionPrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasFunctionPrivilege1 f = new HasFunctionPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_function_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasFunctionPrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasFunctionPrivilege1 f = new HasFunctionPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_language_privilege</code>
+     */
+    public static Boolean hasLanguagePrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasLanguagePrivilege1 f = new HasLanguagePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_language_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasLanguagePrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasLanguagePrivilege1 f = new HasLanguagePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_language_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasLanguagePrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasLanguagePrivilege1 f = new HasLanguagePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_parameter_privilege</code>
+     */
+    public static Boolean hasParameterPrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasParameterPrivilege1 f = new HasParameterPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_parameter_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasParameterPrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasParameterPrivilege1 f = new HasParameterPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_parameter_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasParameterPrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasParameterPrivilege1 f = new HasParameterPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_schema_privilege</code>
+     */
+    public static Boolean hasSchemaPrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasSchemaPrivilege1 f = new HasSchemaPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_schema_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasSchemaPrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasSchemaPrivilege1 f = new HasSchemaPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_schema_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasSchemaPrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasSchemaPrivilege1 f = new HasSchemaPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_sequence_privilege</code>
+     */
+    public static Boolean hasSequencePrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasSequencePrivilege1 f = new HasSequencePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_sequence_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasSequencePrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasSequencePrivilege1 f = new HasSequencePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_sequence_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasSequencePrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasSequencePrivilege1 f = new HasSequencePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_server_privilege</code>
+     */
+    public static Boolean hasServerPrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasServerPrivilege1 f = new HasServerPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_server_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasServerPrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasServerPrivilege1 f = new HasServerPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_server_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasServerPrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasServerPrivilege1 f = new HasServerPrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_table_privilege</code>
+     */
+    public static Boolean hasTablePrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasTablePrivilege1 f = new HasTablePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_table_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasTablePrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasTablePrivilege1 f = new HasTablePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_table_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasTablePrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasTablePrivilege1 f = new HasTablePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_tablespace_privilege</code>
+     */
+    public static Boolean hasTablespacePrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasTablespacePrivilege1 f = new HasTablespacePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_tablespace_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasTablespacePrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasTablespacePrivilege1 f = new HasTablespacePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_tablespace_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasTablespacePrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasTablespacePrivilege1 f = new HasTablespacePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Call <code>pg_catalog.has_type_privilege</code>
+     */
+    public static Boolean hasTypePrivilege1(
+          Configuration configuration
+        , String __1
+        , String __2
+        , String __3
+    ) {
+        HasTypePrivilege1 f = new HasTypePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_type_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasTypePrivilege1(
+          String __1
+        , String __2
+        , String __3
+    ) {
+        HasTypePrivilege1 f = new HasTypePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.has_type_privilege</code> as a field.
+     */
+    public static Field<Boolean> hasTypePrivilege1(
+          Field<String> __1
+        , Field<String> __2
+        , Field<String> __3
+    ) {
+        HasTypePrivilege1 f = new HasTypePrivilege1();
+        f.set__1(__1);
+        f.set__2(__2);
+        f.set__3(__3);
+
+        return f.asField();
+    }
 
     /**
      * Call <code>pg_catalog.shobj_description</code>

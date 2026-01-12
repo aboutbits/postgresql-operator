@@ -9,6 +9,8 @@ dependencies {
      */
     api(libs.jooq)
     compileOnly(libs.jooqMeta)
+    // Custom Database generator
+    jooqCodegen(project(":jooq-generator"))
     // PostgreSQL JDBC Driver for jOOQ generation
     jooqCodegen(libs.postgresql)
 }
@@ -23,14 +25,26 @@ jooq {
         }
         generator {
             database {
-                name = "org.jooq.meta.postgres.PostgresDatabase"
+                name = "it.aboutbits.postgresql.CustomPostgresDatabase"
                 schemata {
                     schema {
                         inputSchema = "pg_catalog"
                     }
                 }
                 includes = """
-                  pg_auth_members
+                  has_column_privilege
+                | has_database_privilege
+                | has_foreign_data_wrapper_privilege
+                | has_function_privilege
+                | has_language_privilege
+                | has_parameter_privilege
+                | has_schema_privilege
+                | has_sequence_privilege
+                | has_server_privilege
+                | has_table_privilege
+                | has_tablespace_privilege
+                | has_type_privilege
+                | pg_auth_members
                 | pg_authid
                 | pg_db_role_setting
                 | shobj_description
