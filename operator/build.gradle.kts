@@ -67,7 +67,7 @@ dependencies {
     testImplementation(libs.datafaker)
 }
 
-tasks.withType<JavaCompile>().configureEach {
+tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
 
