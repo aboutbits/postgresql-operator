@@ -21,7 +21,7 @@ public class RoleSpec {
     @Required
     @ValidationRule(
             value = "self == oldSelf",
-            message = "The Role name must not be changed once it is created"
+            message = "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the operator."
     )
     private String name = "";
 

@@ -2,6 +2,7 @@ package it.aboutbits.postgresql.crd.grant;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.ClusterReference;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,14 +20,26 @@ public class GrantSpec {
 
     /// The database to grant privileges on for this role.
     @Required
+    @ValidationRule(
+            value = "self == oldSelf",
+            message = "The Grant database is immutable. Changing it would require revoking permissions from the old database before granting them in the new one."
+    )
     private String database = "";
 
     /// The name of the role to grant privileges on.
     @Required
+    @ValidationRule(
+            value = "self == oldSelf",
+            message = "The Grant role is immutable. Changing it would require revoking permissions from the old role before granting them to the new one."
+    )
     private String role = "";
 
     /// The database schema to grant privileges on for this role (required except if objectType is "database")
     @Required
+    @ValidationRule(
+            value = "self == oldSelf",
+            message = "The Grant schema is immutable. Changing it would require revoking permissions from the old schema before granting them to objects in the new schema."
+    )
     private String schema = "";
 
     /// The PostgreSQL object type to grant the privileges on.
@@ -46,6 +59,10 @@ public class GrantSpec {
     /// - `type`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
+    @ValidationRule(
+            value = "self == oldSelf",
+            message = "The Grant objectType is immutable. Changing it would require revoking permissions and generating a completely different SQL statement."
+    )
     private GrantObjectType objectType = GrantObjectType.DATABASE;
 
     /// The PostgreSQL objects to grant privileges on.
