@@ -13,8 +13,8 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static org.jooq.impl.DSL.grant;
-import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.privilege;
+import static org.jooq.impl.DSL.quotedName;
 import static org.jooq.impl.DSL.role;
 
 @NullMarked
@@ -37,14 +37,19 @@ public class Grant
         var database = spec.getDatabase();
         var schema = spec.getSchema();
 
-        return spec.getObjects().stream()
+        var statements = spec.getObjects().stream()
                 .map(object -> {
-                    var on = name(database, schema, object);
+                    var on = quotedName(schema, object);
 
                     var statement = grant(privileges).on(on).to(role);
 
                     return statement.getSQL() + ";";
                 })
                 .collect(Collectors.joining("\n"));
+
+        return """
+               Statement(s) executed on database "%s":
+               %s\
+               """.formatted(database, statements);
     }
 }
