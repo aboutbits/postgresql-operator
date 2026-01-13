@@ -47,18 +47,6 @@ jooq {
                 | pg_auth_members
                 | pg_authid
                 | pg_db_role_setting
-                
-                | pg_database
-                | pg_namespace
-                | pg_class
-                | pg_proc
-                | pg_foreign_data_wrapper
-                | pg_foreign_server
-                | pg_type
-                | pg_language
-                | pg_parameter_acl
-                | pg_tablespace
-                
                 | shobj_description
                 """.trimIndent()
                 excludes = """
