@@ -3,12 +3,12 @@ package it.aboutbits.postgresql.crd.grant;
 import com.google.errorprone.annotations.Immutable;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import org.jooq.Field;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
+import java.util.Set;
 
 import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.ALTER_SYSTEM;
 import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.CONNECT;
@@ -34,7 +34,6 @@ import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.USAGE;
 @NullMarked
 @Getter
 @Accessors(fluent = true)
-@RequiredArgsConstructor
 public enum GrantObjectType {
     DATABASE(
             Routines::hasDatabasePrivilege1,
@@ -122,10 +121,22 @@ public enum GrantObjectType {
             )
     );
 
+    /// [Access Privilege Inquiry Functions](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-ACCESS)
     private final PrivilegeFunction checkPrivilegeFunction;
 
     @SuppressWarnings("ImmutableEnumChecker")
     private final List<GrantPrivilege> privileges;
+
+    private final Set<GrantPrivilege> privilegesSet;
+
+    GrantObjectType(
+            PrivilegeFunction checkPrivilegeFunction,
+            List<GrantPrivilege> privileges
+    ) {
+        this.checkPrivilegeFunction = checkPrivilegeFunction;
+        this.privileges = privileges;
+        this.privilegesSet = Set.copyOf(privileges);
+    }
 
     @Immutable
     @FunctionalInterface
