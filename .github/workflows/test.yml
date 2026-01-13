@@ -18,7 +18,7 @@ jobs:
         run: >-
           ./gradlew
           --console=colored
-          test
+          :operator:test
           --fail-fast
         env:
           GITHUB_USER_NAME: ${{ github.actor }}
