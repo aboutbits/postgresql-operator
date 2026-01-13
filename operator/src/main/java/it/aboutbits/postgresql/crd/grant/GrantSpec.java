@@ -14,6 +14,10 @@ import java.util.List;
 @NullMarked
 @Getter
 @Setter
+@ValidationRule(
+        value = "self.objectType == 'database' || (has(self.schema) && self.schema.size() > 0)",
+        message = "The Grant schema is required to be set, except if objectType is 'database'."
+)
 public class GrantSpec {
     @Required
     private ClusterReference clusterRef = new ClusterReference();
@@ -24,6 +28,10 @@ public class GrantSpec {
             value = "self == oldSelf",
             message = "The Grant database is immutable. Changing it would require revoking permissions from the old database before granting them in the new one."
     )
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The Grant database must not be empty."
+    )
     private String database = "";
 
     /// The name of the role to grant privileges on.
@@ -32,13 +40,20 @@ public class GrantSpec {
             value = "self == oldSelf",
             message = "The Grant role is immutable. Changing it would require revoking permissions from the old role before granting them to the new one."
     )
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The Grant role must not be empty."
+    )
     private String role = "";
 
     /// The database schema to grant privileges on for this role (required except if objectType is "database")
-    @Required
     @ValidationRule(
             value = "self == oldSelf",
             message = "The Grant schema is immutable. Changing it would require revoking permissions from the old schema before granting them to objects in the new schema."
+    )
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The Grant schema must not be empty."
     )
     private String schema = "";
 
@@ -72,7 +87,7 @@ public class GrantSpec {
     private List<String> objects = new ArrayList<>();
 
     /// The privileges to grant on the PostgreSQL objects.
-    /// The operator also validates if the objectType supports the privileges.
+    /// The Operator also validates if the objectType supports the privileges.
     ///
     /// There are different kinds of privileges:
     /// - `select`

@@ -93,7 +93,7 @@ users:
 
 ### 2. Create PostgreSQL Connection and Secret
 
-For the `postgresql` Dev Service, you can generate the necessary Custom Resources to test the operator:
+For the `postgresql` Dev Service, you can generate the necessary Custom Resources to test the Operator:
 
 1.  From the Dev UI, get the `postgresql` Dev Service properties (username, password, host, port).
 2.  Convert the `postgresql` Dev Service properties to a **Basic Auth Secret** and a **ClusterConnection** CR instance.
