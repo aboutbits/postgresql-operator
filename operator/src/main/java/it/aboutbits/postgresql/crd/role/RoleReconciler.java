@@ -71,7 +71,7 @@ public class RoleReconciler
 
         if (clusterConnectionOptional.isEmpty()) {
             status.setPhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [clusterRef=%s/%s]".formatted(
+                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
                     ));
@@ -155,7 +155,7 @@ public class RoleReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [clusterRef=%s/%s]".formatted(
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
                     getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                     clusterRef.getName()
             ));
@@ -179,7 +179,7 @@ public class RoleReconciler
                     status.getPhase()
             );
 
-            status.setMessage("Deletion failed: " + e.getMessage());
+            status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
