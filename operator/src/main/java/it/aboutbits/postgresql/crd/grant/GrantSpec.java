@@ -15,8 +15,12 @@ import java.util.List;
 @Getter
 @Setter
 @ValidationRule(
-        value = "self.objectType == 'database' || (has(self.schema) && self.schema.size() > 0)",
-        message = "The Grant schema is required to be set, except if objectType is 'database'."
+        value = "self.objectType == 'database' ? !has(self.schema) : (has(self.schema) && self.schema.size() > 0)",
+        message = "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required."
+)
+@ValidationRule(
+        value = "self.objectType in ['database', 'schema'] ? !has(self.objects) : (has(self.objects) && self.objects.size() > 0)",
+        message = "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's it is required."
 )
 public class GrantSpec {
     @Required
@@ -64,14 +68,6 @@ public class GrantSpec {
     /// - `schema`
     /// - `table`
     /// - `sequence`
-    /// - `routine`
-    /// - `foreign_data_wrapper`
-    /// - `foreign_server`
-    /// - `domain`
-    /// - `language`
-    /// - `parameter`
-    /// - `tablespace`
-    /// - `type`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
     @ValidationRule(
@@ -83,7 +79,6 @@ public class GrantSpec {
     /// The PostgreSQL objects to grant privileges on.
     /// As these are quoted, case-sensitivity is very important.
     /// In PostgreSQL leave everything as lower-case except you have a special case.
-    @Required
     private List<String> objects = new ArrayList<>();
 
     /// The privileges to grant on the PostgreSQL objects.
@@ -100,12 +95,13 @@ public class GrantSpec {
     /// - `create`
     /// - `connect`
     /// - `temporary`
-    /// - `execute`
     /// - `usage`
-    /// - `set`
-    /// - `alter_system`
     /// - `maintain`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The Grant privileges must not be empty. The operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array."
+    )
     private List<GrantPrivilege> privileges = new ArrayList<>();
 }

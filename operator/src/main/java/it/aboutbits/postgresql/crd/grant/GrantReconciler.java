@@ -11,24 +11,14 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
-import org.jooq.Name;
-import org.jooq.Privilege;
-import org.jooq.Record3;
-import org.jooq.Select;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import static org.jooq.impl.DSL.grant;
-import static org.jooq.impl.DSL.privilege;
 import static org.jooq.impl.DSL.quotedName;
-import static org.jooq.impl.DSL.role;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.val;
 
 @NullMarked
 @Slf4j
@@ -36,9 +26,7 @@ import static org.jooq.impl.DSL.val;
 public class GrantReconciler
         extends BaseReconciler<Grant, CRStatus>
         implements Reconciler<Grant> {
-    private static final String OBJECT_FIELD_NAME = "object";
-    private static final String PRIVILEGE_FIELD_NAME = "privilege";
-    private static final String GRANTED_FIELD_NAME = "granted";
+    private final GrantService grantService;
 
     private final KubernetesClient kubernetesClient;
     private final PostgreSQLContextFactory contextFactory;
@@ -79,7 +67,7 @@ public class GrantReconciler
             invalid.removeAll(allowedPrivilegesForObjectType);
 
             status.setPhase(CRPhase.ERROR)
-                    .setMessage("Grant contains invalid privileges for the specified object type [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
+                    .setMessage("Grant contains invalid privileges for the specified objectType [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName(),
                             objectType,
@@ -136,95 +124,129 @@ public class GrantReconciler
 
         var spec = resource.getSpec();
 
-        var role = spec.getRole();
         var schema = spec.getSchema();
         var objectType = spec.getObjectType();
-        var objects = spec.getObjects();
-        var grantPrivileges = spec.getPrivileges();
 
-        var checkPrivilegeFunction = objectType.checkPrivilegeFunction();
+        var expectedObjects = new HashSet<>(spec.getObjects());
+        var expectedPrivileges = new HashSet<>(spec.getPrivileges());
 
-        var checks = new ArrayList<Select<Record3<String, String, Boolean>>>(
-                objects.size() * grantPrivileges.size()
-        );
+        var isAllMode = expectedObjects.isEmpty();
 
-        for (var object : objects) {
-            var qualifiedObject = quotedName(schema, object);
-            var renderedObject = tx.render(qualifiedObject);
+        var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, resource);
+        var ownershipMap = grantService.determineObjectExistenceAndOwnership(tx, resource);
 
-            for (var grantPrivilege : grantPrivileges) {
-                var privilege = grantPrivilege.name().toLowerCase(Locale.ROOT);
+        // Classify objects in a single pass
+        var missingObjects = new ArrayList<String>();
+        var ownedObjects = new ArrayList<String>();
+        var processObjects = new ArrayList<String>();
 
-                var hasPrivilegeFunctionCall = checkPrivilegeFunction.apply(
-                        role,
-                        renderedObject,
-                        privilege
+        ownershipMap.forEach((object, isOwned) -> {
+            var qualifiedObject = tx.render(quotedName(schema, object));
+
+            if (isOwned == null) {
+                missingObjects.add(qualifiedObject);
+            } else if (isOwned) {
+                ownedObjects.add(qualifiedObject);
+            } else {
+                processObjects.add(object);
+            }
+        });
+
+        if (!missingObjects.isEmpty()) {
+            status.setPhase(CRPhase.ERROR)
+                    .setMessage("Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%s".formatted(
+                            objectType,
+                            getResourceNamespaceOrOwn(resource, namespace),
+                            name,
+                            String.join("\n  • ", missingObjects)
+                    ));
+
+            return UpdateControl.patchStatus(resource)
+                    .rescheduleAfter(60, TimeUnit.SECONDS);
+        }
+
+        // 1. Reconcile objects explicitly listed in the Spec (processObjects).
+        // We know these are NOT owned (filtered above) and ARE in the spec.
+        for (var object : processObjects) {
+            var currentPrivileges = currentObjectPrivileges.getOrDefault(object, Set.of());
+
+            // Calculate Revokes: Current - Expected
+            var privilegesToRevoke = new HashSet<>(currentPrivileges);
+            privilegesToRevoke.removeAll(expectedPrivileges);
+
+            if (!privilegesToRevoke.isEmpty()) {
+                grantService.revoke(
+                        tx,
+                        resource,
+                        object,
+                        privilegesToRevoke
                 );
+            }
 
-                // Select the object name and privilege string alongside the result
-                // so we can map the answer back to the correct key.
-                checks.add(
-                        select(
-                                val(object).as(OBJECT_FIELD_NAME),
-                                val(privilege).as(PRIVILEGE_FIELD_NAME),
-                                hasPrivilegeFunctionCall.as(GRANTED_FIELD_NAME)
-                        )
+            // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
+            if (!isAllMode) {
+                // Calculate Grants: Expected - Current
+                var privilegesToGrant = new HashSet<>(expectedPrivileges);
+                privilegesToGrant.removeAll(currentPrivileges);
+
+                if (!privilegesToGrant.isEmpty()) {
+                    grantService.grant(
+                            tx,
+                            resource,
+                            object,
+                            privilegesToGrant
+                    );
+                }
+            }
+        }
+
+        // 2. Bulk grant ("ALL" mode only)
+        if (isAllMode) {
+            grantService.grantOnAll(
+                    tx,
+                    resource,
+                    expectedPrivileges
+            );
+        }
+
+        // 2. Revoke orphaned object privileges (Objects with privileges but not in Spec)
+        // We iterate current privileges and skip those we just processed.
+        // Any object currently having privileges but not listed in 'expectedObjects' is an orphan.
+        // Objects in 'expectedObjects' were either processed in Step 1 or skipped as 'owned'.
+        for (var entry : currentObjectPrivileges.entrySet()) {
+            var object = entry.getKey();
+
+            // If the role owns the object, we can skip it:
+            // - In "Explicit" mode: ownershipMap contains exactly the spec objects.
+            // - In "ALL" mode: ownershipMap contains ALL objects.
+            // Therefore, if it's in ownershipMap, it is NOT an orphan so we should not revoke anything
+            if (ownershipMap.containsKey(object)) {
+                continue;
+            }
+
+            var privilegesToRevoke = entry.getValue();
+            if (!privilegesToRevoke.isEmpty()) {
+                grantService.revoke(
+                        tx,
+                        resource,
+                        object,
+                        privilegesToRevoke
                 );
             }
         }
 
-        // 2. Execute all checks in a single round-trip using UNION ALL
-        if (checks.isEmpty()) {
-            // TODO nothing to do
+        String message = null;
+        if (!ownedObjects.isEmpty()) {
+            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%s".formatted(
+                    objectType,
+                    getResourceNamespaceOrOwn(resource, namespace),
+                    name,
+                    String.join("\n  • ", ownedObjects)
+            );
         }
 
-        var batchQuery = checks.stream()
-                .reduce(Select::unionAll)
-                .orElseThrow();
-
-        var objectPrivilegeIsGrantedMap = tx.fetch(batchQuery)
-                .stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        result -> {
-                            var objectName = result.get(OBJECT_FIELD_NAME, String.class);
-                            var privilegeName = result.get(PRIVILEGE_FIELD_NAME, String.class);
-
-                            return new ObjectPrivilege(
-                                    quotedName(schema, objectName),
-                                    privilege(privilegeName)
-                            );
-                        },
-                        result -> result.get(GRANTED_FIELD_NAME, Boolean.class)
-                ));
-
-        var grants = objectPrivilegeIsGrantedMap.entrySet()
-                .stream()
-                .map(entry -> {
-                    var objectPrivilege = entry.getKey();
-                    //var isGranted = entry.getValue();
-
-                    log.info(
-                            "Granting privilege [resource={}/{}, role={}, object={}, privilege={}]",
-                            namespace,
-                            name,
-                            role,
-                            objectPrivilege.qualifiedObject(),
-                            objectPrivilege.privilege()
-                    );
-
-                    var privilege = objectPrivilege.privilege();
-                    var qualifiedObject = objectPrivilege.qualifiedObject();
-
-                    return grant(privilege)
-                            .on(qualifiedObject)
-                            .to(role(role));
-                })
-                .toList();
-
-        tx.batch(grants).execute();
-
         status.setPhase(CRPhase.READY)
-                .setMessage(null);
+                .setMessage(message);
 
         return UpdateControl.patchStatus(resource);
     }
@@ -232,11 +254,5 @@ public class GrantReconciler
     @Override
     protected CRStatus newStatus() {
         return new CRStatus();
-    }
-
-    private record ObjectPrivilege(
-            Name qualifiedObject,
-            Privilege privilege
-    ) {
     }
 }

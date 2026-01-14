@@ -5,6 +5,7 @@ package it.aboutbits.postgresql.core.infrastructure.persistence;
 
 
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthMembers;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgClass;
 
 import javax.annotation.processing.Generated;
 
@@ -32,4 +33,5 @@ public class Indexes {
     // -------------------------------------------------------------------------
 
     public static final Index PG_AUTH_MEMBERS_GRANTOR_INDEX = Internal.createIndex(DSL.name("pg_auth_members_grantor_index"), PgAuthMembers.PG_AUTH_MEMBERS, new OrderField[] { PgAuthMembers.PG_AUTH_MEMBERS.GRANTOR }, false);
+    public static final Index PG_CLASS_TBLSPC_RELFILENODE_INDEX = Internal.createIndex(DSL.name("pg_class_tblspc_relfilenode_index"), PgClass.PG_CLASS, new OrderField[] { PgClass.PG_CLASS.RELTABLESPACE, PgClass.PG_CLASS.RELFILENODE }, false);
 }

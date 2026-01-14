@@ -1,6 +1,10 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import org.jooq.Privilege;
+import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.Locale;
 
 /**
  * <a href="https://www.postgresql.org/docs/current/sql-grant.html">
@@ -19,9 +23,12 @@ public enum GrantPrivilege {
     CREATE,
     CONNECT,
     TEMPORARY,
-    EXECUTE,
     USAGE,
-    SET,
-    ALTER_SYSTEM,
-    MAINTAIN
+    MAINTAIN;
+
+    public Privilege privilege() {
+        return DSL.privilege(
+                name().toLowerCase(Locale.ROOT)
+        );
+    }
 }

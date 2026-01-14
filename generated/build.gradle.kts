@@ -32,21 +32,13 @@ jooq {
                     }
                 }
                 includes = """
-                  has_column_privilege
-                | has_database_privilege
-                | has_foreign_data_wrapper_privilege
-                | has_function_privilege
-                | has_language_privilege
-                | has_parameter_privilege
-                | has_schema_privilege
-                | has_sequence_privilege
-                | has_server_privilege
-                | has_table_privilege
-                | has_tablespace_privilege
-                | has_type_privilege
+                  aclexplode   
                 | pg_auth_members
                 | pg_authid
+                | pg_class
+                | pg_database
                 | pg_db_role_setting
+                | pg_namespace
                 | shobj_description
                 """.trimIndent()
                 excludes = """
