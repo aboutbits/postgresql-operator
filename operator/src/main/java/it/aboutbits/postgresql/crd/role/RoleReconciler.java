@@ -26,6 +26,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -340,7 +341,7 @@ public class RoleReconciler
             return false;
         }
 
-        var ref = spec.getPasswordSecretRef();
+        var ref = Objects.requireNonNull(spec.getPasswordSecretRef());
         var refName = ref.getName();
         var refNamespace = getResourceNamespaceOrOwn(role, ref.getNamespace());
 

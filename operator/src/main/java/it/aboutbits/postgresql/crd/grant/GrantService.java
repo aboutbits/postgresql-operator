@@ -41,7 +41,7 @@ public class GrantService {
     /// @param tx       The DSLContext for database operations.
     /// @param resource The Grant resource containing the specification details.
     /// @return A map with object names as keys and lists of GrantPrivilege as values.
-    @SuppressWarnings("MethodLength")
+    @SuppressWarnings("checkstyle:MethodLength")
     public Map<String, Set<GrantPrivilege>> determineCurrentObjectPrivileges(
             DSLContext tx,
             Grant resource
@@ -214,7 +214,7 @@ public class GrantService {
     /// @param resource the Grant object containing specifications about the target database objects and privileges
     /// @return a map where the keys represent object names and the values indicate ownership status,
     /// or `null` if the object does not exist
-    @SuppressWarnings("MethodLength")
+    @SuppressWarnings({"checkstyle:MethodLength", "java:S3776"})
     public Map<String, @Nullable Boolean> determineObjectExistenceAndOwnership(
             DSLContext tx,
             Grant resource

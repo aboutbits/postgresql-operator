@@ -114,6 +114,7 @@ public class GrantReconciler
         return updateControl;
     }
 
+    @SuppressWarnings("java:S3776")
     private UpdateControl<Grant> reconcileInTransaction(
             DSLContext tx,
             Grant resource,
