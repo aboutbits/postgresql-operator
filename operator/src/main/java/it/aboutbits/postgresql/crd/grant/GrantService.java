@@ -19,6 +19,8 @@ import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.ACL
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_CLASS;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_DATABASE;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_NAMESPACE;
+import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
+import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.query;
@@ -82,7 +84,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_DATABASE.DATNAME,
-                            GrantPrivilege.class
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
                     );
             /*
              * select
@@ -111,7 +113,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_NAMESPACE.NSPNAME,
-                            GrantPrivilege.class
+                            r -> r.get(PG_NAMESPACE.NSPNAME, GrantPrivilege.class)
                     );
 
             /*
@@ -154,7 +156,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_CLASS.RELNAME,
-                            GrantPrivilege.class
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
                     );
             /*
              * select
@@ -192,7 +194,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_CLASS.RELNAME,
-                            GrantPrivilege.class
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
                     );
         };
 
@@ -232,7 +234,7 @@ public class GrantService {
                 (objects.isEmpty() ? 1 : objects.size()) * spec.getPrivileges().size()
         );
 
-        var allMode = objects.isEmpty();
+        var isAllMode = objects.isEmpty();
 
         switch (objectType) {
             case DATABASE -> {
@@ -360,7 +362,7 @@ public class GrantService {
                                         OID_DATA_TYPE,
                                         val(schema)
                                 )),
-                                allMode ? noCondition() : PG_CLASS.RELNAME.in(objects),
+                                isAllMode ? noCondition() : PG_CLASS.RELNAME.in(objects),
                                 // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
                                 PG_CLASS.RELKIND.eq(
                                         "S" // Sequence
@@ -368,7 +370,7 @@ public class GrantService {
                         )
                         .fetchMap(PG_CLASS.RELNAME, isOwnerCondition);
 
-                if (allMode) {
+                if (isAllMode) {
                     objectExistenceAndOwnershipMap.putAll(existingObjectsOwner);
                 } else {
                     for (var object : objects) {
@@ -394,7 +396,7 @@ public class GrantService {
             DSLContext tx,
             Grant resource,
             String object,
-            Set<GrantPrivilege> privilegesToRevoke
+            Set<GrantPrivilege> privilegesToGrant
     ) {
         var spec = resource.getSpec();
 
@@ -407,7 +409,7 @@ public class GrantService {
             default -> quotedName(object);
         };
 
-        var privileges = privilegesToRevoke.stream()
+        var privileges = privilegesToGrant.stream()
                 .map(GrantPrivilege::privilege)
                 .toList();
 
@@ -425,7 +427,7 @@ public class GrantService {
     public void grantOnAll(
             DSLContext tx,
             Grant resource,
-            Set<GrantPrivilege> privilegesToRevoke
+            Set<GrantPrivilege> privilegesToGrant
     ) {
         var spec = resource.getSpec();
 
@@ -435,11 +437,11 @@ public class GrantService {
 
         // grant <privileges> on all <objectType>s in schema <schema> to <role>;
         // is only supported by TABLE, SEQUENCE, FUNCTION, PROCEDURE and ROUTINE
-        if (objectType != GrantObjectType.TABLE && objectType != GrantObjectType.SEQUENCE) {
+        if (objectType != TABLE && objectType != SEQUENCE) {
             return;
         }
 
-        var privileges = privilegesToRevoke.stream()
+        var privileges = privilegesToGrant.stream()
                 .map(GrantPrivilege::privilege)
                 .toList();
 
@@ -464,10 +466,9 @@ public class GrantService {
 
         var schema = spec.getSchema();
         var role = role(spec.getRole());
-        var objectTypeEnum = spec.getObjectType();
-        var objectType = objectTypeEnum.objectType();
+        var objectType = spec.getObjectType();
 
-        var qualifiedObject = switch (objectTypeEnum) {
+        var qualifiedObject = switch (objectType) {
             case TABLE, SEQUENCE -> quotedName(schema, object);
             default -> quotedName(object);
         };
@@ -479,7 +480,7 @@ public class GrantService {
         var statement = query(
                 "revoke {0} on {1} {2} from {3}",
                 SQLUtil.concatenateQueryPartsWithComma(privileges),
-                objectType,
+                objectType.objectType(),
                 qualifiedObject,
                 role
         );

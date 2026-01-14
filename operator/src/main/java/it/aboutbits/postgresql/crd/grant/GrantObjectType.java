@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jooq.Keyword;
@@ -76,6 +77,11 @@ public enum GrantObjectType {
     ) {
         this.privileges = privileges;
         this.privilegesSet = Set.copyOf(privileges);
+    }
+
+    @JsonValue
+    public String toValue() {
+        return name().toLowerCase(Locale.ROOT);
     }
 
     public Keyword objectType() {

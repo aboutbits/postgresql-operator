@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.jooq.Privilege;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
@@ -25,6 +26,11 @@ public enum GrantPrivilege {
     TEMPORARY,
     USAGE,
     MAINTAIN;
+
+    @JsonValue
+    public String toValue() {
+        return name().toLowerCase(Locale.ROOT);
+    }
 
     public Privilege privilege() {
         return DSL.privilege(

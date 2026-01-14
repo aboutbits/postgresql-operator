@@ -19,7 +19,7 @@ import java.util.List;
         message = "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required."
 )
 @ValidationRule(
-        value = "self.objectType in ['database', 'schema'] ? !has(self.objects) : (has(self.objects) && self.objects.size() > 0)",
+        value = "self.objectType in ['database', 'schema'] ? !has(self.objects) : has(self.objects)",
         message = "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's it is required."
 )
 public class GrantSpec {

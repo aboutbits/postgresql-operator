@@ -185,7 +185,11 @@ public class GrantReconciler
             }
 
             // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
-            if (!isAllMode) {
+            // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't alllow to specify objects there
+            if (!isAllMode
+                    || objectType == GrantObjectType.DATABASE
+                    || objectType == GrantObjectType.SCHEMA
+            ) {
                 // Calculate Grants: Expected - Current
                 var privilegesToGrant = new HashSet<>(expectedPrivileges);
                 privilegesToGrant.removeAll(currentPrivileges);
