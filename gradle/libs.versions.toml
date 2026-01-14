@@ -94,7 +94,6 @@ datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafa
 # https://github.com/google/error-prone
 # https://mvnrepository.com/artifact/com.google.errorprone/error_prone_core
 errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
-errorProne-annotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
 
 # https://github.com/uber/NullAway
 # https://mvnrepository.com/artifact/com.uber.nullaway/nullaway
