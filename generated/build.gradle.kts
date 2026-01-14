@@ -9,8 +9,6 @@ dependencies {
      */
     api(libs.jooq)
     compileOnly(libs.jooqMeta)
-    // Custom Database generator
-    jooqCodegen(project(":jooq-generator"))
     // PostgreSQL JDBC Driver for jOOQ generation
     jooqCodegen(libs.postgresql)
 }
@@ -25,7 +23,7 @@ jooq {
         }
         generator {
             database {
-                name = "it.aboutbits.postgresql.CustomPostgresDatabase"
+                name = "org.jooq.meta.postgres.PostgresDatabase"
                 schemata {
                     schema {
                         inputSchema = "pg_catalog"
