@@ -3,6 +3,7 @@ package it.aboutbits.postgresql._support.testdata.persisted;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.ClusterConnectionCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.DatabaseCreate;
+import it.aboutbits.postgresql._support.testdata.persisted.creator.GrantCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.RoleCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SchemaCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SecretRefCreate;
@@ -104,6 +105,14 @@ public class Given {
         public SchemaCreate schema() {
             return new SchemaCreate(
                     numberOfItems,
+                    kubernetesClient
+            );
+        }
+
+        public GrantCreate grant() {
+            return new GrantCreate(
+                    numberOfItems,
+                    given,
                     kubernetesClient
             );
         }
