@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.database;
+package it.aboutbits.postgresql.crd.schema;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
@@ -22,17 +22,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
-class DatabaseReconcilerTest {
+class SchemaReconcilerTest {
     private final Given given;
 
-    private final DatabaseService databaseService;
+    private final SchemaService schemaService;
     private final PostgreSQLContextFactory postgreSQLContextFactory;
 
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
     void cleanUp() {
-        kubernetesClient.resources(Database.class)
+        kubernetesClient.resources(Schema.class)
                 .withTimeout(5, TimeUnit.SECONDS)
                 .delete();
 
@@ -42,49 +42,49 @@ class DatabaseReconcilerTest {
     }
 
     @Test
-    @DisplayName("When a Database is created, it should be reconciled to READY")
-    void createDatabase_andStatusReady() {
+    @DisplayName("When a Schema is created, it should be reconciled to READY")
+    void createSchema_andStatusReady() {
         // given
         var clusterConnection = given.one()
                 .clusterConnection()
-                .withName("test-connection-database")
+                .withName("test-connection-schema")
                 .returnFirst();
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
-        var dbName = "test-db";
+        var schemaName = "test-schema";
 
         // when
-        var database = given.one()
-                .database()
-                .withName(dbName)
+        var schema = given.one()
+                .schema()
+                .withName(schemaName)
                 .withClusterConnectionName(clusterConnection.getMetadata().getName())
                 .returnFirst();
 
         // then
         var expectedStatus = new CRStatus()
-                .setName(dbName)
+                .setName(schemaName)
                 .setPhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
-        assertThatDatabaseHasExpectedStatus(
-                database,
+        assertThatSchemaHasExpectedStatus(
+                schema,
                 expectedStatus,
                 now
         );
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
-        assertThat(databaseService.databaseExists(dsl, database.getSpec())).isTrue();
+        assertThat(schemaService.schemaExists(dsl, schema.getSpec())).isTrue();
     }
 
-    private void assertThatDatabaseHasExpectedStatus(
-            Database database,
+    private void assertThatSchemaHasExpectedStatus(
+            Schema schema,
             CRStatus expectedStatus,
             OffsetDateTime now
     ) {
-        assertThat(database)
+        assertThat(schema)
                 .isNotNull()
-                .extracting(Database::getStatus)
+                .extracting(Schema::getStatus)
                 .satisfies(status -> {
                     assertThat(status.getLastProbeTime()).isAfter(
                             now

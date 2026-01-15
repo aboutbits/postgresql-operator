@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.database;
+package it.aboutbits.postgresql.crd.schema;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
@@ -22,18 +22,18 @@ import java.util.concurrent.TimeUnit;
 @NullMarked
 @Slf4j
 @RequiredArgsConstructor
-public class DatabaseReconciler
-        extends BaseReconciler<Database, CRStatus>
-        implements Reconciler<Database>, Cleaner<Database> {
-    private final DatabaseService databaseService;
+public class SchemaReconciler
+        extends BaseReconciler<Schema, CRStatus>
+        implements Reconciler<Schema>, Cleaner<Schema> {
+    private final SchemaService schemaService;
 
     private final KubernetesClient kubernetesClient;
     private final PostgreSQLContextFactory contextFactory;
 
     @Override
-    public UpdateControl<Database> reconcile(
-            Database resource,
-            Context<Database> context
+    public UpdateControl<Schema> reconcile(
+            Schema resource,
+            Context<Schema> context
     ) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
@@ -42,7 +42,7 @@ public class DatabaseReconciler
         var namespace = resource.getMetadata().getNamespace();
 
         log.info(
-                "Reconciling Database [resource={}/{}, status.phase={}]",
+                "Reconciling Schema [resource={}/{}, status.phase={}]",
                 namespace,
                 name,
                 status.getPhase()
@@ -69,14 +69,16 @@ public class DatabaseReconciler
 
         var clusterConnection = clusterConnectionOptional.get();
 
-        UpdateControl<Database> updateControl;
+        UpdateControl<Schema> updateControl;
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
-            // PostgreSQL doesn't allow running `create database` in a transaction
-            updateControl = reconcile(
-                    dsl,
-                    resource,
-                    status
+            // Run everything in a single transaction
+            updateControl = dsl.transactionResult(
+                    cfg -> reconcileInTransaction(
+                            cfg.dsl(),
+                            resource,
+                            status
+                    )
             );
         } catch (Exception e) {
             return handleError(
@@ -91,8 +93,8 @@ public class DatabaseReconciler
 
     @Override
     public DeleteControl cleanup(
-            Database resource,
-            Context<Database> context
+            Schema resource,
+            Context<Schema> context
     ) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
@@ -101,7 +103,7 @@ public class DatabaseReconciler
         var namespace = resource.getMetadata().getNamespace();
 
         log.info(
-                "{}ing Database [resource={}/{}, spec.name={}, status.phase={}]",
+                "{}ing Schema [resource={}/{}, spec.name={}, status.phase={}]",
                 spec.getReclaimPolicy().toValue(),
                 namespace,
                 name,
@@ -113,11 +115,11 @@ public class DatabaseReconciler
             status.setPhase(CRPhase.DELETING);
 
             if (spec.getReclaimPolicy() == ReclaimPolicy.DELETE) {
-                status.setMessage("Database deletion in progress");
+                status.setMessage("Schema deletion in progress");
             }
         }
 
-        // We do not actually delete the database if the reclaimPolicy is set to RETAIN, we only delete the CR instance
+        // We do not actually delete the schema if the reclaimPolicy is set to RETAIN, we only delete the CR instance
         if (spec.getReclaimPolicy() == ReclaimPolicy.RETAIN) {
             return DeleteControl.defaultDelete();
         }
@@ -143,12 +145,12 @@ public class DatabaseReconciler
         var clusterConnection = clusterConnectionOptional.get();
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
-            databaseService.dropDatabase(dsl, spec);
+            schemaService.dropSchema(dsl, spec);
 
             return DeleteControl.defaultDelete();
         } catch (Exception e) {
             log.error(
-                    "Failed to delete Database [resource={}/{}, spec.name={}, status.phase={}]",
+                    "Failed to delete Schema [resource={}/{}, spec.name={}, status.phase={}]",
                     namespace,
                     name,
                     spec.getName(),
@@ -167,9 +169,9 @@ public class DatabaseReconciler
         return new CRStatus();
     }
 
-    private UpdateControl<Database> reconcile(
-            DSLContext dsl,
-            Database resource,
+    private UpdateControl<Schema> reconcileInTransaction(
+            DSLContext tx,
+            Schema resource,
             CRStatus status
     ) {
         var name = resource.getMetadata().getName();
@@ -178,15 +180,15 @@ public class DatabaseReconciler
         var spec = resource.getSpec();
 
         // Create and return the role if it doesn't exist yet
-        if (!databaseService.databaseExists(dsl, spec)) {
+        if (!schemaService.schemaExists(tx, spec)) {
             log.info(
-                    "Creating Database [resource={}/{}]",
+                    "Creating Schema [resource={}/{}]",
                     namespace,
                     name
             );
 
-            databaseService.createDatabase(
-                    dsl,
+            schemaService.createSchema(
+                    tx,
                     spec
             );
 
@@ -196,12 +198,12 @@ public class DatabaseReconciler
             return UpdateControl.patchStatus(resource);
         }
 
-        var currentOwner = databaseService.fetchDatabaseOwner(dsl, spec);
+        var currentOwner = schemaService.fetchSchemaOwner(tx, spec);
         var expectedOwner = spec.getOwner();
 
         if (Objects.equals(currentOwner, expectedOwner)) {
             log.info(
-                    "Database up-to-date [resource={}/{}]",
+                    "Schema up-to-date [resource={}/{}]",
                     namespace,
                     name
             );
@@ -210,15 +212,15 @@ public class DatabaseReconciler
         }
 
         log.info(
-                "Changing Database owner [resource={}/{}]",
+                "Changing Schema owner [resource={}/{}]",
                 namespace,
                 name
         );
 
-        databaseService.changeDatabaseOwner(dsl, spec);
+        schemaService.changeSchemaOwner(tx, spec);
 
         status.setPhase(CRPhase.READY)
-                .setMessage("Database owner changed [previousOwner=%s, newOwner=%s]".formatted(
+                .setMessage("Schema owner changed [previousOwner=%s, newOwner=%s]".formatted(
                         currentOwner,
                         expectedOwner
                 ));
