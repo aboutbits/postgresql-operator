@@ -2,7 +2,6 @@ package it.aboutbits.postgresql.crd.database;
 
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
 import jakarta.inject.Singleton;
-import org.jooq.CloseableDSLContext;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
@@ -16,33 +15,33 @@ import static org.jooq.impl.DSL.selectOne;
 @Singleton
 public class DatabaseService {
     public boolean databaseExists(
-            DSLContext tx,
+            DSLContext dsl,
             DatabaseSpec spec
     ) {
-        return tx.fetchExists(selectOne()
+        return dsl.fetchExists(selectOne()
                 .from(PG_DATABASE)
                 .where(PG_DATABASE.DATNAME.eq(spec.getName()))
         );
     }
 
     public void createDatabase(
-            DSLContext tx,
+            DSLContext dsl,
             DatabaseSpec spec
     ) {
         var name = quotedName(spec.getName());
 
-        tx.createDatabase(name).execute();
+        dsl.createDatabase(name).execute();
 
         if (spec.getOwner() != null) {
-            changeDatabaseOwner(tx, spec);
+            changeDatabaseOwner(dsl, spec);
         }
     }
 
     public String fetchDatabaseOwner(
-            DSLContext tx,
+            DSLContext dsl,
             DatabaseSpec spec
     ) {
-        return tx
+        return dsl
                 .select(Routines.pgGetUserbyid(
                         PG_DATABASE.DATDBA
                 ))
@@ -52,12 +51,12 @@ public class DatabaseService {
     }
 
     public void changeDatabaseOwner(
-            DSLContext tx,
+            DSLContext dsl,
             DatabaseSpec spec
     ) {
         var name = quotedName(spec.getName());
 
-        tx.execute(query(
+        dsl.execute(query(
                 "alter database {0} owner to {1}",
                 name,
                 role(spec.getOwner())

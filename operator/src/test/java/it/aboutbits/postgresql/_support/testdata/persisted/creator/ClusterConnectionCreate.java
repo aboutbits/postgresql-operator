@@ -48,19 +48,22 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     @Nullable
     private String withApplicationName;
 
-    public ClusterConnectionCreate withoutNamespace() {
-        this.withoutNamespace = true;
-        return this;
-    }
-
     public ClusterConnectionCreate(
             int numberOfItems,
-            Given given, KubernetesClient kubernetesClient, Given.DBConnectionDetails dbConnectionDetails
+            Given given,
+            KubernetesClient kubernetesClient,
+            Given.DBConnectionDetails dbConnectionDetails
     ) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
         this.dbConnectionDetails = dbConnectionDetails;
+    }
+
+    @SuppressWarnings("unused")
+    public ClusterConnectionCreate withoutNamespace() {
+        this.withoutNamespace = true;
+        return this;
     }
 
     @Override

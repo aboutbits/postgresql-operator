@@ -2,6 +2,7 @@ package it.aboutbits.postgresql._support.testdata.persisted;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.ClusterConnectionCreate;
+import it.aboutbits.postgresql._support.testdata.persisted.creator.DatabaseCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.RoleCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SecretRefCreate;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -88,6 +89,13 @@ public class Given {
             return new RoleCreate(
                     numberOfItems,
                     given,
+                    kubernetesClient
+            );
+        }
+
+        public DatabaseCreate database() {
+            return new DatabaseCreate(
+                    numberOfItems,
                     kubernetesClient
             );
         }

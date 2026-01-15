@@ -3,11 +3,10 @@ package it.aboutbits.postgresql._support.testdata.persisted.creator;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
-import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.ClusterReference;
-import it.aboutbits.postgresql.core.SecretRef;
-import it.aboutbits.postgresql.crd.role.Role;
-import it.aboutbits.postgresql.crd.role.RoleSpec;
+import it.aboutbits.postgresql.core.ReclaimPolicy;
+import it.aboutbits.postgresql.crd.database.Database;
+import it.aboutbits.postgresql.crd.database.DatabaseSpec;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -20,9 +19,7 @@ import java.util.concurrent.TimeUnit;
 @NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
-public class RoleCreate extends TestDataCreator<Role> {
-    private final Given given;
-
+public class DatabaseCreate extends TestDataCreator<Database> {
     private final KubernetesClient kubernetesClient;
 
     @Nullable
@@ -34,59 +31,36 @@ public class RoleCreate extends TestDataCreator<Role> {
     private String withName;
 
     @Nullable
-    private String withComment;
-
-    @Nullable
     private String withClusterConnectionName;
 
     @Nullable
     private String withClusterConnectionNamespace;
 
+    private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
+
     @Nullable
-    private SecretRef withPasswordSecretRef;
+    private String withOwner;
 
-    private RoleSpec.@Nullable Flags withFlags;
-
-    public RoleCreate(
+    public DatabaseCreate(
             int numberOfItems,
-            Given given,
             KubernetesClient kubernetesClient
     ) {
         super(numberOfItems);
-        this.given = given;
         this.kubernetesClient = kubernetesClient;
     }
 
     @SuppressWarnings("unused")
-    public RoleCreate withLogin(boolean login) {
-        if (!login) {
-            withPasswordSecretRef = null;
-            return this;
-        }
-
-        if (withPasswordSecretRef != null) {
-            return this;
-        }
-
-        withPasswordSecretRef = given.one()
-                .secretRef()
-                .returnFirst();
-
-        return this;
-    }
-
-    @SuppressWarnings("unused")
-    public RoleCreate withoutNamespace() {
+    public DatabaseCreate withoutNamespace() {
         withoutNamespace = true;
         return this;
     }
 
     @Override
-    protected Role create(int index) {
+    protected Database create(int index) {
         var namespace = getNamespace();
         var name = getName();
 
-        var item = new Role();
+        var item = new Database();
 
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
@@ -94,34 +68,29 @@ public class RoleCreate extends TestDataCreator<Role> {
                 .build()
         );
 
-        var spec = new RoleSpec();
+        var spec = new DatabaseSpec();
         spec.setName(name);
-        spec.setComment(withComment);
+        spec.setReclaimPolicy(withReclaimPolicy);
+        spec.setOwner(withOwner);
 
         var clusterRef = new ClusterReference();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
         spec.setClusterRef(clusterRef);
 
-        spec.setPasswordSecretRef(withPasswordSecretRef);
-
-        if (withFlags != null) {
-            spec.setFlags(withFlags);
-        }
-
         item.setSpec(spec);
 
-        kubernetesClient.resources(Role.class)
+        kubernetesClient.resources(Database.class)
                 .inNamespace(namespace)
                 .resource(item)
                 .serverSideApply();
 
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Role.class)
+        return kubernetesClient.resources(Database.class)
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        role -> role.getStatus() != null,
+                        db -> db.getStatus() != null,
                         10,
                         TimeUnit.SECONDS
                 );
@@ -145,7 +114,7 @@ public class RoleCreate extends TestDataCreator<Role> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-role");
+        return randomKubernetesNameSuffix("test-database");
     }
 
     private String getClusterConnectionName() {

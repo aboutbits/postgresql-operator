@@ -69,13 +69,11 @@ public class DatabaseReconciler
         UpdateControl<Database> updateControl;
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
-            // Run everything in a single transaction
-            updateControl = dsl.transactionResult(
-                    cfg -> reconcileInTransaction(
-                            cfg.dsl(),
-                            resource,
-                            status
-                    )
+            // PostgreSQL doesn't allow running `create database` in a transaction
+            updateControl = reconcile(
+                    dsl,
+                    resource,
+                    status
             );
         } catch (Exception e) {
             return handleError(
@@ -166,8 +164,8 @@ public class DatabaseReconciler
         return new CRStatus();
     }
 
-    private UpdateControl<Database> reconcileInTransaction(
-            DSLContext tx,
+    private UpdateControl<Database> reconcile(
+            DSLContext dsl,
             Database resource,
             CRStatus status
     ) {
@@ -177,7 +175,7 @@ public class DatabaseReconciler
         var spec = resource.getSpec();
 
         // Create and return the role if it doesn't exist yet
-        if (!databaseService.databaseExists(tx, spec)) {
+        if (!databaseService.databaseExists(dsl, spec)) {
             log.info(
                     "Creating Database [resource={}/{}]",
                     namespace,
@@ -185,7 +183,7 @@ public class DatabaseReconciler
             );
 
             databaseService.createDatabase(
-                    tx,
+                    dsl,
                     spec
             );
 
@@ -195,7 +193,7 @@ public class DatabaseReconciler
             return UpdateControl.patchStatus(resource);
         }
 
-        var currentOwner = databaseService.fetchDatabaseOwner(tx, spec);
+        var currentOwner = databaseService.fetchDatabaseOwner(dsl, spec);
         var expectedOwner = spec.getOwner();
 
         if (Objects.equals(currentOwner, expectedOwner)) {
@@ -214,7 +212,7 @@ public class DatabaseReconciler
                 name
         );
 
-        databaseService.changeDatabaseOwner(tx, spec);
+        databaseService.changeDatabaseOwner(dsl, spec);
 
         status.setPhase(CRPhase.READY)
                 .setMessage("Database owner changed [previousOwner=%s, newOwner=%s]".formatted(
