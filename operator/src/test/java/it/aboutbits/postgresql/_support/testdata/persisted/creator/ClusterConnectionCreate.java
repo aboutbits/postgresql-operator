@@ -40,7 +40,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     private Integer withPort;
 
     @Nullable
-    private String withMaintenanceDatabase;
+    private String withDatabase;
 
     @Nullable
     private SecretRef withAdminSecretRef;
@@ -83,7 +83,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         var spec = new ClusterConnectionSpec();
         spec.setHost(getHost());
         spec.setPort(getPort());
-        spec.setMaintenanceDatabase(getMaintenanceDatabase());
+        spec.setDatabase(getDatabase());
         spec.setAdminSecretRef(getAdminSecretRef());
         spec.setParameters(getParameters());
 
@@ -142,9 +142,9 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         return dbConnectionDetails.port();
     }
 
-    private String getMaintenanceDatabase() {
+    private String getDatabase() {
         return Objects.requireNonNullElse(
-                withMaintenanceDatabase,
+                withDatabase,
                 "postgres"
         );
     }

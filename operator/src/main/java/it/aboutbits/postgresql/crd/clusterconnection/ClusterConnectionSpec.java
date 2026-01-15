@@ -31,9 +31,9 @@ public class ClusterConnectionSpec {
     @Required
     @ValidationRule(
             value = "self.size() > 0",
-            message = "The ClusterConnection maintenanceDatabase must not be empty."
+            message = "The ClusterConnection database must not be empty."
     )
-    private String maintenanceDatabase = "postgres";
+    private String database = "postgres";
 
     @Required
     private SecretRef adminSecretRef = new SecretRef();

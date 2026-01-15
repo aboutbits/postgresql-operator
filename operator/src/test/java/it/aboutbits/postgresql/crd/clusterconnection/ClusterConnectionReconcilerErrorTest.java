@@ -46,7 +46,7 @@ class ClusterConnectionReconcilerErrorTest {
 
         when(spec.getHost()).thenReturn("localhost");
         when(spec.getPort()).thenReturn(5432);
-        when(spec.getMaintenanceDatabase()).thenReturn("postgres");
+        when(spec.getDatabase()).thenReturn("postgres");
         when(spec.getParameters()).thenReturn(Collections.emptyMap());
 
         resource.setSpec(spec);

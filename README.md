@@ -130,7 +130,7 @@ spec:
     name: quarkus-db-secret
   host: localhost
   port: 5432
-  maintenanceDatabase: postgres
+  database: postgres
 ```
 
 ![Established Cluster Connection](docs/established-cluster-connection.png)

@@ -53,7 +53,7 @@ public class ClusterConnection
         var jdbcUrl = "jdbc:postgresql://%s:%d/%s".formatted(
                 spec.getHost(),
                 spec.getPort(),
-                spec.getMaintenanceDatabase()
+                spec.getDatabase()
         );
 
         if (spec.getParameters().isEmpty()) {

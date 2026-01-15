@@ -24,7 +24,7 @@ public class PostgreSQLContextFactory {
     public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) {
         return getDSLContext(
                 clusterConnection,
-                clusterConnection.getSpec().getMaintenanceDatabase()
+                clusterConnection.getSpec().getDatabase()
         );
     }
 

@@ -415,7 +415,7 @@ class GrantReconcilerTest {
             // To create a Schema in the new database, we need a ClusterConnection pointing to it
             var clusterConnectionDb = given.one()
                     .clusterConnection()
-                    .withMaintenanceDatabase(database.getSpec().getName())
+                    .withDatabase(database.getSpec().getName())
                     .returnFirst();
 
             var schema = given.one()
@@ -477,7 +477,7 @@ class GrantReconcilerTest {
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
-                    .withMaintenanceDatabase(database.getSpec().getName())
+                    .withDatabase(database.getSpec().getName())
                     .returnFirst();
 
             var schema = given.one()
@@ -545,7 +545,7 @@ class GrantReconcilerTest {
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
-                    .withMaintenanceDatabase(database.getSpec().getName())
+                    .withDatabase(database.getSpec().getName())
                     .returnFirst();
 
             var schema = given.one()
@@ -629,7 +629,7 @@ class GrantReconcilerTest {
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
-                    .withMaintenanceDatabase(database.getSpec().getName())
+                    .withDatabase(database.getSpec().getName())
                     .returnFirst();
 
             var schema = given.one()
@@ -699,7 +699,7 @@ class GrantReconcilerTest {
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
-                    .withMaintenanceDatabase(database.getSpec().getName())
+                    .withDatabase(database.getSpec().getName())
                     .returnFirst();
 
             var schema = given.one()
