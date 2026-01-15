@@ -10,14 +10,6 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.Named;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.Locale;
-import java.util.stream.Collectors;
-
-import static org.jooq.impl.DSL.grant;
-import static org.jooq.impl.DSL.privilege;
-import static org.jooq.impl.DSL.quotedName;
-import static org.jooq.impl.DSL.role;
-
 @NullMarked
 @Version("v1")
 @Group("postgresql.aboutbits.it")
@@ -52,30 +44,6 @@ public class Grant
     @Override
     @JsonIgnore
     public String getName() {
-        var spec = getSpec();
-
-        var privileges = spec.getPrivileges()
-                .stream()
-                .map(privilege -> privilege(privilege.name().toLowerCase(Locale.ROOT)))
-                .toList();
-
-        var role = role(spec.getRole());
-        var database = spec.getDatabase();
-        var schema = spec.getSchema();
-
-        var statements = spec.getObjects().stream()
-                .map(object -> {
-                    var on = quotedName(schema, object);
-
-                    var statement = grant(privileges).on(on).to(role);
-
-                    return statement.getSQL() + ";";
-                })
-                .collect(Collectors.joining("\n"));
-
-        return """
-               Statement(s) executed on database "%s":
-               %s\
-               """.formatted(database, statements);
+        return ""; // Come up with something that makes sense
     }
 }

@@ -9,9 +9,11 @@ import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,16 +42,14 @@ public class GrantService {
 
     /// Determines all existing privileges for the specified `role`, when applicable `schema`, and the given `objectTyoe`.
     ///
-    /// @param tx       The DSLContext for database operations.
-    /// @param resource The Grant resource containing the specification details.
+    /// @param tx   The DSLContext for database operations.
+    /// @param spec The GrantSpec containing the specification details.
     /// @return A map with object names as keys and lists of GrantPrivilege as values.
     @SuppressWarnings("checkstyle:MethodLength")
     public Map<String, Set<GrantPrivilege>> determineCurrentObjectPrivileges(
             DSLContext tx,
-            Grant resource
+            GrantSpec spec
     ) {
-        var spec = resource.getSpec();
-
         var database = spec.getDatabase();
         var role = spec.getRole();
         var schema = spec.getSchema();
@@ -113,7 +113,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_NAMESPACE.NSPNAME,
-                            r -> r.get(PG_NAMESPACE.NSPNAME, GrantPrivilege.class)
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
                     );
 
             /*
@@ -212,23 +212,24 @@ public class GrantService {
     /// If the `objects` List is empty, no condition is applied for object filtering,
     /// and thus all objects from this `namespace`/`schema` are returned.
     ///
-    /// @param tx       the DSLContext used to execute database operations
-    /// @param resource the Grant object containing specifications about the target database objects and privileges
+    /// @param tx   the DSLContext used to execute database operations
+    /// @param spec the GrantSpec object containing specifications about the target database objects and privileges
     /// @return a map where the keys represent object names and the values indicate ownership status,
     /// or `null` if the object does not exist
     @SuppressWarnings({"checkstyle:MethodLength", "java:S3776"})
     public Map<String, @Nullable Boolean> determineObjectExistenceAndOwnership(
             DSLContext tx,
-            Grant resource
+            GrantSpec spec
     ) {
-        var spec = resource.getSpec();
-
         var database = spec.getDatabase();
         var role = spec.getRole();
         var schema = spec.getSchema();
 
         var objectType = spec.getObjectType();
-        var objects = spec.getObjects();
+        var objects = Objects.requireNonNullElse(
+                spec.getObjects(),
+                Collections.<String>emptySet()
+        );
 
         var objectExistenceAndOwnershipMap = HashMap.<String, @Nullable Boolean>newHashMap(
                 (objects.isEmpty() ? 1 : objects.size()) * spec.getPrivileges().size()
@@ -398,12 +399,10 @@ public class GrantService {
 
     public void grant(
             DSLContext tx,
-            Grant resource,
+            GrantSpec spec,
             String object,
             Set<GrantPrivilege> privilegesToGrant
     ) {
-        var spec = resource.getSpec();
-
         var schema = spec.getSchema();
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
@@ -430,11 +429,9 @@ public class GrantService {
 
     public void grantOnAll(
             DSLContext tx,
-            Grant resource,
+            GrantSpec spec,
             Set<GrantPrivilege> privilegesToGrant
     ) {
-        var spec = resource.getSpec();
-
         var schema = quotedName(spec.getSchema());
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
@@ -462,12 +459,10 @@ public class GrantService {
 
     public void revoke(
             DSLContext tx,
-            Grant resource,
+            GrantSpec spec,
             String object,
             Set<GrantPrivilege> privilegesToRevoke
     ) {
-        var spec = resource.getSpec();
-
         var schema = spec.getSchema();
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();

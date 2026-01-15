@@ -1,7 +1,9 @@
 package it.aboutbits.postgresql.crd.grant;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import it.aboutbits.postgresql.core.BaseReconciler;
@@ -14,7 +16,9 @@ import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -25,7 +29,7 @@ import static org.jooq.impl.DSL.quotedName;
 @RequiredArgsConstructor
 public class GrantReconciler
         extends BaseReconciler<Grant, CRStatus>
-        implements Reconciler<Grant> {
+        implements Reconciler<Grant>, Cleaner<Grant> {
     private final GrantService grantService;
 
     private final KubernetesClient kubernetesClient;
@@ -115,6 +119,84 @@ public class GrantReconciler
     }
 
     @Override
+    public DeleteControl cleanup(
+            Grant resource,
+            Context<Grant> context
+    ) throws Exception {
+        var spec = resource.getSpec();
+        var status = initializeStatus(resource);
+
+        var name = resource.getMetadata().getName();
+        var namespace = resource.getMetadata().getNamespace();
+
+        log.info(
+                "Deleting Grant [resource={}/{}, status.phase={}]",
+                namespace,
+                name,
+                status.getPhase()
+        );
+
+        if (status.getPhase() != CRPhase.DELETING) {
+            status.setPhase(CRPhase.DELETING)
+                    .setMessage("Grant deletion in progress");
+        }
+
+        var clusterRef = spec.getClusterRef();
+
+        var clusterConnectionOptional = getReferencedClusterConnection(
+                kubernetesClient,
+                resource,
+                clusterRef
+        );
+
+        if (clusterConnectionOptional.isEmpty()) {
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
+                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                    clusterRef.getName()
+            ));
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(60, TimeUnit.SECONDS);
+        }
+
+        var clusterConnection = clusterConnectionOptional.get();
+
+        try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+            dsl.transaction(cfg -> {
+                var tx = cfg.dsl();
+
+                var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, spec);
+
+                for (var objectPrivileges : currentObjectPrivileges.entrySet()) {
+                    var object = objectPrivileges.getKey();
+                    var privileges = objectPrivileges.getValue();
+
+                    grantService.revoke(
+                            dsl,
+                            spec,
+                            object,
+                            privileges
+                    );
+                }
+            });
+
+            return DeleteControl.defaultDelete();
+        } catch (Exception e) {
+            log.error(
+                    "Failed to delete Grant [resource={}/{}, status.phase={}]",
+                    namespace,
+                    name,
+                    status.getPhase()
+            );
+
+            status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(60, TimeUnit.SECONDS);
+        }
+    }
+
+    @Override
     protected CRStatus newStatus() {
         return new CRStatus();
     }
@@ -133,13 +215,18 @@ public class GrantReconciler
         var schema = spec.getSchema();
         var objectType = spec.getObjectType();
 
-        var expectedObjects = new HashSet<>(spec.getObjects());
+        var expectedObjects = new HashSet<>(
+                Objects.requireNonNullElse(
+                        spec.getObjects(),
+                        Collections.emptySet()
+                )
+        );
         var expectedPrivileges = new HashSet<>(spec.getPrivileges());
 
         var isAllMode = expectedObjects.isEmpty();
 
-        var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, resource);
-        var ownershipMap = grantService.determineObjectExistenceAndOwnership(tx, resource);
+        var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, spec);
+        var ownershipMap = grantService.determineObjectExistenceAndOwnership(tx, spec);
 
         // Classify objects in a single pass
         var missingObjects = new ArrayList<String>();
@@ -183,7 +270,7 @@ public class GrantReconciler
             if (!privilegesToRevoke.isEmpty()) {
                 grantService.revoke(
                         tx,
-                        resource,
+                        spec,
                         object,
                         privilegesToRevoke
                 );
@@ -202,7 +289,7 @@ public class GrantReconciler
                 if (!privilegesToGrant.isEmpty()) {
                     grantService.grant(
                             tx,
-                            resource,
+                            spec,
                             object,
                             privilegesToGrant
                     );
@@ -214,7 +301,7 @@ public class GrantReconciler
         if (isAllMode) {
             grantService.grantOnAll(
                     tx,
-                    resource,
+                    spec,
                     expectedPrivileges
             );
         }
@@ -238,7 +325,7 @@ public class GrantReconciler
             if (!privilegesToRevoke.isEmpty()) {
                 grantService.revoke(
                         tx,
-                        resource,
+                        spec,
                         object,
                         privilegesToRevoke
                 );

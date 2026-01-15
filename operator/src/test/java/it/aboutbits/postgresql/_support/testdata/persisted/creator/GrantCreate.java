@@ -53,8 +53,11 @@ public class GrantCreate extends TestDataCreator<Grant> {
 
     private GrantObjectType withObjectType = GrantObjectType.DATABASE;
 
-    private List<String> withObjects = new ArrayList<>();
+    @Nullable
+    @Setter(AccessLevel.NONE)
+    private List<String> withObjects = null;
 
+    @Setter(AccessLevel.NONE)
     private List<GrantPrivilege> withPrivileges = new ArrayList<>();
 
     public GrantCreate(
@@ -68,8 +71,20 @@ public class GrantCreate extends TestDataCreator<Grant> {
     }
 
     @SuppressWarnings("unused")
+    public GrantCreate withObjects(List<String> objects) {
+        this.withObjects = objects;
+        return this;
+    }
+
+    @SuppressWarnings("unused")
     public GrantCreate withObjects(String... objects) {
         this.withObjects = List.of(objects);
+        return this;
+    }
+
+    @SuppressWarnings("unused")
+    public GrantCreate withPrivileges(List<GrantPrivilege> privileges) {
+        this.withPrivileges = privileges;
         return this;
     }
 
@@ -98,18 +113,32 @@ public class GrantCreate extends TestDataCreator<Grant> {
                 .build()
         );
 
-        var spec = new GrantSpec();
-        spec.setDatabase(getDatabase());
-        spec.setRole(getRole());
-        spec.setSchema(getSchema());
-        spec.setObjectType(withObjectType);
-        spec.setObjects(withObjects);
-        spec.setPrivileges(withPrivileges);
-
         var clusterRef = new ClusterReference();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
+
+        var spec = new GrantSpec();
+
         spec.setClusterRef(clusterRef);
+        spec.setDatabase(getDatabase());
+        spec.setRole(getRole());
+
+        spec.setObjectType(withObjectType);
+        spec.setObjects(withObjects);
+
+        if (withObjectType != GrantObjectType.DATABASE
+                || withSchema != null
+        ) {
+            spec.setSchema(getSchema());
+        }
+
+        if ((withObjectType != GrantObjectType.DATABASE && withObjectType == GrantObjectType.SCHEMA)
+                || withObjects != null
+        ) {
+            spec.setObjects(withObjects);
+        }
+
+        spec.setPrivileges(withPrivileges);
 
         item.setSpec(spec);
 
