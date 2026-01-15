@@ -36,6 +36,7 @@ jooq {
                 | pg_class
                 | pg_database
                 | pg_db_role_setting
+                | pg_get_userbyid
                 | pg_namespace
                 | shobj_description
                 """.trimIndent()

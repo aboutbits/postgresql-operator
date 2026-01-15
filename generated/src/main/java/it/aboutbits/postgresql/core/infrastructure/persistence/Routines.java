@@ -4,6 +4,7 @@
 package it.aboutbits.postgresql.core.infrastructure.persistence;
 
 
+import it.aboutbits.postgresql.core.infrastructure.persistence.routines.PgGetUserbyid;
 import it.aboutbits.postgresql.core.infrastructure.persistence.routines.ShobjDescription;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
@@ -27,6 +28,44 @@ import org.jooq.Result;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Routines {
+
+    /**
+     * Call <code>pg_catalog.pg_get_userbyid</code>
+     */
+    public static String pgGetUserbyid(
+          Configuration configuration
+        , Long __1
+    ) {
+        PgGetUserbyid f = new PgGetUserbyid();
+        f.set__1(__1);
+
+        f.execute(configuration);
+        return f.getReturnValue();
+    }
+
+    /**
+     * Get <code>pg_catalog.pg_get_userbyid</code> as a field.
+     */
+    public static Field<String> pgGetUserbyid(
+          Long __1
+    ) {
+        PgGetUserbyid f = new PgGetUserbyid();
+        f.set__1(__1);
+
+        return f.asField();
+    }
+
+    /**
+     * Get <code>pg_catalog.pg_get_userbyid</code> as a field.
+     */
+    public static Field<String> pgGetUserbyid(
+          Field<Long> __1
+    ) {
+        PgGetUserbyid f = new PgGetUserbyid();
+        f.set__1(__1);
+
+        return f.asField();
+    }
 
     /**
      * Call <code>pg_catalog.shobj_description</code>

@@ -244,7 +244,8 @@ public class GrantService {
                  * where
                  *   d.datname = '<database_name>'
                  */
-                var isOwner = tx.select(
+                var isOwner = tx
+                        .select(
                                 field(PG_DATABASE.DATDBA.eq(field(
                                         ROLE_OID_SQL,
                                         OID_DATA_TYPE,
@@ -264,7 +265,8 @@ public class GrantService {
                  * where
                  *   s.nspname = '<schema_name>'
                  */
-                var isOwner = tx.select(
+                var isOwner = tx
+                        .select(
                                 field(PG_NAMESPACE.NSPOWNER.eq(field(
                                         ROLE_OID_SQL,
                                         OID_DATA_TYPE,
@@ -297,7 +299,8 @@ public class GrantService {
                         )
                 );
 
-                var existingObjectsOwner = tx.select(
+                var existingObjectsOwner = tx
+                        .select(
                                 PG_CLASS.RELNAME,
                                 isOwnerCondition
                         )
@@ -351,7 +354,8 @@ public class GrantService {
                         )
                 );
 
-                var existingObjectsOwner = tx.select(
+                var existingObjectsOwner = tx
+                        .select(
                                 PG_CLASS.RELNAME,
                                 isOwnerCondition
                         )

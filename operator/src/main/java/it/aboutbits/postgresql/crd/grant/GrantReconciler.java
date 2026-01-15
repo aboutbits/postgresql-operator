@@ -114,6 +114,11 @@ public class GrantReconciler
         return updateControl;
     }
 
+    @Override
+    protected CRStatus newStatus() {
+        return new CRStatus();
+    }
+
     @SuppressWarnings("java:S3776")
     private UpdateControl<Grant> reconcileInTransaction(
             DSLContext tx,
@@ -254,10 +259,5 @@ public class GrantReconciler
                 .setMessage(message);
 
         return UpdateControl.patchStatus(resource);
-    }
-
-    @Override
-    protected CRStatus newStatus() {
-        return new CRStatus();
     }
 }

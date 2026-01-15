@@ -218,6 +218,11 @@ public class RoleReconciler
         return List.of(secretEventSource);
     }
 
+    @Override
+    protected CRStatus newStatus() {
+        return new CRStatus();
+    }
+
     private UpdateControl<Role> reconcileInTransaction(
             DSLContext tx,
             Role resource,
@@ -321,11 +326,6 @@ public class RoleReconciler
                 .setMessage(null);
 
         return UpdateControl.patchStatus(resource);
-    }
-
-    @Override
-    protected CRStatus newStatus() {
-        return new CRStatus();
     }
 
     /**
