@@ -71,7 +71,7 @@ public class GrantReconciler
             invalid.removeAll(allowedPrivilegesForObjectType);
 
             status.setPhase(CRPhase.ERROR)
-                    .setMessage("Grant contains invalid privileges for the specified objectType [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
+                    .setMessage("Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName(),
                             objectType,
