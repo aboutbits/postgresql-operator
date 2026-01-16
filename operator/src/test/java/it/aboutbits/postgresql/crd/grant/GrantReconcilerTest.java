@@ -132,6 +132,7 @@ class GrantReconcilerTest {
                         .hasMessageContaining("The Grant role must not be empty.");
             }
 
+            @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the schema is a blank or empty String (CEL rule)")
             void failWhenSchemaIsBlankOrEmptyString(
@@ -151,7 +152,7 @@ class GrantReconcilerTest {
             }
 
             @Test
-            @DisplayName("Should fail when the privileges are a empty List (CEL rule)")
+            @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
             void failWhenPrivilegesAreAnEmptyList(
             ) {
                 // then
@@ -297,7 +298,7 @@ class GrantReconcilerTest {
             }
 
             @Test
-            @DisplayName("Should fail when objectType is DATABASE but objects has items (CEL rule)")
+            @DisplayName("Should fail when objectType is SCHEMA but objects has items (CEL rule)")
             void failWhenSchemaHasObjects() {
                 // then
                 assertThatThrownBy(() ->
@@ -603,7 +604,7 @@ class GrantReconcilerTest {
                     Set.of(SELECT)
             );
             assertThatPrivileges(
-                    clusterConnectionMain,
+                    clusterConnectionDb,
                     grant,
                     tableName2,
                     Set.of(SELECT)

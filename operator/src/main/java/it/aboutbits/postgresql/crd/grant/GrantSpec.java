@@ -109,7 +109,7 @@ public class GrantSpec {
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
     @ValidationRule(
             value = "self.size() > 0",
-            message = "The Grant privileges must not be empty. The operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array."
+            message = "The Grant privileges must not be empty. The Operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array."
     )
     private List<GrantPrivilege> privileges = new ArrayList<>();
 }

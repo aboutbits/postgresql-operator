@@ -132,7 +132,7 @@ public class GrantCreate extends TestDataCreator<Grant> {
             spec.setSchema(getSchema());
         }
 
-        if ((withObjectType != GrantObjectType.DATABASE && withObjectType == GrantObjectType.SCHEMA)
+        if ((withObjectType != GrantObjectType.DATABASE && withObjectType != GrantObjectType.SCHEMA)
                 || withObjects != null
         ) {
             spec.setObjects(withObjects);

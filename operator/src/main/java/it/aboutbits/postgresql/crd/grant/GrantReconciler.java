@@ -277,7 +277,7 @@ public class GrantReconciler
             }
 
             // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
-            // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't alllow to specify objects there
+            // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't allow to specify objects there
             if (!isAllMode
                     || objectType == GrantObjectType.DATABASE
                     || objectType == GrantObjectType.SCHEMA

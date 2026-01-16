@@ -40,7 +40,7 @@ public class GrantService {
     // language=SQL
     private static final String NAMESPACE_OID_SQL = "{0}::regnamespace";
 
-    /// Determines all existing privileges for the specified `role`, when applicable `schema`, and the given `objectTyoe`.
+    /// Determines all existing privileges for the specified `role`, when applicable `schema`, and the given `objectType`.
     ///
     /// @param tx   The DSLContext for database operations.
     /// @param spec The GrantSpec containing the specification details.

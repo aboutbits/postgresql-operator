@@ -70,6 +70,7 @@ subprojects {
         options.errorprone {
             check("NullAway", CheckSeverity.ERROR)
             option("NullAway:AnnotatedPackages", "it.aboutbits.postgresql")
+            option("NullAway:JSpecifyMode", "true")
         }
     }
 
