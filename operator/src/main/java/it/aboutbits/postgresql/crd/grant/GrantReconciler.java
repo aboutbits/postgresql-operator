@@ -172,7 +172,7 @@ public class GrantReconciler
                     var privileges = objectPrivileges.getValue();
 
                     grantService.revoke(
-                            dsl,
+                            tx,
                             spec,
                             object,
                             privileges
@@ -247,7 +247,7 @@ public class GrantReconciler
 
         if (!missingObjects.isEmpty()) {
             status.setPhase(CRPhase.ERROR)
-                    .setMessage("Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%s".formatted(
+                    .setMessage("Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n%s".formatted(
                             objectType,
                             getResourceNamespaceOrOwn(resource, namespace),
                             name,
@@ -334,7 +334,7 @@ public class GrantReconciler
 
         String message = null;
         if (!ownedObjects.isEmpty()) {
-            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%s".formatted(
+            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n%s".formatted(
                     objectType,
                     getResourceNamespaceOrOwn(resource, namespace),
                     name,
