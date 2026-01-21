@@ -28,12 +28,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.DATABASE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SCHEMA;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
 import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.CONNECT;
+import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.CREATE;
 import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.SELECT;
 import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.USAGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,27 +69,6 @@ class GrantReconcilerTest {
         kubernetesClient.resources(resourceClass)
                 .withTimeout(5, TimeUnit.SECONDS)
                 .delete();
-    }
-
-    private void assertThatGrantHasStatus(
-            Grant grant,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
-        assertThat(grant)
-                .isNotNull()
-                .extracting(Grant::getStatus)
-                .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isAfter(
-                            now
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
-                            now
-                    );
-                })
-                .usingRecursiveComparison()
-                .ignoringFields("message", "lastProbeTime", "lastPhaseTransitionTime")
-                .isEqualTo(expectedStatus);
     }
 
     @Nested
@@ -346,7 +327,7 @@ class GrantReconcilerTest {
     @Nested
     class DatabaseTests {
         @Test
-        @DisplayName("Should grant rights on database")
+        @DisplayName("Should grant and revoke privileges on database")
         void grantOnDatabase() {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -393,13 +374,64 @@ class GrantReconcilerTest {
                     grant.getSpec().getDatabase(),
                     Set.of(CONNECT)
             );
+
+            // given: grant all privileges change
+            var spec = grant.getSpec();
+            var expectedPrivileges = DATABASE.privileges();
+            var initialGeneration = grant.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnection,
+                    grant,
+                    grant.getSpec().getDatabase(),
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(CONNECT));
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnection,
+                    grant,
+                    grant.getSpec().getDatabase(),
+                    Set.of(CONNECT)
+            );
+
+            // when: grant CR instance delete
+            kubernetesClient.resources(Grant.class)
+                    .resource(grant)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoPrivileges(
+                    clusterConnection,
+                    grant,
+                    grant.getSpec().getDatabase()
+            );
         }
     }
 
     @Nested
     class SchemaTests {
         @Test
-        @DisplayName("Should grant rights on schema")
+        @DisplayName("Should grant and revoke privileges on schema")
         void grantOnSchema() {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -429,6 +461,7 @@ class GrantReconcilerTest {
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
                     .returnFirst();
 
+            // when
             var grant = given.one()
                     .grant()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
@@ -440,6 +473,8 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             // then
+            var schemaName = Objects.requireNonNull(grant.getSpec().getSchema());
+
             var expectedStatus = new CRStatus()
                     .setName("")
                     .setPhase(CRPhase.READY)
@@ -457,13 +492,64 @@ class GrantReconcilerTest {
                     Objects.requireNonNull(grant.getSpec().getSchema()),
                     Set.of(USAGE)
             );
+
+            // given: grant all privileges change
+            var spec = grant.getSpec();
+            var expectedPrivileges = SCHEMA.privileges();
+            var initialGeneration = grant.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    schemaName,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(CREATE));
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    schemaName,
+                    Set.of(CREATE)
+            );
+
+            // when: grant CR instance delete
+            kubernetesClient.resources(Grant.class)
+                    .resource(grant)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    schemaName
+            );
         }
     }
 
     @Nested
     class TableTests {
         @Test
-        @DisplayName("Should grant rights on table")
+        @DisplayName("Should grant and revoke privileges on table")
         void grantOnTable() {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -499,6 +585,7 @@ class GrantReconcilerTest {
                     tableName
             );
 
+            // when
             var grant = given.one()
                     .grant()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
@@ -528,10 +615,61 @@ class GrantReconcilerTest {
                     tableName,
                     Set.of(SELECT)
             );
+
+            // given: grant all privileges change
+            var spec = grant.getSpec();
+            var expectedPrivileges = TABLE.privileges();
+            var initialGeneration = grant.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(SELECT));
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName,
+                    Set.of(SELECT)
+            );
+
+            // when: grant CR instance delete
+            kubernetesClient.resources(Grant.class)
+                    .resource(grant)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName
+            );
         }
 
         @Test
-        @DisplayName("Should grant rights on all tables")
+        @DisplayName("Should grant and revoke privileges on all tables")
         void grantOnAllTables() {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -574,6 +712,7 @@ class GrantReconcilerTest {
                     tableName2
             );
 
+            // when
             var grant = given.one()
                     .grant()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
@@ -609,13 +748,81 @@ class GrantReconcilerTest {
                     tableName2,
                     Set.of(SELECT)
             );
+
+            // given: grant all privileges change
+            var spec = grant.getSpec();
+            var expectedPrivileges = TABLE.privileges();
+            var initialGeneration = grant.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName1,
+                    Set.copyOf(expectedPrivileges)
+            );
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName2,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(SELECT));
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName1,
+                    Set.of(SELECT)
+            );
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName2,
+                    Set.of(SELECT)
+            );
+
+            // when: grant CR instance delete
+            kubernetesClient.resources(Grant.class)
+                    .resource(grant)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName1
+            );
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName2
+            );
         }
     }
 
     @Nested
     class SequenceTests {
         @Test
-        @DisplayName("Should grant rights on sequence")
+        @DisplayName("Should grant and revoke privileges on sequence")
         void grantOnSequence() {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -652,6 +859,7 @@ class GrantReconcilerTest {
             );
             var sequenceName = tableName + "_id_seq";
 
+            // when
             var grant = given.one()
                     .grant()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
@@ -681,10 +889,61 @@ class GrantReconcilerTest {
                     sequenceName,
                     Set.of(USAGE)
             );
+
+            // given: grant all privileges change
+            var spec = grant.getSpec();
+            var expectedPrivileges = SEQUENCE.privileges();
+            var initialGeneration = grant.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(SELECT));
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName,
+                    Set.of(SELECT)
+            );
+
+            // when: grant CR instance delete
+            kubernetesClient.resources(Grant.class)
+                    .resource(grant)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName
+            );
         }
 
         @Test
-        @DisplayName("Should grant rights on all sequences")
+        @DisplayName("Should grant and revoke privileges on all sequences")
         void grantOnAllSequences() {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -730,6 +989,7 @@ class GrantReconcilerTest {
             var sequenceName1 = tableName1 + "_id_seq";
             var sequenceName2 = tableName2 + "_id_seq";
 
+            // when
             var grant = given.one()
                     .grant()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
@@ -759,14 +1019,126 @@ class GrantReconcilerTest {
                     sequenceName1,
                     Set.of(USAGE)
             );
-
             assertThatPrivileges(
                     clusterConnectionDb,
                     grant,
                     sequenceName2,
                     Set.of(USAGE)
             );
+
+            // given: grant all privileges change
+            var spec = grant.getSpec();
+            var expectedPrivileges = SEQUENCE.privileges();
+            var initialGeneration = grant.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName1,
+                    Set.copyOf(expectedPrivileges)
+            );
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName2,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(SELECT));
+
+            // when
+            applyGrant(
+                    grant,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName1,
+                    Set.of(SELECT)
+            );
+            assertThatPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName2,
+                    Set.of(SELECT)
+            );
+
+            // when: grant CR instance delete
+            kubernetesClient.resources(Grant.class)
+                    .resource(grant)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName1
+            );
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    sequenceName2
+            );
         }
+    }
+
+    private Grant applyGrant(
+            Grant grant,
+            Predicate<Grant> condition
+    ) {
+        var namespace = kubernetesClient.getNamespace();
+
+        grant.getMetadata().setManagedFields(null);
+        grant.getMetadata().setResourceVersion(null);
+
+        var applied = kubernetesClient.resources(Grant.class)
+                .inNamespace(namespace)
+                .resource(grant)
+                .serverSideApply();
+
+        return kubernetesClient.resources(Grant.class)
+                .inNamespace(namespace)
+                .withName(applied.getMetadata().getName())
+                .waitUntilCondition(
+                        condition,
+                        5,
+                        TimeUnit.SECONDS
+                );
+    }
+
+    private void assertThatGrantHasStatus(
+            Grant grant,
+            CRStatus expectedStatus,
+            OffsetDateTime now
+    ) {
+        assertThat(grant)
+                .isNotNull()
+                .extracting(Grant::getStatus)
+                .satisfies(status -> {
+                    assertThat(status.getLastProbeTime()).isAfter(
+                            now
+                    );
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
+                            now
+                    );
+                })
+                .usingRecursiveComparison()
+                .ignoringFields("message", "lastProbeTime", "lastPhaseTransitionTime")
+                .isEqualTo(expectedStatus);
     }
 
     private void createTable(
@@ -806,9 +1178,24 @@ class GrantReconcilerTest {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             var privileges = grantService.determineCurrentObjectPrivileges(dsl, grant.getSpec());
 
-            assertThat(privileges)
-                    .containsKey(objectName)
-                    .containsEntry(objectName, expectedPrivileges);
+            assertThat(privileges).containsEntry(
+                    objectName,
+                    expectedPrivileges
+            );
+        }
+    }
+
+    private void assertThatNoPrivileges(
+            ClusterConnection clusterConnection,
+            Grant grant,
+            String objectName
+    ) {
+        var databaseName = grant.getSpec().getDatabase();
+
+        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
+            var privileges = grantService.determineCurrentObjectPrivileges(dsl, grant.getSpec());
+
+            assertThat(privileges).doesNotContainKey(objectName);
         }
     }
 }
