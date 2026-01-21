@@ -44,6 +44,6 @@ public class Grant
     @Override
     @JsonIgnore
     public String getName() {
-        return ""; // Come up with something that makes sense
+        return "";
     }
 }
