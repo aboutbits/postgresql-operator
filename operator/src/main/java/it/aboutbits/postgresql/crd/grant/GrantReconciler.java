@@ -122,7 +122,7 @@ public class GrantReconciler
     public DeleteControl cleanup(
             Grant resource,
             Context<Grant> context
-    ) throws Exception {
+    ) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
@@ -139,6 +139,8 @@ public class GrantReconciler
         if (status.getPhase() != CRPhase.DELETING) {
             status.setPhase(CRPhase.DELETING)
                     .setMessage("Grant deletion in progress");
+
+            context.getClient().resource(resource).patchStatus();
         }
 
         var clusterRef = spec.getClusterRef();
@@ -154,6 +156,8 @@ public class GrantReconciler
                     getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                     clusterRef.getName()
             ));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
@@ -190,6 +194,8 @@ public class GrantReconciler
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);

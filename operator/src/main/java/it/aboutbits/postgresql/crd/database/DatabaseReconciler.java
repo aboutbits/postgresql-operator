@@ -115,6 +115,8 @@ public class DatabaseReconciler
             if (spec.getReclaimPolicy() == ReclaimPolicy.DELETE) {
                 status.setMessage("Database deletion in progress");
             }
+
+            context.getClient().resource(resource).patchStatus();
         }
 
         // We do not actually delete the database if the reclaimPolicy is set to RETAIN, we only delete the CR instance
@@ -136,6 +138,8 @@ public class DatabaseReconciler
                     clusterRef.getName()
             ));
 
+            context.getClient().resource(resource).patchStatus();
+
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
         }
@@ -148,14 +152,18 @@ public class DatabaseReconciler
             return DeleteControl.defaultDelete();
         } catch (Exception e) {
             log.error(
-                    "Failed to delete Database [resource={}/{}, spec.name={}, status.phase={}]",
-                    namespace,
-                    name,
-                    spec.getName(),
-                    status.getPhase()
+                    "Failed to delete Database [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
+                            namespace,
+                            name,
+                            spec.getName(),
+                            status.getPhase()
+                    ),
+                    e
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
@@ -177,7 +185,7 @@ public class DatabaseReconciler
 
         var spec = resource.getSpec();
 
-        // Create and return the role if it doesn't exist yet
+        // Create and return the database if it doesn't exist yet
         if (!databaseService.databaseExists(dsl, spec)) {
             log.info(
                     "Creating Database [resource={}/{}]",

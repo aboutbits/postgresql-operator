@@ -117,6 +117,8 @@ public class SchemaReconciler
             if (spec.getReclaimPolicy() == ReclaimPolicy.DELETE) {
                 status.setMessage("Schema deletion in progress");
             }
+
+            context.getClient().resource(resource).patchStatus();
         }
 
         // We do not actually delete the schema if the reclaimPolicy is set to RETAIN, we only delete the CR instance
@@ -138,6 +140,8 @@ public class SchemaReconciler
                     clusterRef.getName()
             ));
 
+            context.getClient().resource(resource).patchStatus();
+
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
         }
@@ -150,14 +154,18 @@ public class SchemaReconciler
             return DeleteControl.defaultDelete();
         } catch (Exception e) {
             log.error(
-                    "Failed to delete Schema [resource={}/{}, spec.name={}, status.phase={}]",
-                    namespace,
-                    name,
-                    spec.getName(),
-                    status.getPhase()
+                    "Failed to delete Schema [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
+                            namespace,
+                            name,
+                            spec.getName(),
+                            status.getPhase()
+                    ),
+                    e
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
@@ -179,7 +187,7 @@ public class SchemaReconciler
 
         var spec = resource.getSpec();
 
-        // Create and return the role if it doesn't exist yet
+        // Create and return the schema if it doesn't exist yet
         if (!schemaService.schemaExists(tx, spec)) {
             log.info(
                     "Creating Schema [resource={}/{}]",

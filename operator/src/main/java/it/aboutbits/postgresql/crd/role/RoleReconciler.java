@@ -145,6 +145,8 @@ public class RoleReconciler
         if (status.getPhase() != CRPhase.DELETING) {
             status.setPhase(CRPhase.DELETING)
                     .setMessage("Role deletion in progress");
+
+            context.getClient().resource(resource).patchStatus();
         }
 
         var clusterRef = spec.getClusterRef();
@@ -161,6 +163,8 @@ public class RoleReconciler
                     clusterRef.getName()
             ));
 
+            context.getClient().resource(resource).patchStatus();
+
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
         }
@@ -173,14 +177,18 @@ public class RoleReconciler
             return DeleteControl.defaultDelete();
         } catch (Exception e) {
             log.error(
-                    "Failed to delete Role [resource={}/{}, spec.name={}, status.phase={}]",
-                    namespace,
-                    name,
-                    spec.getName(),
-                    status.getPhase()
+                    "Failed to delete Role [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
+                            namespace,
+                            name,
+                            spec.getName(),
+                            status.getPhase()
+                    ),
+                    e
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
