@@ -30,9 +30,14 @@ jooq {
                     }
                 }
                 includes = """
-                  pg_auth_members
+                  aclexplode   
+                | pg_auth_members
                 | pg_authid
+                | pg_class
+                | pg_database
                 | pg_db_role_setting
+                | pg_get_userbyid
+                | pg_namespace
                 | shobj_description
                 """.trimIndent()
                 excludes = """

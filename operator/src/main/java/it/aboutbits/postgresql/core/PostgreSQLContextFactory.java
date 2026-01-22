@@ -20,7 +20,19 @@ public class PostgreSQLContextFactory {
     private final KubernetesService kubernetesService;
     private final KubernetesClient kubernetesClient;
 
+    /// Create a DSLContext with a JDBC connection to the PostgreSQL maintenance database.
     public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) {
+        return getDSLContext(
+                clusterConnection,
+                clusterConnection.getSpec().getDatabase()
+        );
+    }
+
+    /// Create a DSLContext with a JDBC connection to the specified database.
+    public CloseableDSLContext getDSLContext(
+            ClusterConnection clusterConnection,
+            String database
+    ) {
         var credentials = kubernetesService.getSecretRefCredentials(
                 kubernetesClient,
                 clusterConnection
@@ -31,7 +43,7 @@ public class PostgreSQLContextFactory {
         var jdbcUrl = "jdbc:postgresql://%s:%d/%s".formatted(
                 spec.getHost(),
                 spec.getPort(),
-                spec.getMaintenanceDatabase()
+                database
         );
 
         var properties = new Properties(2 + spec.getParameters().size());

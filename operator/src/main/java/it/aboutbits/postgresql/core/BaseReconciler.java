@@ -62,7 +62,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         //noinspection ConstantConditions
         if (clusterConnection == null) {
             log.error(
-                    "The specified ClusterConnection does not exist [clusterConnection={}/{}]",
+                    "The specified ClusterConnection does not exist [resource={}/{}]",
                     connectionNamespace,
                     connectionName
             );
@@ -75,7 +75,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
 
         if (!Objects.equals(currentPhase, expectedPhase)) {
             log.warn(
-                    "The specified ClusterConnection is not ready yet [clusterConnection={}/{}]",
+                    "The specified ClusterConnection is not ready yet [resource={}/{}]",
                     connectionNamespace,
                     connectionName
             );
@@ -91,6 +91,12 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
             S status,
             E exception
     ) {
+        log.error(
+                "Failed to reconcile resource [resource={}]",
+                resource.getMetadata().getName(),
+                exception
+        );
+
         status.setPhase(CRPhase.ERROR)
                 .setMessage(exception.getMessage());
 

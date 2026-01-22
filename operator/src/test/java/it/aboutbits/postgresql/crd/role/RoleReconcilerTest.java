@@ -273,7 +273,7 @@ class RoleReconcilerTest {
 
         // then: password should match the initial one
         // Wait for password to match because reconciliation might take a bit
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
@@ -293,7 +293,7 @@ class RoleReconcilerTest {
                 .serverSideApply();
 
         // then: password should eventually match the new one
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
@@ -341,7 +341,7 @@ class RoleReconcilerTest {
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         // then: password should match the initial one
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
@@ -355,7 +355,7 @@ class RoleReconcilerTest {
         var updatedRole = applyRole(role);
 
         // then: password should eventually match the new one
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
@@ -863,7 +863,7 @@ class RoleReconcilerTest {
                 .delete();
 
         // then
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .until(() -> !roleService.roleExists(dsl, role.getSpec()));
     }
@@ -909,7 +909,7 @@ class RoleReconcilerTest {
                 .withName(applied.getMetadata().getName())
                 .waitUntilCondition(
                         r -> r.getStatus() != null && r.getStatus().getObservedGeneration() >= generation,
-                        10,
+                        5,
                         TimeUnit.SECONDS
                 );
     }
@@ -933,7 +933,7 @@ class RoleReconcilerTest {
                 .withName(applied.getMetadata().getName())
                 .waitUntilCondition(
                         condition,
-                        10,
+                        5,
                         TimeUnit.SECONDS
                 );
     }

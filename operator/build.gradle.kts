@@ -1,6 +1,3 @@
-import net.ltgt.gradle.errorprone.CheckSeverity
-import net.ltgt.gradle.errorprone.errorprone
-
 plugins {
     id("io.quarkus")
 }
@@ -65,16 +62,6 @@ dependencies {
     testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)
-}
-
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-    options.compilerArgs.add("-parameters")
-
-    options.errorprone {
-        check("NullAway", CheckSeverity.ERROR)
-        option("NullAway:AnnotatedPackages", "it.aboutbits.postgresql")
-    }
 }
 
 tasks.quarkusDev {

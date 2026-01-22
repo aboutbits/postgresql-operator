@@ -1,6 +1,7 @@
 package it.aboutbits.postgresql.core;
 
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
@@ -11,6 +12,10 @@ import org.jspecify.annotations.Nullable;
 @Setter
 public class SecretRef {
     @Required
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The SecretRef name must not be empty."
+    )
     private String name = "";
 
     /**

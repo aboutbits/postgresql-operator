@@ -1,6 +1,9 @@
 package it.aboutbits.postgresql.crd.clusterconnection;
 
+import io.fabric8.generator.annotation.Max;
+import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
+import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.SecretRef;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,13 +17,23 @@ import java.util.Map;
 @Setter
 public class ClusterConnectionSpec {
     @Required
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The ClusterConnection host must not be empty."
+    )
     private String host = "";
 
     @Required
-    private Integer port = -1;
+    @Min(1)
+    @Max(65535)
+    private int port = -1;
 
     @Required
-    private String maintenanceDatabase = "postgres";
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The ClusterConnection database must not be empty."
+    )
+    private String database = "postgres";
 
     @Required
     private SecretRef adminSecretRef = new SecretRef();

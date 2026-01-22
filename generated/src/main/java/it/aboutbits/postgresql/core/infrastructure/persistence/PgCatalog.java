@@ -4,9 +4,14 @@
 package it.aboutbits.postgresql.core.infrastructure.persistence;
 
 
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthMembers;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthid;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgClass;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +19,9 @@ import java.util.List;
 import javax.annotation.processing.Generated;
 
 import org.jooq.Catalog;
+import org.jooq.Configuration;
+import org.jooq.Field;
+import org.jooq.Result;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SchemaImpl;
@@ -40,6 +48,45 @@ public class PgCatalog extends SchemaImpl {
     public static final PgCatalog PG_CATALOG = new PgCatalog();
 
     /**
+     * convert ACL item array to table, primarily for use by information schema
+     */
+    public final Aclexplode ACLEXPLODE = Aclexplode.ACLEXPLODE;
+
+    /**
+     * Call <code>pg_catalog.aclexplode</code>.
+     */
+    public static Result<AclexplodeRecord> ACLEXPLODE(
+          Configuration configuration
+        , String[] acl
+    ) {
+        return configuration.dsl().selectFrom(it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode.ACLEXPLODE.call(
+              acl
+        )).fetch();
+    }
+
+    /**
+     * Get <code>pg_catalog.aclexplode</code> as a table.
+     */
+    public static Aclexplode ACLEXPLODE(
+          String[] acl
+    ) {
+        return it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode.ACLEXPLODE.call(
+            acl
+        );
+    }
+
+    /**
+     * Get <code>pg_catalog.aclexplode</code> as a table.
+     */
+    public static Aclexplode ACLEXPLODE(
+          Field<String[]> acl
+    ) {
+        return it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode.ACLEXPLODE.call(
+            acl
+        );
+    }
+
+    /**
      * The table <code>pg_catalog.pg_auth_members</code>.
      */
     public final PgAuthMembers PG_AUTH_MEMBERS = PgAuthMembers.PG_AUTH_MEMBERS;
@@ -50,9 +97,24 @@ public class PgCatalog extends SchemaImpl {
     public final PgAuthid PG_AUTHID = PgAuthid.PG_AUTHID;
 
     /**
+     * The table <code>pg_catalog.pg_class</code>.
+     */
+    public final PgClass PG_CLASS = PgClass.PG_CLASS;
+
+    /**
+     * The table <code>pg_catalog.pg_database</code>.
+     */
+    public final PgDatabase PG_DATABASE = PgDatabase.PG_DATABASE;
+
+    /**
      * The table <code>pg_catalog.pg_db_role_setting</code>.
      */
     public final PgDbRoleSetting PG_DB_ROLE_SETTING = PgDbRoleSetting.PG_DB_ROLE_SETTING;
+
+    /**
+     * The table <code>pg_catalog.pg_namespace</code>.
+     */
+    public final PgNamespace PG_NAMESPACE = PgNamespace.PG_NAMESPACE;
 
     /**
      * No further instances allowed
@@ -70,9 +132,13 @@ public class PgCatalog extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
+            Aclexplode.ACLEXPLODE,
             PgAuthMembers.PG_AUTH_MEMBERS,
             PgAuthid.PG_AUTHID,
-            PgDbRoleSetting.PG_DB_ROLE_SETTING
+            PgClass.PG_CLASS,
+            PgDatabase.PG_DATABASE,
+            PgDbRoleSetting.PG_DB_ROLE_SETTING,
+            PgNamespace.PG_NAMESPACE
         );
     }
 }

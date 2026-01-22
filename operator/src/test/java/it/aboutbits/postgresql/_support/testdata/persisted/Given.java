@@ -2,7 +2,10 @@ package it.aboutbits.postgresql._support.testdata.persisted;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.ClusterConnectionCreate;
+import it.aboutbits.postgresql._support.testdata.persisted.creator.DatabaseCreate;
+import it.aboutbits.postgresql._support.testdata.persisted.creator.GrantCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.RoleCreate;
+import it.aboutbits.postgresql._support.testdata.persisted.creator.SchemaCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SecretRefCreate;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.AccessLevel;
@@ -86,6 +89,28 @@ public class Given {
 
         public RoleCreate role() {
             return new RoleCreate(
+                    numberOfItems,
+                    given,
+                    kubernetesClient
+            );
+        }
+
+        public DatabaseCreate database() {
+            return new DatabaseCreate(
+                    numberOfItems,
+                    kubernetesClient
+            );
+        }
+
+        public SchemaCreate schema() {
+            return new SchemaCreate(
+                    numberOfItems,
+                    kubernetesClient
+            );
+        }
+
+        public GrantCreate grant() {
+            return new GrantCreate(
                     numberOfItems,
                     given,
                     kubernetesClient

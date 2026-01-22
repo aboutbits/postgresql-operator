@@ -47,6 +47,17 @@ public class RoleCreate extends TestDataCreator<Role> {
 
     private RoleSpec.@Nullable Flags withFlags;
 
+    public RoleCreate(
+            int numberOfItems,
+            Given given,
+            KubernetesClient kubernetesClient
+    ) {
+        super(numberOfItems);
+        this.given = given;
+        this.kubernetesClient = kubernetesClient;
+    }
+
+    @SuppressWarnings("unused")
     public RoleCreate withLogin(boolean login) {
         if (!login) {
             withPasswordSecretRef = null;
@@ -64,19 +75,10 @@ public class RoleCreate extends TestDataCreator<Role> {
         return this;
     }
 
+    @SuppressWarnings("unused")
     public RoleCreate withoutNamespace() {
         withoutNamespace = true;
         return this;
-    }
-
-    public RoleCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
-        super(numberOfItems);
-        this.given = given;
-        this.kubernetesClient = kubernetesClient;
     }
 
     @Override

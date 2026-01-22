@@ -40,7 +40,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     private Integer withPort;
 
     @Nullable
-    private String withMaintenanceDatabase;
+    private String withDatabase;
 
     @Nullable
     private SecretRef withAdminSecretRef;
@@ -48,19 +48,22 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     @Nullable
     private String withApplicationName;
 
-    public ClusterConnectionCreate withoutNamespace() {
-        this.withoutNamespace = true;
-        return this;
-    }
-
     public ClusterConnectionCreate(
             int numberOfItems,
-            Given given, KubernetesClient kubernetesClient, Given.DBConnectionDetails dbConnectionDetails
+            Given given,
+            KubernetesClient kubernetesClient,
+            Given.DBConnectionDetails dbConnectionDetails
     ) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
         this.dbConnectionDetails = dbConnectionDetails;
+    }
+
+    @SuppressWarnings("unused")
+    public ClusterConnectionCreate withoutNamespace() {
+        this.withoutNamespace = true;
+        return this;
     }
 
     @Override
@@ -80,7 +83,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         var spec = new ClusterConnectionSpec();
         spec.setHost(getHost());
         spec.setPort(getPort());
-        spec.setMaintenanceDatabase(getMaintenanceDatabase());
+        spec.setDatabase(getDatabase());
         spec.setAdminSecretRef(getAdminSecretRef());
         spec.setParameters(getParameters());
 
@@ -139,9 +142,9 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         return dbConnectionDetails.port();
     }
 
-    private String getMaintenanceDatabase() {
+    private String getDatabase() {
         return Objects.requireNonNullElse(
-                withMaintenanceDatabase,
+                withDatabase,
                 "postgres"
         );
     }

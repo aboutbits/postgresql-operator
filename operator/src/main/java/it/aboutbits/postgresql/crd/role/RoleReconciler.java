@@ -26,6 +26,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public class RoleReconciler
 
         if (clusterConnectionOptional.isEmpty()) {
             status.setPhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [clusterRef=%s/%s]".formatted(
+                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
                     ));
@@ -144,6 +145,8 @@ public class RoleReconciler
         if (status.getPhase() != CRPhase.DELETING) {
             status.setPhase(CRPhase.DELETING)
                     .setMessage("Role deletion in progress");
+
+            context.getClient().resource(resource).patchStatus();
         }
 
         var clusterRef = spec.getClusterRef();
@@ -155,10 +158,12 @@ public class RoleReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [clusterRef=%s/%s]".formatted(
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
                     getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                     clusterRef.getName()
             ));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
@@ -172,14 +177,18 @@ public class RoleReconciler
             return DeleteControl.defaultDelete();
         } catch (Exception e) {
             log.error(
-                    "Failed to delete Role [resource={}/{}, spec.name={}, status.phase={}]",
-                    namespace,
-                    name,
-                    spec.getName(),
-                    status.getPhase()
+                    "Failed to delete Role [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
+                            namespace,
+                            name,
+                            spec.getName(),
+                            status.getPhase()
+                    ),
+                    e
             );
 
-            status.setMessage("Deletion failed: " + e.getMessage());
+            status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
+
+            context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
                     .rescheduleAfter(60, TimeUnit.SECONDS);
@@ -215,6 +224,11 @@ public class RoleReconciler
         );
 
         return List.of(secretEventSource);
+    }
+
+    @Override
+    protected CRStatus newStatus() {
+        return new CRStatus();
     }
 
     private UpdateControl<Role> reconcileInTransaction(
@@ -322,11 +336,6 @@ public class RoleReconciler
         return UpdateControl.patchStatus(resource);
     }
 
-    @Override
-    protected CRStatus newStatus() {
-        return new CRStatus();
-    }
-
     /**
      * Checks if the given Role's spec.passwordSecretRef points to the changed Secret.
      */
@@ -340,7 +349,7 @@ public class RoleReconciler
             return false;
         }
 
-        var ref = spec.getPasswordSecretRef();
+        var ref = Objects.requireNonNull(spec.getPasswordSecretRef());
         var refName = ref.getName();
         var refNamespace = getResourceNamespaceOrOwn(role, ref.getNamespace());
 

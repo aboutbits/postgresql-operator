@@ -4,11 +4,20 @@
 package it.aboutbits.postgresql.core.infrastructure.persistence;
 
 
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthMembers;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthid;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgClass;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
 
 import javax.annotation.processing.Generated;
+
+import org.jooq.Configuration;
+import org.jooq.Field;
+import org.jooq.Result;
 
 
 /**
@@ -25,6 +34,45 @@ import javax.annotation.processing.Generated;
 public class Tables {
 
     /**
+     * convert ACL item array to table, primarily for use by information schema
+     */
+    public static final Aclexplode ACLEXPLODE = Aclexplode.ACLEXPLODE;
+
+    /**
+     * Call <code>pg_catalog.aclexplode</code>.
+     */
+    public static Result<AclexplodeRecord> ACLEXPLODE(
+          Configuration configuration
+        , String[] acl
+    ) {
+        return configuration.dsl().selectFrom(it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode.ACLEXPLODE.call(
+              acl
+        )).fetch();
+    }
+
+    /**
+     * Get <code>pg_catalog.aclexplode</code> as a table.
+     */
+    public static Aclexplode ACLEXPLODE(
+          String[] acl
+    ) {
+        return it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode.ACLEXPLODE.call(
+            acl
+        );
+    }
+
+    /**
+     * Get <code>pg_catalog.aclexplode</code> as a table.
+     */
+    public static Aclexplode ACLEXPLODE(
+          Field<String[]> acl
+    ) {
+        return it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode.ACLEXPLODE.call(
+            acl
+        );
+    }
+
+    /**
      * The table <code>pg_catalog.pg_auth_members</code>.
      */
     public static final PgAuthMembers PG_AUTH_MEMBERS = PgAuthMembers.PG_AUTH_MEMBERS;
@@ -35,7 +83,22 @@ public class Tables {
     public static final PgAuthid PG_AUTHID = PgAuthid.PG_AUTHID;
 
     /**
+     * The table <code>pg_catalog.pg_class</code>.
+     */
+    public static final PgClass PG_CLASS = PgClass.PG_CLASS;
+
+    /**
+     * The table <code>pg_catalog.pg_database</code>.
+     */
+    public static final PgDatabase PG_DATABASE = PgDatabase.PG_DATABASE;
+
+    /**
      * The table <code>pg_catalog.pg_db_role_setting</code>.
      */
     public static final PgDbRoleSetting PG_DB_ROLE_SETTING = PgDbRoleSetting.PG_DB_ROLE_SETTING;
+
+    /**
+     * The table <code>pg_catalog.pg_namespace</code>.
+     */
+    public static final PgNamespace PG_NAMESPACE = PgNamespace.PG_NAMESPACE;
 }

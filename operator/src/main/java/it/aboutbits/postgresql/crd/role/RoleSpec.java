@@ -19,18 +19,22 @@ import java.util.List;
 @Setter
 public class RoleSpec {
     @Required
+    private ClusterReference clusterRef = new ClusterReference();
+
+    @Required
     @ValidationRule(
             value = "self == oldSelf",
-            message = "The Role name must not be changed once it is created"
+            message = "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
+    )
+    @ValidationRule(
+            value = "self.size() > 0",
+            message = "The Role name must not be empty."
     )
     private String name = "";
 
     @Nullable
     @io.fabric8.generator.annotation.Nullable
     private String comment;
-
-    @Required
-    private ClusterReference clusterRef = new ClusterReference();
 
     @Nullable
     @io.fabric8.generator.annotation.Nullable

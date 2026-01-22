@@ -20,7 +20,6 @@ import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.keyword;
 import static org.jooq.impl.DSL.multiset;
-import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.query;
 import static org.jooq.impl.DSL.role;
 import static org.jooq.impl.DSL.select;
@@ -419,7 +418,7 @@ public final class RoleService {
     ) {
         return query(
                 "comment on role {0} is {1}",
-                name(roleName),
+                role(roleName),
                 val(comment)
         );
     }
