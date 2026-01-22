@@ -136,6 +136,9 @@ public class DefaultPrivilegeReconciler
                     .setMessage("DefaultPrivilege deletion in progress");
 
             context.getClient().resource(resource).patchStatus();
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(1, TimeUnit.SECONDS);
         }
 
         var clusterRef = spec.getClusterRef();
@@ -166,11 +169,13 @@ public class DefaultPrivilegeReconciler
 
                 var currentDefaultPrivileges = defaultPrivilegeService.determineCurrentDefaultPrivileges(tx, spec);
 
-                defaultPrivilegeService.revoke(
-                        tx,
-                        spec,
-                        currentDefaultPrivileges
-                );
+                if (!currentDefaultPrivileges.isEmpty()) {
+                    defaultPrivilegeService.revoke(
+                            tx,
+                            spec,
+                            currentDefaultPrivileges
+                    );
+                }
             });
 
             return DeleteControl.defaultDelete();

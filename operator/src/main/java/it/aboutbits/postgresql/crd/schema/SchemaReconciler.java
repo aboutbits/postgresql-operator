@@ -119,6 +119,9 @@ public class SchemaReconciler
             }
 
             context.getClient().resource(resource).patchStatus();
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(1, TimeUnit.SECONDS);
         }
 
         // We do not actually delete the schema if the reclaimPolicy is set to RETAIN, we only delete the CR instance
