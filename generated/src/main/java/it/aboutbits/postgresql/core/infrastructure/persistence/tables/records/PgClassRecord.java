@@ -208,10 +208,25 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
     }
 
     /**
+     * Setter for <code>pg_catalog.pg_class.relallfrozen</code>.
+     */
+    public PgClassRecord setRelallfrozen(Integer value) {
+        set(12, value);
+        return this;
+    }
+
+    /**
+     * Getter for <code>pg_catalog.pg_class.relallfrozen</code>.
+     */
+    public Integer getRelallfrozen() {
+        return (Integer) get(12);
+    }
+
+    /**
      * Setter for <code>pg_catalog.pg_class.reltoastrelid</code>.
      */
     public PgClassRecord setReltoastrelid(Long value) {
-        set(12, value);
+        set(13, value);
         return this;
     }
 
@@ -219,14 +234,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.reltoastrelid</code>.
      */
     public Long getReltoastrelid() {
-        return (Long) get(12);
+        return (Long) get(13);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relhasindex</code>.
      */
     public PgClassRecord setRelhasindex(Boolean value) {
-        set(13, value);
+        set(14, value);
         return this;
     }
 
@@ -234,14 +249,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relhasindex</code>.
      */
     public Boolean getRelhasindex() {
-        return (Boolean) get(13);
+        return (Boolean) get(14);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relisshared</code>.
      */
     public PgClassRecord setRelisshared(Boolean value) {
-        set(14, value);
+        set(15, value);
         return this;
     }
 
@@ -249,14 +264,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relisshared</code>.
      */
     public Boolean getRelisshared() {
-        return (Boolean) get(14);
+        return (Boolean) get(15);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relpersistence</code>.
      */
     public PgClassRecord setRelpersistence(String value) {
-        set(15, value);
+        set(16, value);
         return this;
     }
 
@@ -264,14 +279,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relpersistence</code>.
      */
     public String getRelpersistence() {
-        return (String) get(15);
+        return (String) get(16);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relkind</code>.
      */
     public PgClassRecord setRelkind(String value) {
-        set(16, value);
+        set(17, value);
         return this;
     }
 
@@ -279,14 +294,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relkind</code>.
      */
     public String getRelkind() {
-        return (String) get(16);
+        return (String) get(17);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relnatts</code>.
      */
     public PgClassRecord setRelnatts(Short value) {
-        set(17, value);
+        set(18, value);
         return this;
     }
 
@@ -294,14 +309,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relnatts</code>.
      */
     public Short getRelnatts() {
-        return (Short) get(17);
+        return (Short) get(18);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relchecks</code>.
      */
     public PgClassRecord setRelchecks(Short value) {
-        set(18, value);
+        set(19, value);
         return this;
     }
 
@@ -309,14 +324,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relchecks</code>.
      */
     public Short getRelchecks() {
-        return (Short) get(18);
+        return (Short) get(19);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relhasrules</code>.
      */
     public PgClassRecord setRelhasrules(Boolean value) {
-        set(19, value);
+        set(20, value);
         return this;
     }
 
@@ -324,14 +339,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relhasrules</code>.
      */
     public Boolean getRelhasrules() {
-        return (Boolean) get(19);
+        return (Boolean) get(20);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relhastriggers</code>.
      */
     public PgClassRecord setRelhastriggers(Boolean value) {
-        set(20, value);
+        set(21, value);
         return this;
     }
 
@@ -339,14 +354,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relhastriggers</code>.
      */
     public Boolean getRelhastriggers() {
-        return (Boolean) get(20);
+        return (Boolean) get(21);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relhassubclass</code>.
      */
     public PgClassRecord setRelhassubclass(Boolean value) {
-        set(21, value);
+        set(22, value);
         return this;
     }
 
@@ -354,14 +369,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relhassubclass</code>.
      */
     public Boolean getRelhassubclass() {
-        return (Boolean) get(21);
+        return (Boolean) get(22);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relrowsecurity</code>.
      */
     public PgClassRecord setRelrowsecurity(Boolean value) {
-        set(22, value);
+        set(23, value);
         return this;
     }
 
@@ -369,14 +384,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relrowsecurity</code>.
      */
     public Boolean getRelrowsecurity() {
-        return (Boolean) get(22);
+        return (Boolean) get(23);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relforcerowsecurity</code>.
      */
     public PgClassRecord setRelforcerowsecurity(Boolean value) {
-        set(23, value);
+        set(24, value);
         return this;
     }
 
@@ -384,14 +399,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relforcerowsecurity</code>.
      */
     public Boolean getRelforcerowsecurity() {
-        return (Boolean) get(23);
+        return (Boolean) get(24);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relispopulated</code>.
      */
     public PgClassRecord setRelispopulated(Boolean value) {
-        set(24, value);
+        set(25, value);
         return this;
     }
 
@@ -399,14 +414,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relispopulated</code>.
      */
     public Boolean getRelispopulated() {
-        return (Boolean) get(24);
+        return (Boolean) get(25);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relreplident</code>.
      */
     public PgClassRecord setRelreplident(String value) {
-        set(25, value);
+        set(26, value);
         return this;
     }
 
@@ -414,14 +429,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relreplident</code>.
      */
     public String getRelreplident() {
-        return (String) get(25);
+        return (String) get(26);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relispartition</code>.
      */
     public PgClassRecord setRelispartition(Boolean value) {
-        set(26, value);
+        set(27, value);
         return this;
     }
 
@@ -429,14 +444,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relispartition</code>.
      */
     public Boolean getRelispartition() {
-        return (Boolean) get(26);
+        return (Boolean) get(27);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relrewrite</code>.
      */
     public PgClassRecord setRelrewrite(Long value) {
-        set(27, value);
+        set(28, value);
         return this;
     }
 
@@ -444,14 +459,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relrewrite</code>.
      */
     public Long getRelrewrite() {
-        return (Long) get(27);
+        return (Long) get(28);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relfrozenxid</code>.
      */
     public PgClassRecord setRelfrozenxid(Long value) {
-        set(28, value);
+        set(29, value);
         return this;
     }
 
@@ -459,14 +474,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relfrozenxid</code>.
      */
     public Long getRelfrozenxid() {
-        return (Long) get(28);
+        return (Long) get(29);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relminmxid</code>.
      */
     public PgClassRecord setRelminmxid(Long value) {
-        set(29, value);
+        set(30, value);
         return this;
     }
 
@@ -474,14 +489,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relminmxid</code>.
      */
     public Long getRelminmxid() {
-        return (Long) get(29);
+        return (Long) get(30);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.relacl</code>.
      */
     public PgClassRecord setRelacl(String[] value) {
-        set(30, value);
+        set(31, value);
         return this;
     }
 
@@ -489,14 +504,14 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.relacl</code>.
      */
     public String[] getRelacl() {
-        return (String[]) get(30);
+        return (String[]) get(31);
     }
 
     /**
      * Setter for <code>pg_catalog.pg_class.reloptions</code>.
      */
     public PgClassRecord setReloptions(String[] value) {
-        set(31, value);
+        set(32, value);
         return this;
     }
 
@@ -504,7 +519,7 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      * Getter for <code>pg_catalog.pg_class.reloptions</code>.
      */
     public String[] getReloptions() {
-        return (String[]) get(31);
+        return (String[]) get(32);
     }
 
     /**
@@ -517,7 +532,7 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      */
     @Deprecated
     public PgClassRecord setRelpartbound(Object value) {
-        set(32, value);
+        set(33, value);
         return this;
     }
 
@@ -531,7 +546,7 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
      */
     @Deprecated
     public Object getRelpartbound() {
-        return get(32);
+        return get(33);
     }
 
     // -------------------------------------------------------------------------
@@ -557,7 +572,7 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
     /**
      * Create a detached, initialised PgClassRecord
      */
-    public PgClassRecord(Long oid, String relname, Long relnamespace, Long reltype, Long reloftype, Long relowner, Long relam, Long relfilenode, Long reltablespace, Integer relpages, Float reltuples, Integer relallvisible, Long reltoastrelid, Boolean relhasindex, Boolean relisshared, String relpersistence, String relkind, Short relnatts, Short relchecks, Boolean relhasrules, Boolean relhastriggers, Boolean relhassubclass, Boolean relrowsecurity, Boolean relforcerowsecurity, Boolean relispopulated, String relreplident, Boolean relispartition, Long relrewrite, Long relfrozenxid, Long relminmxid, String[] relacl, String[] reloptions, Object relpartbound) {
+    public PgClassRecord(Long oid, String relname, Long relnamespace, Long reltype, Long reloftype, Long relowner, Long relam, Long relfilenode, Long reltablespace, Integer relpages, Float reltuples, Integer relallvisible, Integer relallfrozen, Long reltoastrelid, Boolean relhasindex, Boolean relisshared, String relpersistence, String relkind, Short relnatts, Short relchecks, Boolean relhasrules, Boolean relhastriggers, Boolean relhassubclass, Boolean relrowsecurity, Boolean relforcerowsecurity, Boolean relispopulated, String relreplident, Boolean relispartition, Long relrewrite, Long relfrozenxid, Long relminmxid, String[] relacl, String[] reloptions, Object relpartbound) {
         super(PgClass.PG_CLASS);
 
         setOid(oid);
@@ -572,6 +587,7 @@ public class PgClassRecord extends UpdatableRecordImpl<PgClassRecord> {
         setRelpages(relpages);
         setReltuples(reltuples);
         setRelallvisible(relallvisible);
+        setRelallfrozen(relallfrozen);
         setReltoastrelid(reltoastrelid);
         setRelhasindex(relhasindex);
         setRelisshared(relisshared);

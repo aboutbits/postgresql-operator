@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.core.SQLUtil;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
 import jakarta.inject.Singleton;
@@ -11,7 +12,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -44,9 +44,9 @@ public class GrantService {
     ///
     /// @param tx   The DSLContext for database operations.
     /// @param spec The GrantSpec containing the specification details.
-    /// @return A map with object names as keys and lists of GrantPrivilege as values.
+    /// @return A map with object names as keys and lists of Privilege as values.
     @SuppressWarnings("checkstyle:MethodLength")
-    public Map<String, Set<GrantPrivilege>> determineCurrentObjectPrivileges(
+    public Map<String, Set<Privilege>> determineCurrentObjectPrivileges(
             DSLContext tx,
             GrantSpec spec
     ) {
@@ -84,7 +84,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_DATABASE.DATNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
                     );
             /*
              * select
@@ -113,7 +113,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_NAMESPACE.NSPNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
                     );
 
             /*
@@ -156,7 +156,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_CLASS.RELNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
                     );
             /*
              * select
@@ -194,7 +194,7 @@ public class GrantService {
                     )
                     .fetchGroups(
                             PG_CLASS.RELNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, GrantPrivilege.class)
+                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
                     );
         };
 
@@ -202,7 +202,7 @@ public class GrantService {
                 .stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> new HashSet<>(entry.getValue())
+                        entry -> Set.copyOf(entry.getValue())
                 ));
     }
 
@@ -401,7 +401,7 @@ public class GrantService {
             DSLContext tx,
             GrantSpec spec,
             String object,
-            Set<GrantPrivilege> privilegesToGrant
+            Set<Privilege> privilegesToGrant
     ) {
         var schema = spec.getSchema();
         var role = role(spec.getRole());
@@ -413,7 +413,7 @@ public class GrantService {
         };
 
         var privileges = privilegesToGrant.stream()
-                .map(GrantPrivilege::privilege)
+                .map(Privilege::privilege)
                 .toList();
 
         var statement = query(
@@ -430,7 +430,7 @@ public class GrantService {
     public void grantOnAll(
             DSLContext tx,
             GrantSpec spec,
-            Set<GrantPrivilege> privilegesToGrant
+            Set<Privilege> privilegesToGrant
     ) {
         var schema = quotedName(spec.getSchema());
         var role = role(spec.getRole());
@@ -443,7 +443,7 @@ public class GrantService {
         }
 
         var privileges = privilegesToGrant.stream()
-                .map(GrantPrivilege::privilege)
+                .map(Privilege::privilege)
                 .toList();
 
         var statement = query(
@@ -461,7 +461,7 @@ public class GrantService {
             DSLContext tx,
             GrantSpec spec,
             String object,
-            Set<GrantPrivilege> privilegesToRevoke
+            Set<Privilege> privilegesToRevoke
     ) {
         var schema = spec.getSchema();
         var role = role(spec.getRole());
@@ -473,7 +473,7 @@ public class GrantService {
         };
 
         var privileges = privilegesToRevoke.stream()
-                .map(GrantPrivilege::privilege)
+                .map(Privilege::privilege)
                 .toList();
 
         var statement = query(

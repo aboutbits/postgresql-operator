@@ -10,6 +10,7 @@ import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthid;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgClass;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDefaultAcl;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
 
@@ -112,6 +113,11 @@ public class PgCatalog extends SchemaImpl {
     public final PgDbRoleSetting PG_DB_ROLE_SETTING = PgDbRoleSetting.PG_DB_ROLE_SETTING;
 
     /**
+     * The table <code>pg_catalog.pg_default_acl</code>.
+     */
+    public final PgDefaultAcl PG_DEFAULT_ACL = PgDefaultAcl.PG_DEFAULT_ACL;
+
+    /**
      * The table <code>pg_catalog.pg_namespace</code>.
      */
     public final PgNamespace PG_NAMESPACE = PgNamespace.PG_NAMESPACE;
@@ -138,6 +144,7 @@ public class PgCatalog extends SchemaImpl {
             PgClass.PG_CLASS,
             PgDatabase.PG_DATABASE,
             PgDbRoleSetting.PG_DB_ROLE_SETTING,
+            PgDefaultAcl.PG_DEFAULT_ACL,
             PgNamespace.PG_NAMESPACE
         );
     }

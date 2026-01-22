@@ -9,12 +9,14 @@ import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthid;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgClass;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDefaultAcl;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgAuthMembersRecord;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgAuthidRecord;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgClassRecord;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgDatabaseRecord;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgDbRoleSettingRecord;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgDefaultAclRecord;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.PgNamespaceRecord;
 
 import javax.annotation.processing.Generated;
@@ -53,6 +55,8 @@ public class Keys {
     public static final UniqueKey<PgDatabaseRecord> PG_DATABASE_DATNAME_INDEX = Internal.createUniqueKey(PgDatabase.PG_DATABASE, DSL.name("pg_database_datname_index"), new TableField[] { PgDatabase.PG_DATABASE.DATNAME }, true);
     public static final UniqueKey<PgDatabaseRecord> PG_DATABASE_OID_INDEX = Internal.createUniqueKey(PgDatabase.PG_DATABASE, DSL.name("pg_database_oid_index"), new TableField[] { PgDatabase.PG_DATABASE.OID }, true);
     public static final UniqueKey<PgDbRoleSettingRecord> PG_DB_ROLE_SETTING_DATABASEID_ROL_INDEX = Internal.createUniqueKey(PgDbRoleSetting.PG_DB_ROLE_SETTING, DSL.name("pg_db_role_setting_databaseid_rol_index"), new TableField[] { PgDbRoleSetting.PG_DB_ROLE_SETTING.SETDATABASE, PgDbRoleSetting.PG_DB_ROLE_SETTING.SETROLE }, true);
+    public static final UniqueKey<PgDefaultAclRecord> PG_DEFAULT_ACL_OID_INDEX = Internal.createUniqueKey(PgDefaultAcl.PG_DEFAULT_ACL, DSL.name("pg_default_acl_oid_index"), new TableField[] { PgDefaultAcl.PG_DEFAULT_ACL.OID }, true);
+    public static final UniqueKey<PgDefaultAclRecord> PG_DEFAULT_ACL_ROLE_NSP_OBJ_INDEX = Internal.createUniqueKey(PgDefaultAcl.PG_DEFAULT_ACL, DSL.name("pg_default_acl_role_nsp_obj_index"), new TableField[] { PgDefaultAcl.PG_DEFAULT_ACL.DEFACLROLE, PgDefaultAcl.PG_DEFAULT_ACL.DEFACLNAMESPACE, PgDefaultAcl.PG_DEFAULT_ACL.DEFACLOBJTYPE }, true);
     public static final UniqueKey<PgNamespaceRecord> PG_NAMESPACE_NSPNAME_INDEX = Internal.createUniqueKey(PgNamespace.PG_NAMESPACE, DSL.name("pg_namespace_nspname_index"), new TableField[] { PgNamespace.PG_NAMESPACE.NSPNAME }, true);
     public static final UniqueKey<PgNamespaceRecord> PG_NAMESPACE_OID_INDEX = Internal.createUniqueKey(PgNamespace.PG_NAMESPACE, DSL.name("pg_namespace_oid_index"), new TableField[] { PgNamespace.PG_NAMESPACE.OID }, true);
 }

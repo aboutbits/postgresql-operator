@@ -1,7 +1,6 @@
-package it.aboutbits.postgresql.crd.grant;
+package it.aboutbits.postgresql.core;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.jooq.Privilege;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 
@@ -13,7 +12,7 @@ import java.util.Locale;
  * </a>
  */
 @NullMarked
-public enum GrantPrivilege {
+public enum Privilege {
     SELECT,
     INSERT,
     UPDATE,
@@ -32,7 +31,7 @@ public enum GrantPrivilege {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    public Privilege privilege() {
+    public org.jooq.Privilege privilege() {
         return DSL.privilege(
                 name().toLowerCase(Locale.ROOT)
         );

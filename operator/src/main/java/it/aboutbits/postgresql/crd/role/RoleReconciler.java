@@ -147,6 +147,9 @@ public class RoleReconciler
                     .setMessage("Role deletion in progress");
 
             context.getClient().resource(resource).patchStatus();
+
+            return DeleteControl.noFinalizerRemoval()
+                    .rescheduleAfter(1, TimeUnit.SECONDS);
         }
 
         var clusterRef = spec.getClusterRef();

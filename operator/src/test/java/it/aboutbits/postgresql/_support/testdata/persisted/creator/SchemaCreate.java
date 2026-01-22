@@ -91,7 +91,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
                 .withName(name)
                 .waitUntilCondition(
                         db -> db.getStatus() != null,
-                        10,
+                        5,
                         TimeUnit.SECONDS
                 );
     }
