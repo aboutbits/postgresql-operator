@@ -55,7 +55,7 @@ class DefaultPrivilegeReconcilerTest {
         deleteResources(Role.class);
         deleteResources(ClusterConnection.class);
 
-        // Create the default connection "test-cluster-connection" used by GrantCreate defaults
+        // Create the default connection "test-cluster-connection" used by DefaultPrivilegeCreate defaults
         given.one().clusterConnection()
                 .withName("test-cluster-connection")
                 .returnFirst();
