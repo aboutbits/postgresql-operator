@@ -8,6 +8,8 @@ import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql._support.valuesource.BlankSource;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
+import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
+import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.database.Database;
 import it.aboutbits.postgresql.crd.role.Role;
@@ -23,8 +25,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
+import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
 import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType.SCHEMA;
@@ -38,6 +43,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiredArgsConstructor
 class DefaultPrivilegeReconcilerTest {
     private final Given given;
+    private final DefaultPrivilegeService defaultPrivilegeService;
+    private final PostgreSQLContextFactory postgreSQLContextFactory;
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
@@ -314,7 +321,7 @@ class DefaultPrivilegeReconcilerTest {
                         .setObservedGeneration(1L);
 
                 // then
-                assertThatGrantHasStatus(
+                assertThatDefaultPrivilegeHasStatus(
                         defaultPrivilege,
                         expectedStatus,
                         now
@@ -323,7 +330,357 @@ class DefaultPrivilegeReconcilerTest {
         }
     }
 
-    private void assertThatGrantHasStatus(
+    @Nested
+    class SchemaTests {
+        @Test
+        @DisplayName("Should grant and revoke default privileges on schema")
+        void defaultPrivilegeOnSchema() {
+            // given
+            var now = OffsetDateTime.now(ZoneOffset.UTC);
+
+            var clusterConnectionMain = given.one()
+                    .clusterConnection()
+                    .returnFirst();
+
+            var database = given.one()
+                    .database()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            // To create a Schema in the new database, we need a ClusterConnection pointing to it
+            var clusterConnectionDb = given.one()
+                    .clusterConnection()
+                    .withDatabase(database.getSpec().getName())
+                    .returnFirst();
+
+            var role = given.one()
+                    .role()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            // when
+            var defaultPrivilege = given.one()
+                    .defaultPrivilege()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withRole(role.getSpec().getName())
+                    .withObjectType(SCHEMA)
+                    .withPrivileges(USAGE)
+                    .returnFirst();
+
+            // then
+            var expectedStatus = new CRStatus()
+                    .setName("")
+                    .setPhase(CRPhase.READY)
+                    .setObservedGeneration(1L);
+
+            assertThatDefaultPrivilegeHasStatus(
+                    defaultPrivilege,
+                    expectedStatus,
+                    now
+            );
+
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.of(USAGE)
+            );
+
+            // given: grant all privileges change
+            var spec = defaultPrivilege.getSpec();
+            var expectedPrivileges = SCHEMA.privileges();
+            var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyDefaultPrivilege(
+                    defaultPrivilege,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(CREATE));
+
+            // when
+            applyDefaultPrivilege(
+                    defaultPrivilege,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.of(CREATE)
+            );
+
+            // when: defaultPrivilege CR instance delete
+            kubernetesClient.resources(DefaultPrivilege.class)
+                    .resource(defaultPrivilege)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege
+            );
+        }
+    }
+
+    @Nested
+    class TableTests {
+        @Test
+        @DisplayName("Should grant and revoke default privileges on table")
+        void defaultPrivilegeOnTable() {
+            // given
+            var now = OffsetDateTime.now(ZoneOffset.UTC);
+
+            var clusterConnectionMain = given.one()
+                    .clusterConnection()
+                    .returnFirst();
+            var database = given.one()
+                    .database()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            var clusterConnectionDb = given.one()
+                    .clusterConnection()
+                    .withDatabase(database.getSpec().getName())
+                    .returnFirst();
+
+            var schema = given.one()
+                    .schema()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .returnFirst();
+
+            var role = given.one()
+                    .role()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            // when
+            var defaultPrivilege = given.one()
+                    .defaultPrivilege()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withSchema(schema.getSpec().getName())
+                    .withRole(role.getSpec().getName())
+                    .withObjectType(TABLE)
+                    .withPrivileges(SELECT)
+                    .returnFirst();
+
+            // then
+            var expectedStatus = new CRStatus()
+                    .setName("")
+                    .setPhase(CRPhase.READY)
+                    .setObservedGeneration(1L);
+
+            assertThatDefaultPrivilegeHasStatus(
+                    defaultPrivilege,
+                    expectedStatus,
+                    now
+            );
+
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.of(SELECT)
+            );
+
+            // given: grant all privileges change
+            var spec = defaultPrivilege.getSpec();
+            var expectedPrivileges = TABLE.privileges();
+            var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyDefaultPrivilege(
+                    defaultPrivilege,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: defaultPrivilege privileges change
+            spec.setPrivileges(List.of(SELECT));
+
+            // when
+            applyDefaultPrivilege(
+                    defaultPrivilege,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.of(SELECT)
+            );
+
+            // when: defaultPrivilege CR instance delete
+            kubernetesClient.resources(DefaultPrivilege.class)
+                    .resource(defaultPrivilege)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege
+            );
+        }
+    }
+
+    @Nested
+    class SequenceTests {
+        @Test
+        @DisplayName("Should grant and revoke default privileges on sequence")
+        void defaultPrivilegeOnSequence() {
+            // given
+            var now = OffsetDateTime.now(ZoneOffset.UTC);
+
+            var clusterConnectionMain = given.one()
+                    .clusterConnection()
+                    .returnFirst();
+            var database = given.one()
+                    .database()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            var clusterConnectionDb = given.one()
+                    .clusterConnection()
+                    .withDatabase(database.getSpec().getName())
+                    .returnFirst();
+
+            var schema = given.one()
+                    .schema()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .returnFirst();
+
+            var role = given.one()
+                    .role()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            // when
+            var defaultPrivilege = given.one()
+                    .defaultPrivilege()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withSchema(schema.getSpec().getName())
+                    .withRole(role.getSpec().getName())
+                    .withObjectType(SEQUENCE)
+                    .withPrivileges(USAGE)
+                    .returnFirst();
+
+            // then
+            var expectedStatus = new CRStatus()
+                    .setName("")
+                    .setPhase(CRPhase.READY)
+                    .setObservedGeneration(1L);
+
+            assertThatDefaultPrivilegeHasStatus(
+                    defaultPrivilege,
+                    expectedStatus,
+                    now
+            );
+
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.of(USAGE)
+            );
+
+            // given: grant all privileges change
+            var spec = defaultPrivilege.getSpec();
+            var expectedPrivileges = SEQUENCE.privileges();
+            var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
+
+            spec.setPrivileges(expectedPrivileges);
+
+            // when
+            applyDefaultPrivilege(
+                    defaultPrivilege,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
+            );
+
+            // then
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.copyOf(expectedPrivileges)
+            );
+
+            // given: grant privileges change
+            spec.setPrivileges(List.of(SELECT));
+
+            // when
+            applyDefaultPrivilege(
+                    defaultPrivilege,
+                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
+            );
+
+            // then
+            assertThatDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege,
+                    Set.of(SELECT)
+            );
+
+            // when: defaultPrivilege CR instance delete
+            kubernetesClient.resources(DefaultPrivilege.class)
+                    .resource(defaultPrivilege)
+                    .withTimeout(5, TimeUnit.SECONDS)
+                    .delete();
+
+            // then
+            assertThatNoDefaultPrivileges(
+                    clusterConnectionDb,
+                    defaultPrivilege
+            );
+        }
+    }
+
+    private DefaultPrivilege applyDefaultPrivilege(
+            DefaultPrivilege defaultPrivilege,
+            Predicate<DefaultPrivilege> condition
+    ) {
+        var namespace = kubernetesClient.getNamespace();
+
+        defaultPrivilege.getMetadata().setManagedFields(null);
+        defaultPrivilege.getMetadata().setResourceVersion(null);
+
+        var applied = kubernetesClient.resources(DefaultPrivilege.class)
+                .inNamespace(namespace)
+                .resource(defaultPrivilege)
+                .serverSideApply();
+
+        return kubernetesClient.resources(DefaultPrivilege.class)
+                .inNamespace(namespace)
+                .withName(applied.getMetadata().getName())
+                .waitUntilCondition(
+                        condition,
+                        5,
+                        TimeUnit.SECONDS
+                );
+    }
+
+    private void assertThatDefaultPrivilegeHasStatus(
             DefaultPrivilege defaultPrivilege,
             CRStatus expectedStatus,
             OffsetDateTime now
@@ -342,5 +699,32 @@ class DefaultPrivilegeReconcilerTest {
                 .usingRecursiveComparison()
                 .ignoringFields("message", "lastProbeTime", "lastPhaseTransitionTime")
                 .isEqualTo(expectedStatus);
+    }
+
+    private void assertThatDefaultPrivileges(
+            ClusterConnection clusterConnection,
+            DefaultPrivilege defaultPrivilege,
+            Set<Privilege> expectedPrivileges
+    ) {
+        var databaseName = defaultPrivilege.getSpec().getDatabase();
+
+        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
+            var privileges = defaultPrivilegeService.determineCurrentDefaultPrivileges(dsl, defaultPrivilege.getSpec());
+
+            assertThat(privileges).containsAll(expectedPrivileges);
+        }
+    }
+
+    private void assertThatNoDefaultPrivileges(
+            ClusterConnection clusterConnection,
+            DefaultPrivilege defaultPrivilege
+    ) {
+        var databaseName = defaultPrivilege.getSpec().getDatabase();
+
+        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
+            var privileges = defaultPrivilegeService.determineCurrentDefaultPrivileges(dsl, defaultPrivilege.getSpec());
+
+            assertThat(privileges).isEmpty();
+        }
     }
 }
