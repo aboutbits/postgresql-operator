@@ -9,6 +9,7 @@ import it.aboutbits.postgresql._support.valuesource.BlankSource;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
+import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.database.Database;
 import it.aboutbits.postgresql.crd.role.Role;
@@ -30,14 +31,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
+import static it.aboutbits.postgresql.core.Privilege.CONNECT;
+import static it.aboutbits.postgresql.core.Privilege.CREATE;
+import static it.aboutbits.postgresql.core.Privilege.SELECT;
+import static it.aboutbits.postgresql.core.Privilege.USAGE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.DATABASE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SCHEMA;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
-import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.CONNECT;
-import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.CREATE;
-import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.SELECT;
-import static it.aboutbits.postgresql.crd.grant.GrantPrivilege.USAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.jooq.impl.DSL.quotedName;
@@ -1171,7 +1172,7 @@ class GrantReconcilerTest {
             ClusterConnection clusterConnection,
             Grant grant,
             String objectName,
-            Set<GrantPrivilege> expectedPrivileges
+            Set<Privilege> expectedPrivileges
     ) {
         var databaseName = grant.getSpec().getDatabase();
 

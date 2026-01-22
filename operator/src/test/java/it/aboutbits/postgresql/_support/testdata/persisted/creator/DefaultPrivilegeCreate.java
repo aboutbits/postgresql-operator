@@ -6,9 +6,9 @@ import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.ClusterReference;
 import it.aboutbits.postgresql.core.Privilege;
-import it.aboutbits.postgresql.crd.grant.Grant;
-import it.aboutbits.postgresql.crd.grant.GrantObjectType;
-import it.aboutbits.postgresql.crd.grant.GrantSpec;
+import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilege;
+import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType;
+import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeSpec;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
-public class GrantCreate extends TestDataCreator<Grant> {
+public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
@@ -49,18 +49,17 @@ public class GrantCreate extends TestDataCreator<Grant> {
     private String withRole;
 
     @Nullable
-    private String withSchema;
-
-    private GrantObjectType withObjectType = GrantObjectType.DATABASE;
+    private String withOwner;
 
     @Nullable
-    @Setter(AccessLevel.NONE)
-    private List<String> withObjects = null;
+    private String withSchema;
+
+    private DefaultPrivilegeObjectType withObjectType = DefaultPrivilegeObjectType.SCHEMA;
 
     @Setter(AccessLevel.NONE)
     private List<Privilege> withPrivileges = new ArrayList<>();
 
-    public GrantCreate(
+    public DefaultPrivilegeCreate(
             int numberOfItems,
             Given given,
             KubernetesClient kubernetesClient
@@ -71,41 +70,29 @@ public class GrantCreate extends TestDataCreator<Grant> {
     }
 
     @SuppressWarnings("unused")
-    public GrantCreate withObjects(List<String> objects) {
-        this.withObjects = objects;
-        return this;
-    }
-
-    @SuppressWarnings("unused")
-    public GrantCreate withObjects(String... objects) {
-        this.withObjects = List.of(objects);
-        return this;
-    }
-
-    @SuppressWarnings("unused")
-    public GrantCreate withPrivileges(List<Privilege> privileges) {
+    public DefaultPrivilegeCreate withPrivileges(List<Privilege> privileges) {
         this.withPrivileges = privileges;
         return this;
     }
 
     @SuppressWarnings("unused")
-    public GrantCreate withPrivileges(Privilege... privileges) {
+    public DefaultPrivilegeCreate withPrivileges(Privilege... privileges) {
         this.withPrivileges = List.of(privileges);
         return this;
     }
 
     @SuppressWarnings("unused")
-    public GrantCreate withoutNamespace() {
+    public DefaultPrivilegeCreate withoutNamespace() {
         withoutNamespace = true;
         return this;
     }
 
     @Override
-    protected Grant create(int index) {
+    protected DefaultPrivilege create(int index) {
         var namespace = getNamespace();
         var name = getName();
 
-        var item = new Grant();
+        var item = new DefaultPrivilege();
 
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
@@ -117,42 +104,36 @@ public class GrantCreate extends TestDataCreator<Grant> {
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
 
-        var spec = new GrantSpec();
+        var spec = new DefaultPrivilegeSpec();
 
         spec.setClusterRef(clusterRef);
         spec.setDatabase(getDatabase());
         spec.setRole(getRole());
+        spec.setOwner(getOwner());
 
         spec.setObjectType(withObjectType);
-        spec.setObjects(withObjects);
 
-        if (withObjectType != GrantObjectType.DATABASE
+        if (withObjectType != DefaultPrivilegeObjectType.SCHEMA
                 || withSchema != null
         ) {
             spec.setSchema(getSchema());
-        }
-
-        if ((withObjectType != GrantObjectType.DATABASE && withObjectType != GrantObjectType.SCHEMA)
-                || withObjects != null
-        ) {
-            spec.setObjects(withObjects);
         }
 
         spec.setPrivileges(withPrivileges);
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(Grant.class)
+        kubernetesClient.resources(DefaultPrivilege.class)
                 .inNamespace(namespace)
                 .resource(item)
                 .serverSideApply();
 
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Grant.class)
+        return kubernetesClient.resources(DefaultPrivilege.class)
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        grant -> grant.getStatus() != null,
+                        defaultPrivilege -> defaultPrivilege.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );
@@ -201,6 +182,18 @@ public class GrantCreate extends TestDataCreator<Grant> {
     private String getRole() {
         if (withRole != null) {
             return withRole;
+        }
+
+        return given.one()
+                .role()
+                .returnFirst()
+                .getSpec()
+                .getName();
+    }
+
+    private String getOwner() {
+        if (withOwner != null) {
+            return withOwner;
         }
 
         return given.one()

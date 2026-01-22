@@ -10,6 +10,7 @@ import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgAuthid;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgClass;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDefaultAcl;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
 
@@ -96,6 +97,11 @@ public class Tables {
      * The table <code>pg_catalog.pg_db_role_setting</code>.
      */
     public static final PgDbRoleSetting PG_DB_ROLE_SETTING = PgDbRoleSetting.PG_DB_ROLE_SETTING;
+
+    /**
+     * The table <code>pg_catalog.pg_default_acl</code>.
+     */
+    public static final PgDefaultAcl PG_DEFAULT_ACL = PgDefaultAcl.PG_DEFAULT_ACL;
 
     /**
      * The table <code>pg_catalog.pg_namespace</code>.

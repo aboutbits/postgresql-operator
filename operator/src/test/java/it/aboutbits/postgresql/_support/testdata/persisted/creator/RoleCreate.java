@@ -122,7 +122,7 @@ public class RoleCreate extends TestDataCreator<Role> {
                 .withName(name)
                 .waitUntilCondition(
                         role -> role.getStatus() != null,
-                        10,
+                        5,
                         TimeUnit.SECONDS
                 );
     }

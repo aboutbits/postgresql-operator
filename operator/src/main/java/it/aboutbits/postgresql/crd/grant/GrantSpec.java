@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.ClusterReference;
+import it.aboutbits.postgresql.core.Privilege;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
@@ -17,7 +18,7 @@ import java.util.List;
 @Getter
 @Setter
 @ValidationRule(
-        value = "self.objectType == 'database' ? !has(self.schema) : (has(self.schema) && self.schema.size() > 0)",
+        value = "self.objectType == 'database' ? !has(self.schema) : (has(self.schema) && self.schema.trim().size() > 0)",
         message = "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required."
 )
 @ValidationRule(
@@ -111,5 +112,5 @@ public class GrantSpec {
             value = "self.size() > 0",
             message = "The Grant privileges must not be empty. The Operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array."
     )
-    private List<GrantPrivilege> privileges = new ArrayList<>();
+    private List<Privilege> privileges = new ArrayList<>();
 }

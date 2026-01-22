@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.crd.grant;
+package it.aboutbits.postgresql.crd.defaultprivilege;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import it.aboutbits.postgresql.core.Privilege;
@@ -11,14 +11,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static it.aboutbits.postgresql.core.Privilege.CONNECT;
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.DELETE;
 import static it.aboutbits.postgresql.core.Privilege.INSERT;
 import static it.aboutbits.postgresql.core.Privilege.MAINTAIN;
 import static it.aboutbits.postgresql.core.Privilege.REFERENCES;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
-import static it.aboutbits.postgresql.core.Privilege.TEMPORARY;
 import static it.aboutbits.postgresql.core.Privilege.TRIGGER;
 import static it.aboutbits.postgresql.core.Privilege.TRUNCATE;
 import static it.aboutbits.postgresql.core.Privilege.UPDATE;
@@ -26,28 +24,23 @@ import static it.aboutbits.postgresql.core.Privilege.USAGE;
 import static org.jooq.impl.DSL.keyword;
 
 /**
- * <a href="https://www.postgresql.org/docs/current/sql-grant.html">
- * https://www.postgresql.org/docs/current/sql-grant.html
+ * <a href="https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html">
+ * https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html
  * </a>
  */
 @NullMarked
 @Getter
 @Accessors(fluent = true)
-public enum GrantObjectType {
-    DATABASE(
-            List.of(
-                    CREATE,
-                    CONNECT,
-                    TEMPORARY
-            )
-    ),
+public enum DefaultPrivilegeObjectType {
     SCHEMA(
+            "n",
             List.of(
                     USAGE,
                     CREATE
             )
     ),
     TABLE(
+            "r",
             List.of(
                     SELECT,
                     INSERT,
@@ -60,6 +53,7 @@ public enum GrantObjectType {
             )
     ),
     SEQUENCE(
+            "S",
             List.of(
                     USAGE,
                     SELECT,
@@ -73,9 +67,14 @@ public enum GrantObjectType {
     @SuppressWarnings("ImmutableEnumChecker")
     private final Set<Privilege> privilegesSet;
 
-    GrantObjectType(
+    private final String objectTypeChar;
+
+    DefaultPrivilegeObjectType(
+            String objectTypeChar,
             List<Privilege> privileges
     ) {
+        this.objectTypeChar = objectTypeChar;
+
         this.privileges = privileges;
         this.privilegesSet = Set.copyOf(privileges);
     }

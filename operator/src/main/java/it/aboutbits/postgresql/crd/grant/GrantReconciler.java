@@ -62,7 +62,7 @@ public class GrantReconciler
         );
 
         var objectType = spec.getObjectType();
-        var grantPrivileges = new HashSet<>(spec.getPrivileges());
+        var grantPrivileges = Set.copyOf(spec.getPrivileges());
         var allowedPrivilegesForObjectType = objectType.privilegesSet();
 
         if (!allowedPrivilegesForObjectType.containsAll(grantPrivileges)) {
@@ -221,13 +221,13 @@ public class GrantReconciler
         var schema = spec.getSchema();
         var objectType = spec.getObjectType();
 
-        var expectedObjects = new HashSet<>(
+        var expectedObjects = Set.copyOf(
                 Objects.requireNonNullElse(
                         spec.getObjects(),
                         Collections.emptySet()
                 )
         );
-        var expectedPrivileges = new HashSet<>(spec.getPrivileges());
+        var expectedPrivileges = Set.copyOf(spec.getPrivileges());
 
         var isAllMode = expectedObjects.isEmpty();
 
@@ -283,7 +283,7 @@ public class GrantReconciler
             }
 
             // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
-            // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't allow to specify objects there
+            // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't allow specifying objects there
             if (!isAllMode
                     || objectType == GrantObjectType.DATABASE
                     || objectType == GrantObjectType.SCHEMA
