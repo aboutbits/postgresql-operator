@@ -61,13 +61,13 @@ public enum DefaultPrivilegeObjectType {
             )
     );
 
+    private final String objectTypeChar;
+
     @SuppressWarnings("ImmutableEnumChecker")
     private final List<Privilege> privileges;
 
     @SuppressWarnings("ImmutableEnumChecker")
     private final Set<Privilege> privilegesSet;
-
-    private final String objectTypeChar;
 
     DefaultPrivilegeObjectType(
             String objectTypeChar,
