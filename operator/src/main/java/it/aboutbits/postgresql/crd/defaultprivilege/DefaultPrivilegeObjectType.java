@@ -14,7 +14,6 @@ import java.util.Set;
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.DELETE;
 import static it.aboutbits.postgresql.core.Privilege.INSERT;
-import static it.aboutbits.postgresql.core.Privilege.MAINTAIN;
 import static it.aboutbits.postgresql.core.Privilege.REFERENCES;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
 import static it.aboutbits.postgresql.core.Privilege.TRIGGER;
@@ -48,8 +47,8 @@ public enum DefaultPrivilegeObjectType {
                     DELETE,
                     TRUNCATE,
                     REFERENCES,
-                    TRIGGER,
-                    MAINTAIN
+                    TRIGGER
+                    //MAINTAIN // PostgreSQL 17+
             )
     ),
     SEQUENCE(

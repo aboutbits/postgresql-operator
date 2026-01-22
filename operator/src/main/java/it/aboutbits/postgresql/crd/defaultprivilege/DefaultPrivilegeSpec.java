@@ -102,7 +102,6 @@ public class DefaultPrivilegeSpec {
     /// - `trigger`
     /// - `create`
     /// - `usage`
-    /// - `maintain`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
     @ValidationRule(

@@ -105,7 +105,6 @@ public class GrantSpec {
     /// - `connect`
     /// - `temporary`
     /// - `usage`
-    /// - `maintain`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
     @ValidationRule(

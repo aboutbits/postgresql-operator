@@ -23,8 +23,8 @@ public enum Privilege {
     CREATE,
     CONNECT,
     TEMPORARY,
-    USAGE,
-    MAINTAIN;
+    USAGE;
+    //MAINTAIN; // PostgreSQL 17+
 
     @JsonValue
     public String toValue() {
