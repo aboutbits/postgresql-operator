@@ -386,7 +386,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.of(USAGE)
             );
 
-            // given: grant all privileges change
+            // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
             var expectedPrivileges = SCHEMA.privileges();
             var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
@@ -406,7 +406,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.copyOf(expectedPrivileges)
             );
 
-            // given: grant privileges change
+            // given: DefaultPrivilege privileges change
             spec.setPrivileges(List.of(CREATE));
 
             // when
@@ -422,7 +422,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.of(CREATE)
             );
 
-            // when: defaultPrivilege CR instance delete
+            // when: DefaultPrivilege CR instance delete
             kubernetesClient.resources(DefaultPrivilege.class)
                     .resource(defaultPrivilege)
                     .withTimeout(5, TimeUnit.SECONDS)
@@ -496,7 +496,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.of(SELECT)
             );
 
-            // given: grant all privileges change
+            // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
             var expectedPrivileges = TABLE.privileges();
             var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
@@ -516,7 +516,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.copyOf(expectedPrivileges)
             );
 
-            // given: defaultPrivilege privileges change
+            // given: DefaultPrivilege privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
@@ -532,7 +532,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.of(SELECT)
             );
 
-            // when: defaultPrivilege CR instance delete
+            // when: DefaultPrivilege CR instance delete
             kubernetesClient.resources(DefaultPrivilege.class)
                     .resource(defaultPrivilege)
                     .withTimeout(5, TimeUnit.SECONDS)
@@ -606,7 +606,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.of(USAGE)
             );
 
-            // given: grant all privileges change
+            // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
             var expectedPrivileges = SEQUENCE.privileges();
             var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
@@ -626,7 +626,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.copyOf(expectedPrivileges)
             );
 
-            // given: grant privileges change
+            // given: DefaultPrivilege privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
@@ -642,7 +642,7 @@ class DefaultPrivilegeReconcilerTest {
                     Set.of(SELECT)
             );
 
-            // when: defaultPrivilege CR instance delete
+            // when: DefaultPrivilege CR instance delete
             kubernetesClient.resources(DefaultPrivilege.class)
                     .resource(defaultPrivilege)
                     .withTimeout(5, TimeUnit.SECONDS)

@@ -157,7 +157,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-grant");
+        return randomKubernetesNameSuffix("test-default-privilege");
     }
 
     private String getClusterConnectionName() {
