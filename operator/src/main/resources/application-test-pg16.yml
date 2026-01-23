@@ -4,4 +4,4 @@ quarkus:
       parent: test
   compose:
     devservices:
-      files: src/main/docker/compose-deviservices-test-pg16.yml
+      files: src/main/docker/compose-devservices-test-pg16.yml
