@@ -2,6 +2,9 @@
 ## AboutBits Libraries ##
 checkstyleConfig = "2.0.0"
 
+# Axion Release Plugin #
+axionReleasePlugin = "1.21.1"
+
 ## Libraries ##
 jooq = "3.20.10"
 jSpecify = "1.0.0"
@@ -19,6 +22,10 @@ errorPronePlugin = "4.4.0"
 nullAway = "0.13.0"
 
 [plugins]
+# https://github.com/allegro/axion-release-plugin
+# https://axion-release-plugin.readthedocs.io/
+axionReleasePlugin = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionReleasePlugin" }
+
 # https://github.com/tbroyer/gradle-errorprone-plugin
 # https://mvnrepository.com/artifact/net.ltgt.errorprone/net.ltgt.errorprone.gradle.plugin
 errorPronePlugin = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
