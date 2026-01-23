@@ -15,7 +15,7 @@ on:
           - "Prerelease"
 
 env:
-  DOCKER_IMAGE: ghcr.io/${{ github.repository }}/app
+  DOCKER_IMAGE: ghcr.io/${{ github.repository }}
 
 jobs:
   build-and-publish:
