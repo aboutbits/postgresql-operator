@@ -1,6 +1,8 @@
 name: Test
 
-on: push
+on:
+  pull_request:
+    types: [ opened, reopened, synchronize ]
 
 concurrency:
   group: ${{ github.ref }}
@@ -8,5 +10,6 @@ concurrency:
 
 jobs:
   test:
+    name: Tests
     uses: ./.github/workflows/test.yml
     secrets: inherit
