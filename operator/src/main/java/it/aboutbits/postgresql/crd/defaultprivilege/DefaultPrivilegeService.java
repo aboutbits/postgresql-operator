@@ -41,6 +41,7 @@ public class DefaultPrivilegeService {
             DSLContext tx,
             DefaultPrivilegeSpec spec
     ) {
+        var owner = spec.getOwner();
         var role = spec.getRole();
         var schema = spec.getSchema();
 
@@ -65,6 +66,11 @@ public class DefaultPrivilegeService {
                 .from(PG_DEFAULT_ACL)
                 .crossJoin(Routines.aclexplode(PG_DEFAULT_ACL.DEFACLACL))
                 .where(
+                        PG_DEFAULT_ACL.DEFACLROLE.eq(field(
+                                ROLE_OID_SQL,
+                                OID_DATA_TYPE,
+                                val(owner)
+                        )),
                         PG_DEFAULT_ACL.DEFACLOBJTYPE.eq(objectType.objectTypeChar()),
                         objectType == SCHEMA
                                 ? noCondition()

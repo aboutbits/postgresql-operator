@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @NullMarked
 @QuarkusTest
@@ -30,10 +31,14 @@ class PostgreSQLInstanceReadinessCheckTest {
     KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        kubernetesClient.resources(ClusterConnection.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(ClusterConnection.class).list().getItems().isEmpty()
+                );
     }
 
     @Test

@@ -164,9 +164,10 @@ public class DefaultPrivilegeReconciler
                     .rescheduleAfter(60, TimeUnit.SECONDS);
         }
 
+        var database = spec.getDatabase();
         var clusterConnection = clusterConnectionOptional.get();
 
-        try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+        try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
             dsl.transaction(cfg -> {
                 var tx = cfg.dsl();
 

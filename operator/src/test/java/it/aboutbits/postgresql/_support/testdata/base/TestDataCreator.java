@@ -62,7 +62,8 @@ public abstract class TestDataCreator<T> {
         }
 
         var separator = "-";
-        var suffixLength = maxLength - name.length() - separator.length();
+        var availableSpace = maxLength - name.length() - separator.length();
+        var suffixLength = Math.min(7, availableSpace);
 
         return name + separator + FAKER.regexify("[a-z0-9]{%d}".formatted(suffixLength));
     }

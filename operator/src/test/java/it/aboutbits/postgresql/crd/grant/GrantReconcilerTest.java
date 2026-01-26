@@ -1,6 +1,5 @@
 package it.aboutbits.postgresql.crd.grant;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
@@ -40,12 +39,14 @@ import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.MAINTAIN;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.DATABASE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SCHEMA;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.quotedName;
 
 @NullMarked
@@ -61,22 +62,45 @@ class GrantReconcilerTest {
 
     @BeforeEach
     void resetEnvironment() {
-        deleteResources(Grant.class);
-        deleteResources(Schema.class);
-        deleteResources(Database.class);
-        deleteResources(Role.class);
-        deleteResources(ClusterConnection.class);
+        kubernetesClient.resources(Grant.class).delete();
 
-        // Create the default connection "test-cluster-connection" used by GrantCreate defaults
-        given.one().clusterConnection()
-                .withName("test-cluster-connection")
-                .returnFirst();
-    }
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(Grant.class).list().getItems().isEmpty()
+                );
 
-    private <T extends HasMetadata> void deleteResources(Class<T> resourceClass) {
-        kubernetesClient.resources(resourceClass)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+        kubernetesClient.resources(Schema.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(Schema.class).list().getItems().isEmpty()
+                );
+
+        kubernetesClient.resources(Role.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(Role.class).list().getItems().isEmpty()
+                );
+
+        kubernetesClient.resources(Database.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(Database.class).list().getItems().isEmpty()
+                );
+
+        kubernetesClient.resources(ClusterConnection.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(ClusterConnection.class).list().getItems().isEmpty()
+                );
     }
 
     @Nested
@@ -99,7 +123,7 @@ class GrantReconcilerTest {
                                 .withPrivileges(USAGE)
                                 .apply()
                 ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant database must not be empty.");
+                        .hasMessageContaining("The ClusterConnection database must not be empty.");
             }
 
             @ParameterizedTest
@@ -341,6 +365,7 @@ class GrantReconcilerTest {
                 var database = given.one()
                         .database()
                         .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                        .withReclaimPolicy(DELETE)
                         .returnFirst();
 
                 var clusterConnectionDb = given.one()
@@ -351,6 +376,7 @@ class GrantReconcilerTest {
                 var schema = given.one()
                         .schema()
                         .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                        .withReclaimPolicy(DELETE)
                         .returnFirst();
 
                 var role = given.one()
@@ -388,6 +414,14 @@ class GrantReconcilerTest {
                                     .startsWith("The following privileges require a newer PostgreSQL version (current:")
                                     .contains("{MAINTAIN=17}");
                         });
+
+                // cleanup
+                deleteTable(
+                        clusterConnectionDb,
+                        database.getSpec().getName(),
+                        schema.getSpec().getName(),
+                        tableName
+                );
             }
         }
     }
@@ -412,6 +446,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             // when
@@ -511,6 +546,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             // To create a Schema in the new database, we need a ClusterConnection pointing to it
@@ -522,6 +558,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -632,6 +669,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -642,6 +680,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -738,6 +777,14 @@ class GrantReconcilerTest {
                     grant,
                     tableName
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
         }
 
         @ParameterizedTest
@@ -756,6 +803,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -766,6 +814,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -892,6 +941,20 @@ class GrantReconcilerTest {
                     grant,
                     tableName2
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName1
+            );
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName2
+            );
         }
 
         static Stream<List<Privilege>> provideAllSupportedPrivileges() {
@@ -923,6 +986,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -933,6 +997,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -1030,6 +1095,14 @@ class GrantReconcilerTest {
                     grant,
                     sequenceName
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
         }
 
         @Test
@@ -1045,6 +1118,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -1055,6 +1129,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -1183,6 +1258,20 @@ class GrantReconcilerTest {
                     grant,
                     sequenceName2
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName1
+            );
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName2
+            );
         }
     }
 
@@ -1254,6 +1343,17 @@ class GrantReconcilerTest {
             dsl.createTable(quotedName(schemaName, tableName))
                     .column("id", SQLDataType.BIGINT.identity(true))
                     .execute();
+        }
+    }
+
+    private void deleteTable(
+            ClusterConnection clusterConnection,
+            String databaseName,
+            String schemaName,
+            String tableName
+    ) {
+        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
+            dsl.dropTable(quotedName(schemaName, tableName)).execute();
         }
     }
 

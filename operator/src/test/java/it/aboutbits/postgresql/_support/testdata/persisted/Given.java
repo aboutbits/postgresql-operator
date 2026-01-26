@@ -99,6 +99,7 @@ public class Given {
         public DatabaseCreate database() {
             return new DatabaseCreate(
                     numberOfItems,
+                    given,
                     kubernetesClient
             );
         }
@@ -106,6 +107,7 @@ public class Given {
         public SchemaCreate schema() {
             return new SchemaCreate(
                     numberOfItems,
+                    given,
                     kubernetesClient
             );
         }

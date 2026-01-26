@@ -17,7 +17,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @NullMarked
 @QuarkusTest
@@ -31,14 +33,22 @@ class DatabaseReconcilerTest {
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(Database.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        kubernetesClient.resources(Database.class).delete();
 
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(Database.class).list().getItems().isEmpty()
+                );
+
+        kubernetesClient.resources(ClusterConnection.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(ClusterConnection.class).list().getItems().isEmpty()
+                );
     }
 
     @Test
@@ -58,6 +68,7 @@ class DatabaseReconcilerTest {
                 .database()
                 .withName(dbName)
                 .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withReclaimPolicy(DELETE)
                 .returnFirst();
 
         // then

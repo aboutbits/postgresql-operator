@@ -17,8 +17,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 
 @NullMarked
 @Setter
@@ -161,10 +162,17 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
     }
 
     private String getClusterConnectionName() {
-        return Objects.requireNonNullElse(
-                withClusterConnectionName,
-                "test-cluster-connection"
-        );
+        if (withClusterConnectionName != null) {
+            return withClusterConnectionName;
+        }
+
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .returnFirst();
+
+        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
+
+        return clusterConnection.getMetadata().getName();
     }
 
     private String getDatabase() {
@@ -172,11 +180,16 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withDatabase;
         }
 
-        return given.one()
+        var item = given.one()
                 .database()
-                .returnFirst()
-                .getSpec()
-                .getName();
+                .withClusterConnectionName(getClusterConnectionName())
+                .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                .withReclaimPolicy(DELETE)
+                .returnFirst();
+
+        withDatabase = item.getSpec().getName();
+
+        return withDatabase;
     }
 
     private String getRole() {
@@ -184,11 +197,15 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withRole;
         }
 
-        return given.one()
+        var item = given.one()
                 .role()
-                .returnFirst()
-                .getSpec()
-                .getName();
+                .withClusterConnectionName(getClusterConnectionName())
+                .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                .returnFirst();
+
+        withRole = item.getSpec().getName();
+
+        return withRole;
     }
 
     private String getOwner() {
@@ -196,11 +213,15 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withOwner;
         }
 
-        return given.one()
+        var item = given.one()
                 .role()
-                .returnFirst()
-                .getSpec()
-                .getName();
+                .withClusterConnectionName(getClusterConnectionName())
+                .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                .returnFirst();
+
+        withOwner = item.getSpec().getName();
+
+        return withOwner;
     }
 
     private String getSchema() {
@@ -208,10 +229,22 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withSchema;
         }
 
-        return given.one()
+        var clusterConnectionDb = given.one()
+                .clusterConnection()
+                .withName(getClusterConnectionName() + "-db")
+                .withNamespace(withClusterConnectionNamespace)
+                .withDatabase(getDatabase())
+                .returnFirst();
+
+        var item = given.one()
                 .schema()
-                .returnFirst()
-                .getSpec()
-                .getName();
+                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                .withClusterConnectionNamespace(clusterConnectionDb.getMetadata().getNamespace())
+                .withReclaimPolicy(DELETE)
+                .returnFirst();
+
+        withSchema = item.getSpec().getName();
+
+        return withSchema;
     }
 }

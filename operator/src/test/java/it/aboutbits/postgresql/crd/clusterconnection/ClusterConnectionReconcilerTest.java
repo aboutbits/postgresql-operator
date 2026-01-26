@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.within;
+import static org.awaitility.Awaitility.await;
 
 @NullMarked
 @QuarkusTest
@@ -35,10 +36,14 @@ class ClusterConnectionReconcilerTest {
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        kubernetesClient.resources(ClusterConnection.class).delete();
+
+        await().atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() ->
+                        kubernetesClient.resources(ClusterConnection.class).list().getItems().isEmpty()
+                );
     }
 
     @Test

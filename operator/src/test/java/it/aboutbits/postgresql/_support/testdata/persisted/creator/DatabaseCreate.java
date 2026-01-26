@@ -3,6 +3,7 @@ package it.aboutbits.postgresql._support.testdata.persisted.creator;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
+import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.ClusterReference;
 import it.aboutbits.postgresql.core.ReclaimPolicy;
 import it.aboutbits.postgresql.crd.database.Database;
@@ -13,13 +14,14 @@ import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
 public class DatabaseCreate extends TestDataCreator<Database> {
+    private final Given given;
+
     private final KubernetesClient kubernetesClient;
 
     @Nullable
@@ -43,9 +45,11 @@ public class DatabaseCreate extends TestDataCreator<Database> {
 
     public DatabaseCreate(
             int numberOfItems,
+            Given given,
             KubernetesClient kubernetesClient
     ) {
         super(numberOfItems);
+        this.given = given;
         this.kubernetesClient = kubernetesClient;
     }
 
@@ -118,9 +122,16 @@ public class DatabaseCreate extends TestDataCreator<Database> {
     }
 
     private String getClusterConnectionName() {
-        return Objects.requireNonNullElse(
-                withClusterConnectionName,
-                "test-cluster-connection"
-        );
+        if (withClusterConnectionName != null) {
+            return withClusterConnectionName;
+        }
+
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .returnFirst();
+
+        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
+
+        return clusterConnection.getMetadata().getName();
     }
 }
