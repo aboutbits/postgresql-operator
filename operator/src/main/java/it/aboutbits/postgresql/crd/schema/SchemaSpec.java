@@ -22,7 +22,7 @@ public class SchemaSpec {
             message = "The Schema name is immutable. Allowing to rename the Schema name using 'alter schema <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
     )
     @ValidationRule(
-            value = "self.size() > 0",
+            value = "self.trim().size() > 0",
             message = "The Schema name must not be empty."
     )
     private String name = "";

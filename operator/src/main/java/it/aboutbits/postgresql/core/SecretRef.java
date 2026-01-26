@@ -13,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 public class SecretRef {
     @Required
     @ValidationRule(
-            value = "self.size() > 0",
+            value = "self.trim().size() > 0",
             message = "The SecretRef name must not be empty."
     )
     private String name = "";

@@ -22,7 +22,7 @@ public class DatabaseSpec {
             message = "The Database name is immutable. Allowing to rename the Database name using 'alter database <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
     )
     @ValidationRule(
-            value = "self.size() > 0",
+            value = "self.trim().size() > 0",
             message = "The Database name must not be empty."
     )
     private String name = "";
