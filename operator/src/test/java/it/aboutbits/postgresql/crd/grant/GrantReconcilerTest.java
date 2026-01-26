@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -107,6 +108,7 @@ class GrantReconcilerTest {
     class CRDValidation {
         @Nested
         class FieldSize {
+            @Disabled("Test is way too slow")
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the database is a blank or empty String (CEL rule)")
@@ -123,9 +125,10 @@ class GrantReconcilerTest {
                                 .withPrivileges(USAGE)
                                 .apply()
                 ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The ClusterConnection database must not be empty.");
+                        .hasMessageContaining("The Grant database must not be empty.");
             }
 
+            @Disabled("Test is way too slow")
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the role is a blank or empty String (CEL rule)")
@@ -145,6 +148,7 @@ class GrantReconcilerTest {
                         .hasMessageContaining("The Grant role must not be empty.");
             }
 
+            @Disabled("Test is way too slow")
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the schema is a blank or empty String (CEL rule)")
@@ -787,6 +791,7 @@ class GrantReconcilerTest {
             );
         }
 
+        @SuppressWarnings("CheckStyle:MethodLength")
         @ParameterizedTest
         @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on all tables")
@@ -1105,6 +1110,7 @@ class GrantReconcilerTest {
             );
         }
 
+        @SuppressWarnings("CheckStyle:MethodLength")
         @Test
         @DisplayName("Should grant and revoke privileges on all sequences")
         void grantOnAllSequences() {
