@@ -57,17 +57,12 @@ jobs:
           release-description: |
             ## Installation
 
-            **Docker Image:**
-            ```bash
-            docker pull ${{ env.DOCKER_IMAGE }}:${{ steps.nextVersion.outputs.version }}
-            ```
-
-            **Helm Chart:**
+            ### Helm Chart
             ```bash
             helm install postgresql-operator https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz
             ```
             
-            **Manually installing CRDs:**
+            ### Manual CRD Installation
             ```bash
             kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/clusterconnections.postgresql.aboutbits.it-v1.yml
             kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/databases.postgresql.aboutbits.it-v1.yml
