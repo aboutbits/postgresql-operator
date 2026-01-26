@@ -335,7 +335,8 @@ class DefaultPrivilegeReconcilerTest {
                     disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
             )
             @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege")
+                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
+            )
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given
                 var clusterConnectionMain = given.one()
