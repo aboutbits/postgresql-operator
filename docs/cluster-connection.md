@@ -3,7 +3,7 @@
 The `ClusterConnection` Custom Resource Definition (CRD) defines the connection details for a PostgreSQL cluster.  
 It specifies the host, port, database, and the credentials to use for administrative operations.
 
-Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPrivilege`) reference to a specify target PostgreSQL cluster using  `clusterRef` to be able to execute the operations on.
+Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPrivilege`) reference a specific target PostgreSQL cluster using `clusterRef` on which to execute the operations.
 
 ## Spec
 
