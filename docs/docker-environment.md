@@ -1,6 +1,6 @@
 # Docker Environment
 
-This example demonstrates how to set up a local development environment using Quarkus Dev Services to test the Operator manually.
+This example demonstrates how to set up a local development environment using Quarkus Dev Services to test the Operator manually.  
 As the K3s cluster port and the secrets change on every `./gradlew :operator:quarkusDev` run, you will have to manually update the port and secrets in the `~/.kube/config` every time.
 
 ## 1. Configure Kubeconfig from Dev Services

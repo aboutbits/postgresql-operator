@@ -18,6 +18,8 @@ Further documentation of each Custom Resource can be found here:
 
 The following example shows how to set up a connection to a PostgreSQL cluster, create a database and schema, a login role (user), and configure permissions.
 
+If you want to try this out locally, you can follow the [Docker Environment](docs/docker-environment.md) guide.
+
 ```yaml
 # Define a ClusterConnection resource to connect to a PostgreSQL cluster.
 ---
@@ -159,8 +161,10 @@ make run
 ./gradlew :operator:quarkusDev
 ```
 
-The app service will be available at http://localhost:8080,
-and you can also use the Dev UI (available in dev mode only) at <http://localhost:8080/q/dev/>.
+The app service will be available at [http://localhost:8080](http://localhost:8080).
+
+You can also use the Dev UI (available in dev mode only) at [http://localhost:8080/q/dev-ui/welcome](http://localhost:8080/q/dev-ui/welcome).  
+There you can find a set of guides for the used extensions in this project to get up-to-speed faster.
 
 To execute the test without continuous testing in the dev mode, you can run the following command:
 
