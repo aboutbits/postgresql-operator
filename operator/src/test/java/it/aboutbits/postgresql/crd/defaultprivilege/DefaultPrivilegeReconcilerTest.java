@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -33,6 +34,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
+import static it.aboutbits.postgresql.core.Privilege.MAINTAIN;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
 import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType.SCHEMA;
@@ -308,10 +310,7 @@ class DefaultPrivilegeReconcilerTest {
             @Test
             @DisplayName("Should reconcile to ERROR when privileges are invalid for objectType")
             void errorWhenInvalidPrivileges() {
-                // given
-                var now = OffsetDateTime.now(ZoneOffset.UTC);
-
-                // when
+                // given / when
                 var defaultPrivilege = given.one()
                         .defaultPrivilege()
                         .withObjectType(SCHEMA)
@@ -319,18 +318,71 @@ class DefaultPrivilegeReconcilerTest {
                         .withPrivileges(SELECT)
                         .returnFirst();
 
-                var expectedStatus = new CRStatus()
-                        .setName("")
-                        .setPhase(CRPhase.ERROR)
-                        .setMessage("DefaultPrivilege contains invalid privileges for the specified objectType")
-                        .setObservedGeneration(1L);
+                // then
+                assertThat(defaultPrivilege)
+                        .isNotNull()
+                        .extracting(DefaultPrivilege::getStatus)
+                        .satisfies(status -> {
+                            assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
+                            assertThat(status.getMessage()).startsWith("DefaultPrivilege contains invalid privileges for the specified objectType");
+                        });
+            }
+
+            @Test
+            @EnabledIfSystemProperty(
+                    named = "quarkus.test.profile",
+                    matches = "test-pg(15|16)",
+                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
+            )
+            @DisplayName(
+                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege")
+            void errorWhenUnsupportedMaintainTablePrivilege() {
+                // given
+                var clusterConnectionMain = given.one()
+                        .clusterConnection()
+                        .returnFirst();
+
+                var database = given.one()
+                        .database()
+                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                        .returnFirst();
+
+                var clusterConnectionDb = given.one()
+                        .clusterConnection()
+                        .withDatabase(database.getSpec().getName())
+                        .returnFirst();
+
+                var schema = given.one()
+                        .schema()
+                        .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                        .returnFirst();
+
+                var role = given.one()
+                        .role()
+                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                        .returnFirst();
+
+                // when
+                var defaultPrivilege = given.one()
+                        .defaultPrivilege()
+                        .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                        .withDatabase(database.getSpec().getName())
+                        .withSchema(schema.getSpec().getName())
+                        .withRole(role.getSpec().getName())
+                        .withObjectType(TABLE)
+                        .withPrivileges(MAINTAIN)
+                        .returnFirst();
 
                 // then
-                assertThatDefaultPrivilegeHasStatus(
-                        defaultPrivilege,
-                        expectedStatus,
-                        now
-                );
+                assertThat(defaultPrivilege)
+                        .isNotNull()
+                        .extracting(DefaultPrivilege::getStatus)
+                        .satisfies(status -> {
+                            assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
+                            assertThat(status.getMessage())
+                                    .startsWith("The following privileges require a newer PostgreSQL version (current:")
+                                    .contains("{MAINTAIN=17}");
+                        });
             }
         }
     }
