@@ -12,6 +12,7 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.database.Database;
+import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.schema.Schema;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -30,6 +32,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.Privilege.CONNECT;
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
@@ -48,8 +52,10 @@ import static org.jooq.impl.DSL.quotedName;
 @RequiredArgsConstructor
 class GrantReconcilerTest {
     private final Given given;
+
     private final GrantService grantService;
     private final PostgreSQLContextFactory postgreSQLContextFactory;
+
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
@@ -549,15 +555,19 @@ class GrantReconcilerTest {
 
     @Nested
     class TableTests {
-        @Test
+        @ParameterizedTest
+        @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on table")
-        void grantOnTable() {
+        void grantOnTable(
+                List<Privilege> allSupportedPrivileges
+        ) {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
 
             var clusterConnectionMain = given.one()
                     .clusterConnection()
                     .returnFirst();
+
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
@@ -619,7 +629,7 @@ class GrantReconcilerTest {
 
             // given: grant all privileges change
             var spec = grant.getSpec();
-            var expectedPrivileges = TABLE.privileges();
+            var expectedPrivileges = allSupportedPrivileges;
             var initialGeneration = grant.getStatus().getObservedGeneration();
 
             spec.setPrivileges(expectedPrivileges);
@@ -669,15 +679,19 @@ class GrantReconcilerTest {
             );
         }
 
-        @Test
+        @ParameterizedTest
+        @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on all tables")
-        void grantOnAllTables() {
+        void grantOnAllTables(
+                List<Privilege> allSupportedPrivileges
+        ) {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
 
             var clusterConnectionMain = given.one()
                     .clusterConnection()
                     .returnFirst();
+
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
@@ -752,10 +766,10 @@ class GrantReconcilerTest {
 
             // given: grant all privileges change
             var spec = grant.getSpec();
-            var expectedPrivileges = TABLE.privileges();
+            var expectedPrivileges = allSupportedPrivileges;
             var initialGeneration = grant.getStatus().getObservedGeneration();
 
-            spec.setPrivileges(expectedPrivileges);
+            spec.setPrivileges(allSupportedPrivileges);
 
             // when
             applyGrant(
@@ -818,6 +832,19 @@ class GrantReconcilerTest {
                     tableName2
             );
         }
+
+        static Stream<List<Privilege>> provideAllSupportedPrivileges() {
+            var profile = System.getProperty("quarkus.test.profile", "");
+            var matcher = Pattern.compile("test-pg(\\d+)").matcher(profile);
+            int version = matcher.find() ? Integer.parseInt(matcher.group(1)) : 0;
+
+            return Stream.of(DefaultPrivilegeObjectType.TABLE.privilegesSet().stream()
+                    .filter(privilege -> privilege.minimumPostgresVersion() == null
+                            || privilege.minimumPostgresVersion() <= version
+                    )
+                    .toList()
+            );
+        }
     }
 
     @Nested
@@ -831,6 +858,7 @@ class GrantReconcilerTest {
             var clusterConnectionMain = given.one()
                     .clusterConnection()
                     .returnFirst();
+
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())

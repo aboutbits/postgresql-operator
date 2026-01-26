@@ -21,6 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
@@ -43,8 +46,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiredArgsConstructor
 class DefaultPrivilegeReconcilerTest {
     private final Given given;
+
     private final DefaultPrivilegeService defaultPrivilegeService;
     private final PostgreSQLContextFactory postgreSQLContextFactory;
+
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
@@ -438,15 +443,19 @@ class DefaultPrivilegeReconcilerTest {
 
     @Nested
     class TableTests {
-        @Test
+        @ParameterizedTest
+        @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke default privileges on table")
-        void defaultPrivilegeOnTable() {
+        void defaultPrivilegeOnTable(
+                List<Privilege> allSupportedPrivileges
+        ) {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
 
             var clusterConnectionMain = given.one()
                     .clusterConnection()
                     .returnFirst();
+
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
@@ -498,7 +507,7 @@ class DefaultPrivilegeReconcilerTest {
 
             // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
-            var expectedPrivileges = TABLE.privileges();
+            var expectedPrivileges = allSupportedPrivileges;
             var initialGeneration = defaultPrivilege.getStatus().getObservedGeneration();
 
             spec.setPrivileges(expectedPrivileges);
@@ -544,6 +553,19 @@ class DefaultPrivilegeReconcilerTest {
                     defaultPrivilege
             );
         }
+
+        static Stream<List<Privilege>> provideAllSupportedPrivileges() {
+            var profile = System.getProperty("quarkus.test.profile", "");
+            var matcher = Pattern.compile("test-pg(\\d+)").matcher(profile);
+            int version = matcher.find() ? Integer.parseInt(matcher.group(1)) : 0;
+
+            return Stream.of(TABLE.privilegesSet().stream()
+                    .filter(privilege -> privilege.minimumPostgresVersion() == null
+                            || privilege.minimumPostgresVersion() <= version
+                    )
+                    .toList()
+            );
+        }
     }
 
     @Nested
@@ -557,6 +579,7 @@ class DefaultPrivilegeReconcilerTest {
             var clusterConnectionMain = given.one()
                     .clusterConnection()
                     .returnFirst();
+
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())

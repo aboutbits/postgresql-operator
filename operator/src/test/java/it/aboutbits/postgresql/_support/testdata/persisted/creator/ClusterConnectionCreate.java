@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Accessors(fluent = true, chain = true)
 public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> {
     private final Given given;
+
     private final KubernetesClient kubernetesClient;
     private final Given.DBConnectionDetails dbConnectionDetails;
 
