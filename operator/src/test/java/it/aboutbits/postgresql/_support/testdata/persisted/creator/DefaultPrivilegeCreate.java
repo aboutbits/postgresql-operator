@@ -134,7 +134,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        defaultPrivilege -> defaultPrivilege.getStatus() != null,
+                        defaultPrivilege -> defaultPrivilege != null && defaultPrivilege.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );

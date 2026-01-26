@@ -152,7 +152,7 @@ public class GrantCreate extends TestDataCreator<Grant> {
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        grant -> grant.getStatus() != null,
+                        grant -> grant != null && grant.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );

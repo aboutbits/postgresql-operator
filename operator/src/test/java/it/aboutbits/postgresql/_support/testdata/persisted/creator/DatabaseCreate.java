@@ -94,7 +94,7 @@ public class DatabaseCreate extends TestDataCreator<Database> {
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        db -> db.getStatus() != null,
+                        db -> db != null && db.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );

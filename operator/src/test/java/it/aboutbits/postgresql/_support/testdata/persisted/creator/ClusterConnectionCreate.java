@@ -100,7 +100,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        clusterConnection -> clusterConnection.getStatus() != null,
+                        clusterConnection -> clusterConnection != null && clusterConnection.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );
