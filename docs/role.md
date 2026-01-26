@@ -4,13 +4,13 @@ The `Role` Custom Resource Definition (CRD) manages PostgreSQL roles (users).
 
 ## Spec
 
-| Field               | Type               | Description                                                 | Required | Immutable |
-|---------------------|--------------------|-------------------------------------------------------------|----------|-----------|
-| `clusterRef`        | `ClusterReference` | Reference to the `ClusterConnection` to use.                | Yes      | No        |
-| `name`              | `string`           | The name of the role to create in the database.             | Yes      | Yes       |
-| `comment`           | `string`           | A comment to add to the role.                               | No       | No        |
-| `flags`             | `RoleFlags`        | Flags and attributes for the role.                          | No       | No        |
-| `passwordSecretRef` | `SecretRef`        | Reference to a secret containing the password for the role. | No       | No        |
+| Field               | Type               | Description                                                                         | Required | Immutable |
+|---------------------|--------------------|-------------------------------------------------------------------------------------|----------|-----------|
+| `clusterRef`        | `ClusterReference` | Reference to the `ClusterConnection` to use.                                        | Yes      | No        |
+| `name`              | `string`           | The name of the role to create in the database.                                     | Yes      | Yes       |
+| `comment`           | `string`           | A comment to add to the role.                                                       | No       | No        |
+| `passwordSecretRef` | `SecretRef`        | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | No        |
+| `flags`             | `RoleFlags`        | Flags and attributes for the role.                                                  | No       | No        |
 
 ### ClusterReference
 
@@ -21,18 +21,18 @@ The `Role` Custom Resource Definition (CRD) manages PostgreSQL roles (users).
 
 ### RoleFlags
 
-| Field             | Type            | Default | Description                                                            |
-|-------------------|-----------------|---------|------------------------------------------------------------------------|
-| `bypassrls`       | `boolean`       | `false` | Bypass Row Level Security.                                             |
-| `connectionLimit` | `integer`       | `-1`    | Maximum number of concurrent connections.                              |
-| `createdb`        | `boolean`       | `false` | Ability to create databases.                                           |
-| `createrole`      | `boolean`       | `false` | Ability to create new roles.                                           |
-| `inRole`          | `array[string]` | `[]`    | List of roles this role should be added to.                            |
-| `inherit`         | `boolean`       | `true`  | Whether to inherit privileges from roles it is a member of by default. |
-| `replication`     | `boolean`       | `false` | Ability to initiate replication.                                       |
-| `role`            | `array[string]` | `[]`    | List of roles that should be members of this role.                     |
-| `superuser`       | `boolean`       | `false` | Superuser status.                                                      |
-| `validUntil`      | `string`        | `null`  | Date and time until the password is valid (ISO 8601).                  |
+| Field             | Type            | Default | Description                                                             |
+|-------------------|-----------------|---------|-------------------------------------------------------------------------|
+| `bypassrls`       | `boolean`       | `false` | Bypass Row Level Security.                                              |
+| `connectionLimit` | `integer`       | `-1`    | Maximum number of concurrent connections. A value of -1 means no limit. |
+| `createdb`        | `boolean`       | `false` | Ability to create databases.                                            |
+| `createrole`      | `boolean`       | `false` | Ability to create new roles.                                            |
+| `inRole`          | `array[string]` | `[]`    | List of roles this role should be added to.                             |
+| `inherit`         | `boolean`       | `true`  | Whether to inherit privileges from roles it is a member of by default.  |
+| `replication`     | `boolean`       | `false` | Ability to initiate replication.                                        |
+| `role`            | `array[string]` | `[]`    | List of roles that should be members of this role.                      |
+| `superuser`       | `boolean`       | `false` | Superuser status.                                                       |
+| `validUntil`      | `string`        | `null`  | Date and time until the password is valid (ISO 8601).                   |
 
 ### SecretRef
 

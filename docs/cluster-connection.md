@@ -48,4 +48,9 @@ spec:
   host: localhost
   port: 5432
   database: postgres
+  # Example parameters
+  parameters:
+    ApplicationName: "k8s-operator" # Helps identify this connection in Postgres logs
+    #sslmode: "require" # Enforce SSL encryption
+    #connectTimeout: "10" # Timeout in seconds for connection attempts
 ```

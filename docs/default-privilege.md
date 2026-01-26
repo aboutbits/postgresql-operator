@@ -4,15 +4,15 @@ The `DefaultPrivilege` Custom Resource Definition (CRD) manages default privileg
 
 ## Spec
 
-| Field        | Type               | Description                                                                                                                                | Required    | Immutable |
-|--------------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------|-------------|-----------|
-| `clusterRef` | `ClusterReference` | Reference to the `ClusterConnection` to use.                                                                                               | Yes         | No        |
-| `database`   | `string`           | The database where default privileges apply.                                                                                               | Yes         | Yes       |
-| `role`       | `string`           | The role to which default privileges are granted.                                                                                          | Yes         | Yes       |
-| `owner`      | `string`           | The role that owns the objects (the creator). Default privileges apply to objects created by this role.                                    | Yes         | Yes       |
-| `objectType` | `string`           | The type of object.                                                                                                                        | Yes         | Yes       |
-| `schema`     | `string`           | The schema where default privileges apply. Required if `objectType` is `sequence` or `table`. Must NOT be set if `objectType` is `schema`. | Conditional | Yes       |
-| `privileges` | `array[string]`    | List of privileges to grant.                                                                                                               | Yes         | No        |
+| Field        | Type               | Description                                                                                             | Required    | Immutable |
+|--------------|--------------------|---------------------------------------------------------------------------------------------------------|-------------|-----------|
+| `clusterRef` | `ClusterReference` | Reference to the `ClusterConnection` to use.                                                            | Yes         | No        |
+| `database`   | `string`           | The database where default privileges apply.                                                            | Yes         | Yes       |
+| `role`       | `string`           | The role to which default privileges are granted.                                                       | Yes         | Yes       |
+| `owner`      | `string`           | The role that owns the objects (the creator). Default privileges apply to objects created by this role. | Yes         | Yes       |
+| `schema`     | `string`           | The schema where default privileges apply. Required, unless `objectType` is `schema`.                   | Conditional | Yes       |
+| `objectType` | `string`           | The type of object.                                                                                     | Yes         | Yes       |
+| `privileges` | `array[string]`    | List of privileges to grant.                                                                            | Yes         | No        |
 
 ### Object Types
 
