@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:18
-    command: "postgres -c checkpoint_timeout=10min -c fsync=off -c full_page_writes=off -c max_wal_size=2GB -c synchronous_commit=off"
+    command: [ "postgres", "-c", "checkpoint_timeout=10min", "-c", "fsync=off", "-c", "full_page_writes=off", "-c", "max_wal_size=2GB", "-c", "synchronous_commit=off" ]
     tmpfs:
       - /var/lib/postgresql/18/docker:rw,async,noatime
     healthcheck:
