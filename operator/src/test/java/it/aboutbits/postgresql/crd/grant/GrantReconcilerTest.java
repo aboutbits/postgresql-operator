@@ -12,7 +12,6 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.database.Database;
-import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.schema.Schema;
 import lombok.RequiredArgsConstructor;
@@ -900,7 +899,7 @@ class GrantReconcilerTest {
             var matcher = Pattern.compile("test-pg(\\d+)").matcher(profile);
             int version = matcher.find() ? Integer.parseInt(matcher.group(1)) : 0;
 
-            return Stream.of(DefaultPrivilegeObjectType.TABLE.privilegesSet().stream()
+            return Stream.of(TABLE.privilegesSet().stream()
                     .filter(privilege -> privilege.minimumPostgresVersion() == null
                             || privilege.minimumPostgresVersion() <= version
                     )
