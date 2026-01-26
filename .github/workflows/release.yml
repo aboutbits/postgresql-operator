@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: "Version increment type"
+        type: choice
+        required: true
+        default: "Patch"
+        options:
+          - "Major"
+          - "Minor"
+          - "Patch"
+          - "Prerelease"
+
+env:
+  DOCKER_IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+
+  build-and-release:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+      - uses: aboutbits/github-actions-base/git-setup@v2
+      - uses: aboutbits/github-actions-java/setup-with-gradle@v4
+        with:
+          java-version: 25
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      - name: Increment version
+        run: ./gradlew --console=colored createRelease -Prelease.versionIncrementer=increment${{ github.event.inputs.increment }}
+        shell: bash
+      - name: Get next package version
+        id: nextVersion
+        run: echo "version=$(./gradlew currentVersion -q -Prelease.quiet)" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Build package
+        run: ./gradlew --console=colored build -x test
+      - name: Build Docker image
+        uses: aboutbits/github-actions-docker/build-push@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          docker-image: ${{ env.DOCKER_IMAGE }}
+          docker-tag: ${{ steps.nextVersion.outputs.version }}
+          working-directory: './operator'
+          dockerfile: './operator/src/main/docker/Dockerfile.jvm'
+      - name: Push tag to remote
+        run: ./gradlew --console=colored pushRelease
+        shell: bash
+      - uses: aboutbits/github-actions-base/github-create-release@v2
+        with:
+          tag-name: 'v${{ steps.nextVersion.outputs.version }}'
+          release-description: |
+            ## Installation
+
+            ### Helm Chart
+            ```bash
+            helm install postgresql-operator https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz
+            ```
+            
+            ### Manual CRD Installation
+            ```bash
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/clusterconnections.postgresql.aboutbits.it-v1.yml
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/databases.postgresql.aboutbits.it-v1.yml
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/schemas.postgresql.aboutbits.it-v1.yml
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/roles.postgresql.aboutbits.it-v1.yml
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/grants.postgresql.aboutbits.it-v1.yml
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/defaultprivileges.postgresql.aboutbits.it-v1.yml
+            ```
+          release-notes-generation: 'true'
+      - name: Upload Helm chart and CRD assets
+        env:
+          GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          gh release upload v${{ steps.nextVersion.outputs.version }} operator/build/helm/kubernetes/*.tgz operator/build/kubernetes/*.postgresql.aboutbits.it-v1.yml
+        shell: bash

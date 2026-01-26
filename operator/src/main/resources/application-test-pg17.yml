@@ -1,0 +1,7 @@
+quarkus:
+  config:
+    profile:
+      parent: test
+  compose:
+    devservices:
+      files: src/main/docker/compose-devservices-test-pg17.yml

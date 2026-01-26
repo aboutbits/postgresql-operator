@@ -10,6 +10,7 @@ import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
+import it.aboutbits.postgresql.core.Privilege;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -21,6 +22,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.jooq.impl.DSL.quotedName;
 
@@ -230,9 +233,34 @@ public class GrantReconciler
                         Collections.emptySet()
                 )
         );
+        var isAllMode = expectedObjects.isEmpty();
+
         var expectedPrivileges = Set.copyOf(spec.getPrivileges());
 
-        var isAllMode = expectedObjects.isEmpty();
+        int databaseMajorVersion = tx.connectionResult(connection ->
+                connection.getMetaData().getDatabaseMajorVersion()
+        );
+
+        var unsupportedPrivileges = expectedPrivileges.stream()
+                .filter(privilege -> privilege.minimumPostgresVersion() != null
+                        && databaseMajorVersion < privilege.minimumPostgresVersion()
+                )
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        Privilege::minimumPostgresVersion
+                ));
+
+        if (!unsupportedPrivileges.isEmpty()) {
+            status.setPhase(CRPhase.ERROR)
+                    .setMessage("The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
+                            databaseMajorVersion,
+                            unsupportedPrivileges,
+                            getResourceNamespaceOrOwn(resource, namespace),
+                            name
+                    ));
+
+            return UpdateControl.patchStatus(resource);
+        }
 
         var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, spec);
         var ownershipMap = grantService.determineObjectExistenceAndOwnership(tx, spec);

@@ -16,7 +16,7 @@ quarkus:
   datasource:
     devservices:
       enabled: true
-      image-name: postgres:17.7
+      image-name: postgres:18
       username: root
       password: password
       reuse: false
@@ -45,8 +45,8 @@ quarkus:
   # Container Image config for Kubernetes Helm #
   container-image:
     registry: ghcr.io
-    group: aboutbits/postgresql-operator
-    name: app
+    group: aboutbits
+    name: postgresql-operator
     tag: ${quarkus.application.version}
   helm:
     app-version: ${quarkus.application.version}

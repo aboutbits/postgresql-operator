@@ -8,22 +8,36 @@ plugins {
     java
     checkstyle
     id("io.quarkus").apply(false)
+    alias(libs.plugins.axionReleasePlugin)
     alias(libs.plugins.errorPronePlugin)
     alias(libs.plugins.jooqPlugin).apply(false)
 }
 
 description = "AboutBits PostgreSQL Operator"
 
+scmVersion {
+    checks {
+        aheadOfRemote = true
+        snapshotDependencies = false
+        uncommittedChanges = false
+    }
+    releaseBranchNames = setOf("main")
+    releaseOnlyOnReleaseBranches = true
+    versionCreator("simple")
+}
+
+version = scmVersion.version
+
 allprojects {
     group = "it.aboutbits.postgresql"
-    version = "0.0.1-SNAPSHOT"
+    version = rootProject.version
 
     tasks.withType<Checkstyle>().configureEach {
         dependsOn(":checkstyleExtractConfig")
 
         reports {
-            html.required.set(false)
-            xml.required.set(false)
+            html.required = false
+            xml.required = false
         }
     }
 }

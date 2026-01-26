@@ -1,6 +1,9 @@
 [versions]
 ## AboutBits Libraries ##
-checkstyleConfig = "2.0.0"
+checkstyleConfig = "2.0.0-RC1"
+
+# Axion Release Plugin #
+axionReleasePlugin = "1.21.1"
 
 ## Libraries ##
 jooq = "3.20.10"
@@ -11,7 +14,7 @@ quarkiverse-helm = "1.2.7"
 scram-client = "3.2"
 
 ## Testing ##
-assertj = "3.27.6"
+assertj = "3.27.7"
 checkstyle = "13.0.0"
 datafaker = "2.5.3"
 errorProne = "2.46.0"
@@ -19,6 +22,10 @@ errorPronePlugin = "4.4.0"
 nullAway = "0.13.0"
 
 [plugins]
+# https://github.com/allegro/axion-release-plugin
+# https://axion-release-plugin.readthedocs.io/
+axionReleasePlugin = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionReleasePlugin" }
+
 # https://github.com/tbroyer/gradle-errorprone-plugin
 # https://mvnrepository.com/artifact/net.ltgt.errorprone/net.ltgt.errorprone.gradle.plugin
 errorPronePlugin = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
