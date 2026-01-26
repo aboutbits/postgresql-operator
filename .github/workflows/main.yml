@@ -1,8 +1,6 @@
 name: Test
 
-on:
-  pull_request:
-    types: [ opened, reopened, synchronize ]
+on: push
 
 concurrency:
   group: ${{ github.ref }}
@@ -10,28 +8,5 @@ concurrency:
 
 jobs:
   test:
-    name: Tests (PostgreSQL ${{ matrix.postgres-version }})
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    strategy:
-      fail-fast: false
-      matrix:
-        postgres-version: [ 15, 16, 17, 18 ]
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-      - uses: aboutbits/github-actions-java/setup-with-gradle@v4
-        with:
-          java-version: 25
-          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-      - name: Build & Test
-        run: >-
-          ./gradlew
-          --console=colored
-          :operator:test
-          --fail-fast
-          -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }}
-        env:
-          GITHUB_USER_NAME: ${{ github.actor }}
-          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
