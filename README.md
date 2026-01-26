@@ -2,6 +2,36 @@
 
 AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage PostgreSQL databases, roles (users), and privileges in a declarative way using Custom Resource Definitions (CRDs).
 
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                            Kubernetes Cluster                            │
+│  ┌────────────────────────┐   ┌────────────────────────────────────────┐ │
+│  │ PostgreSQL             │   │          PostgreSQL Operator           │ │
+│  │ Operator CRDs          │──▶│  ┌──────────────────────────────────┐  │ │
+│  │                        │   │  │   ClusterConnection Controller   │  │ │
+│  │ ┌────────────────────┐ │   │  ├──────────────────────────────────┤  │ │
+│  │ │ ClusterConnection  │ │   │  │       Database Controller        │  │ │
+│  │ └──────────▲─────────┘ │   │  ├──────────────────────────────────┤  │ │
+│  │            │           │   │  │         Role Controller          │  │ │
+│  │ ┌──────────┴─────────┐ │   │  ├──────────────────────────────────┤  │ │
+│  │ │ - Database         │ │   │  │        Schema Controller         │  │ │
+│  │ │ - Schema           │ │   │  ├──────────────────────────────────┤  │ │
+│  │ │ - Role             │ │   │  │         Grant Controller         │  │ │
+│  │ │ - Grant            │ │   │  ├──────────────────────────────────┤  │ │
+│  │ │ - DefaultPrivilege │ │   │  │   DefaultPrivilege Controller    │  │ │
+│  │ └────────────────────┘ │   │  └──────────────────────────────────┘  │ │
+│  └────────────────────────┘   └────────────────────┬───────────────────┘ │
+│                                                    │                     │
+│                                                    ▼                     │
+│                                  ┌──────────────────────────────────┐    │
+│                                  │        PostgreSQL Server         │    │
+│                                  │              (SQL)               │    │
+│                                  └──────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
 ## Usage
 
 This operator allows you to manage PostgreSQL resources using Kubernetes manifests.  
