@@ -1,6 +1,6 @@
 [versions]
 ## AboutBits Libraries ##
-checkstyleConfig = "2.0.0"
+checkstyleConfig = "2.0.0-RC1"
 
 # Axion Release Plugin #
 axionReleasePlugin = "1.21.1"
