@@ -2,8 +2,8 @@ package it.aboutbits.postgresql;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,10 +29,8 @@ class PostgreSQLInstanceReadinessCheckTest {
     KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Test

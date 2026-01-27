@@ -14,7 +14,6 @@ import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @NullMarked
@@ -121,7 +120,7 @@ public class RoleCreate extends TestDataCreator<Role> {
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        role -> role.getStatus() != null,
+                        role -> role != null && role.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );
@@ -137,7 +136,9 @@ public class RoleCreate extends TestDataCreator<Role> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -145,13 +146,23 @@ public class RoleCreate extends TestDataCreator<Role> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-role");
+        withName = randomKubernetesNameSuffix("test-role");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
-        return Objects.requireNonNullElse(
-                withClusterConnectionName,
-                "test-cluster-connection"
-        );
+        if (withClusterConnectionName != null) {
+            return withClusterConnectionName;
+        }
+
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("%s-conn".formatted(getName()))
+                .returnFirst();
+
+        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
+
+        return clusterConnection.getMetadata().getName();
     }
 }

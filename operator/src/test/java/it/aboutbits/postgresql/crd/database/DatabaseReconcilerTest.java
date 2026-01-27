@@ -2,11 +2,11 @@ package it.aboutbits.postgresql.crd.database;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @NullMarked
@@ -31,14 +31,8 @@ class DatabaseReconcilerTest {
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(Database.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
-
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Test
@@ -58,6 +52,7 @@ class DatabaseReconcilerTest {
                 .database()
                 .withName(dbName)
                 .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withReclaimPolicy(DELETE)
                 .returnFirst();
 
         // then

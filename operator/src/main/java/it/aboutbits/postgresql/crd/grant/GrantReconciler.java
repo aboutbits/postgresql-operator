@@ -146,7 +146,7 @@ public class GrantReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(1, TimeUnit.SECONDS);
+                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
         }
 
         var clusterRef = spec.getClusterRef();
@@ -213,7 +213,7 @@ public class GrantReconciler
         return new CRStatus();
     }
 
-    @SuppressWarnings("java:S3776")
+    @SuppressWarnings({"checkstyle:MethodLength", "java:S3776"})
     private UpdateControl<Grant> reconcileInTransaction(
             DSLContext tx,
             Grant resource,

@@ -3,6 +3,7 @@ package it.aboutbits.postgresql._support.testdata.persisted.creator;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
+import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.ClusterReference;
 import it.aboutbits.postgresql.core.ReclaimPolicy;
 import it.aboutbits.postgresql.crd.schema.Schema;
@@ -13,13 +14,14 @@ import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
 public class SchemaCreate extends TestDataCreator<Schema> {
+    private final Given given;
+
     private final KubernetesClient kubernetesClient;
 
     @Nullable
@@ -43,9 +45,11 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
     public SchemaCreate(
             int numberOfItems,
+            Given given,
             KubernetesClient kubernetesClient
     ) {
         super(numberOfItems);
+        this.given = given;
         this.kubernetesClient = kubernetesClient;
     }
 
@@ -90,7 +94,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        db -> db.getStatus() != null,
+                        db -> db != null && db.getStatus() != null,
                         5,
                         TimeUnit.SECONDS
                 );
@@ -106,7 +110,9 @@ public class SchemaCreate extends TestDataCreator<Schema> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -114,13 +120,23 @@ public class SchemaCreate extends TestDataCreator<Schema> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-schema");
+        withName = randomKubernetesNameSuffix("test-schema");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
-        return Objects.requireNonNullElse(
-                withClusterConnectionName,
-                "test-cluster-connection"
-        );
+        if (withClusterConnectionName != null) {
+            return withClusterConnectionName;
+        }
+
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("%s-conn".formatted(getName()))
+                .returnFirst();
+
+        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
+
+        return clusterConnection.getMetadata().getName();
     }
 }

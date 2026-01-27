@@ -3,13 +3,13 @@ package it.aboutbits.postgresql.crd.role;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.SecretRef;
-import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -50,14 +50,8 @@ class RoleReconcilerTest {
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(Role.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
-
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Test
@@ -233,6 +227,12 @@ class RoleReconcilerTest {
                 now
         );
         assertThat(role.getStatus().getLastPhaseTransitionTime()).isNull();
+
+        // We have to manually clean up this as the RoleController#cleanup will always fail as the ClusterConnection does not exist
+        kubernetesClient.resource(role).delete();
+        role.getMetadata().setFinalizers(null);
+        role.getMetadata().setResourceVersion(null);
+        kubernetesClient.resource(role).patch();
     }
 
     @Test
@@ -274,7 +274,7 @@ class RoleReconcilerTest {
         // then: password should match the initial one
         // Wait for password to match because reconciliation might take a bit
         await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         role.getSpec(),
@@ -294,7 +294,7 @@ class RoleReconcilerTest {
 
         // then: password should eventually match the new one
         await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         role.getSpec(),
@@ -342,7 +342,7 @@ class RoleReconcilerTest {
 
         // then: password should match the initial one
         await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         role.getSpec(),
@@ -356,7 +356,7 @@ class RoleReconcilerTest {
 
         // then: password should eventually match the new one
         await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
                 .until(() -> postgreSQLAuthenticationService.passwordMatches(
                         dsl,
                         updatedRole.getSpec(),
@@ -864,7 +864,7 @@ class RoleReconcilerTest {
 
         // then
         await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
                 .until(() -> !roleService.roleExists(dsl, role.getSpec()));
     }
 

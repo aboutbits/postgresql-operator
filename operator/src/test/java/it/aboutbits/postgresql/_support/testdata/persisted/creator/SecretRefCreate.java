@@ -101,7 +101,9 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -109,7 +111,9 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-secret");
+        withName = randomKubernetesNameSuffix("test-secret");
+
+        return withName;
     }
 
     @Nullable
@@ -122,7 +126,9 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withUsername;
         }
 
-        return FAKER.credentials().username();
+        withUsername = FAKER.credentials().username();
+
+        return withUsername;
     }
 
     @Nullable
@@ -135,6 +141,8 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withPassword;
         }
 
-        return FAKER.credentials().username();
+        withPassword = FAKER.credentials().password(8, 16, true, true);
+
+        return withPassword;
     }
 }

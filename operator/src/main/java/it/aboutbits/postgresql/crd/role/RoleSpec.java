@@ -27,7 +27,7 @@ public class RoleSpec {
             message = "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
     )
     @ValidationRule(
-            value = "self.size() > 0",
+            value = "self.trim().size() > 0",
             message = "The Role name must not be empty."
     )
     private String name = "";

@@ -2,6 +2,7 @@ package it.aboutbits.postgresql.crd.clusterconnection;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
@@ -18,7 +19,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,13 +32,12 @@ class ClusterConnectionReconcilerTest {
     private final Given given;
 
     private final PostgreSQLContextFactory postgreSQLContextFactory;
+
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
-    void cleanUp() {
-        kubernetesClient.resources(ClusterConnection.class)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+    void resetEnvironment() {
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Test

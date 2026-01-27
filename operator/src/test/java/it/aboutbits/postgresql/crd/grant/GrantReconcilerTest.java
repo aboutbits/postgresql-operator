@@ -1,9 +1,9 @@
 package it.aboutbits.postgresql.crd.grant;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql._support.valuesource.BlankSource;
 import it.aboutbits.postgresql.core.CRPhase;
@@ -11,9 +11,6 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-import it.aboutbits.postgresql.crd.database.Database;
-import it.aboutbits.postgresql.crd.role.Role;
-import it.aboutbits.postgresql.crd.schema.Schema;
 import lombok.RequiredArgsConstructor;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
@@ -40,12 +37,13 @@ import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.MAINTAIN;
 import static it.aboutbits.postgresql.core.Privilege.SELECT;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.DATABASE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SCHEMA;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.jooq.impl.DSL.quotedName;
 
 @NullMarked
@@ -61,22 +59,7 @@ class GrantReconcilerTest {
 
     @BeforeEach
     void resetEnvironment() {
-        deleteResources(Grant.class);
-        deleteResources(Schema.class);
-        deleteResources(Database.class);
-        deleteResources(Role.class);
-        deleteResources(ClusterConnection.class);
-
-        // Create the default connection "test-cluster-connection" used by GrantCreate defaults
-        given.one().clusterConnection()
-                .withName("test-cluster-connection")
-                .returnFirst();
-    }
-
-    private <T extends HasMetadata> void deleteResources(Class<T> resourceClass) {
-        kubernetesClient.resources(resourceClass)
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Nested
@@ -90,7 +73,7 @@ class GrantReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -98,8 +81,7 @@ class GrantReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant database must not be empty.");
+                ).withMessageContaining("The Grant database must not be empty.");
             }
 
             @ParameterizedTest
@@ -109,7 +91,7 @@ class GrantReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -117,8 +99,7 @@ class GrantReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant role must not be empty.");
+                ).withMessageContaining("The Grant role must not be empty.");
             }
 
             @ParameterizedTest
@@ -128,7 +109,7 @@ class GrantReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -136,24 +117,21 @@ class GrantReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant schema must not be empty.");
+                ).withMessageContaining("The Grant schema must not be empty.");
             }
 
             @Test
             @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
-            void failWhenPrivilegesAreAnEmptyList(
-            ) {
+            void failWhenPrivilegesAreAnEmptyList() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(List.of())
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant privileges must not be empty.");
+                ).withMessageContaining("The Grant privileges must not be empty.");
             }
         }
 
@@ -170,7 +148,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setDatabase("new-database");
 
@@ -178,8 +156,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant database is immutable.");
+                }).withMessageContaining("The Grant database is immutable.");
             }
 
             @Test
@@ -193,7 +170,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setRole("new-role");
 
@@ -201,8 +178,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant role is immutable.");
+                }).withMessageContaining("The Grant role is immutable.");
             }
 
             @Test
@@ -216,7 +192,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setSchema("new-schema");
 
@@ -224,8 +200,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant schema is immutable.");
+                }).withMessageContaining("The Grant schema is immutable.");
             }
 
             @Test
@@ -239,7 +214,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setObjectType(SEQUENCE);
 
@@ -247,8 +222,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant objectType is immutable.");
+                }).withMessageContaining("The Grant objectType is immutable.");
             }
         }
 
@@ -258,7 +232,7 @@ class GrantReconcilerTest {
             @DisplayName("Should fail when objectType is DATABASE but schema is set (CEL rule)")
             void failWhenDatabaseHasSchema() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -266,15 +240,14 @@ class GrantReconcilerTest {
                                 .withObjectType(DATABASE)
                                 .withPrivileges(CONNECT)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant schema must be not set if objectType is 'database'");
+                ).withMessageContaining("The Grant schema must be not set if objectType is 'database'");
             }
 
             @Test
             @DisplayName("Should fail when objectType is DATABASE but objects has items (CEL rule)")
             void failWhenDatabaseHasObjects() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -282,15 +255,14 @@ class GrantReconcilerTest {
                                 .withObjects("some_object", "other_object")
                                 .withPrivileges(CONNECT)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
             @DisplayName("Should fail when objectType is SCHEMA but objects has items (CEL rule)")
             void failWhenSchemaHasObjects() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -298,8 +270,7 @@ class GrantReconcilerTest {
                                 .withObjects("some_object", "other_object")
                                 .withPrivileges(USAGE)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
@@ -341,6 +312,7 @@ class GrantReconcilerTest {
                 var database = given.one()
                         .database()
                         .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                        .withReclaimPolicy(DELETE)
                         .returnFirst();
 
                 var clusterConnectionDb = given.one()
@@ -351,6 +323,7 @@ class GrantReconcilerTest {
                 var schema = given.one()
                         .schema()
                         .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                        .withReclaimPolicy(DELETE)
                         .returnFirst();
 
                 var role = given.one()
@@ -388,6 +361,14 @@ class GrantReconcilerTest {
                                     .startsWith("The following privileges require a newer PostgreSQL version (current:")
                                     .contains("{MAINTAIN=17}");
                         });
+
+                // cleanup
+                deleteTable(
+                        clusterConnectionDb,
+                        database.getSpec().getName(),
+                        schema.getSpec().getName(),
+                        tableName
+                );
             }
         }
     }
@@ -412,6 +393,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             // when
@@ -511,6 +493,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             // To create a Schema in the new database, we need a ClusterConnection pointing to it
@@ -522,6 +505,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -632,6 +616,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -642,6 +627,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -738,8 +724,17 @@ class GrantReconcilerTest {
                     grant,
                     tableName
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
         }
 
+        @SuppressWarnings("checkstyle:MethodLength")
         @ParameterizedTest
         @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on all tables")
@@ -756,6 +751,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -766,6 +762,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -892,6 +889,20 @@ class GrantReconcilerTest {
                     grant,
                     tableName2
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName1
+            );
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName2
+            );
         }
 
         static Stream<List<Privilege>> provideAllSupportedPrivileges() {
@@ -923,6 +934,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -933,6 +945,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -1030,8 +1043,17 @@ class GrantReconcilerTest {
                     grant,
                     sequenceName
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
         }
 
+        @SuppressWarnings("checkstyle:MethodLength")
         @Test
         @DisplayName("Should grant and revoke privileges on all sequences")
         void grantOnAllSequences() {
@@ -1045,6 +1067,7 @@ class GrantReconcilerTest {
             var database = given.one()
                     .database()
                     .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var clusterConnectionDb = given.one()
@@ -1055,6 +1078,7 @@ class GrantReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
                     .returnFirst();
 
             var role = given.one()
@@ -1183,6 +1207,20 @@ class GrantReconcilerTest {
                     grant,
                     sequenceName2
             );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName1
+            );
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName2
+            );
         }
     }
 
@@ -1254,6 +1292,17 @@ class GrantReconcilerTest {
             dsl.createTable(quotedName(schemaName, tableName))
                     .column("id", SQLDataType.BIGINT.identity(true))
                     .execute();
+        }
+    }
+
+    private void deleteTable(
+            ClusterConnection clusterConnection,
+            String databaseName,
+            String schemaName,
+            String tableName
+    ) {
+        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
+            dsl.dropTable(quotedName(schemaName, tableName)).execute();
         }
     }
 

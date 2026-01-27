@@ -18,7 +18,7 @@ import java.util.Map;
 public class ClusterConnectionSpec {
     @Required
     @ValidationRule(
-            value = "self.size() > 0",
+            value = "self.trim().size() > 0",
             message = "The ClusterConnection host must not be empty."
     )
     private String host = "";
@@ -30,7 +30,7 @@ public class ClusterConnectionSpec {
 
     @Required
     @ValidationRule(
-            value = "self.size() > 0",
+            value = "self.trim().size() > 0",
             message = "The ClusterConnection database must not be empty."
     )
     private String database = "postgres";
