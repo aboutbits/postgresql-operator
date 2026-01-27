@@ -150,7 +150,9 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -158,7 +160,9 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-default-privilege");
+        withName = randomKubernetesNameSuffix("test-default-privilege");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
@@ -168,6 +172,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
+                .withName("conn-%s".formatted(withName))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();

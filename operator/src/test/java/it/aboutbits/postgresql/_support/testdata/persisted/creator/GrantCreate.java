@@ -168,7 +168,9 @@ public class GrantCreate extends TestDataCreator<Grant> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -176,7 +178,9 @@ public class GrantCreate extends TestDataCreator<Grant> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-grant");
+        withName = randomKubernetesNameSuffix("test-grant");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
@@ -186,6 +190,7 @@ public class GrantCreate extends TestDataCreator<Grant> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
+                .withName("conn-%s".formatted(withName))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();

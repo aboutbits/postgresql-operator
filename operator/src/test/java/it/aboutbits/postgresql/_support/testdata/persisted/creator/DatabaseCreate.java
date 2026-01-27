@@ -110,7 +110,9 @@ public class DatabaseCreate extends TestDataCreator<Database> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -118,7 +120,9 @@ public class DatabaseCreate extends TestDataCreator<Database> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-database");
+        withName = randomKubernetesNameSuffix("test-database");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
@@ -128,6 +132,7 @@ public class DatabaseCreate extends TestDataCreator<Database> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
+                .withName("conn-%s".formatted(withName))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();

@@ -108,7 +108,7 @@ class GrantReconcilerTest {
     class CRDValidation {
         @Nested
         class FieldSize {
-            @Disabled("Test is way too slow")
+            @Disabled("Test is way too slow with all combinations")
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the database is a blank or empty String (CEL rule)")
@@ -128,7 +128,7 @@ class GrantReconcilerTest {
                         .hasMessageContaining("The Grant database must not be empty.");
             }
 
-            @Disabled("Test is way too slow")
+            @Disabled("Test is way too slow with all combinations")
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the role is a blank or empty String (CEL rule)")
@@ -148,7 +148,7 @@ class GrantReconcilerTest {
                         .hasMessageContaining("The Grant role must not be empty.");
             }
 
-            @Disabled("Test is way too slow")
+            @Disabled("Test is way too slow with all combinations")
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the schema is a blank or empty String (CEL rule)")
@@ -170,8 +170,7 @@ class GrantReconcilerTest {
 
             @Test
             @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
-            void failWhenPrivilegesAreAnEmptyList(
-            ) {
+            void failWhenPrivilegesAreAnEmptyList() {
                 // then
                 assertThatThrownBy(() ->
                         // given / when

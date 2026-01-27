@@ -110,7 +110,9 @@ public class SchemaCreate extends TestDataCreator<Schema> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -118,7 +120,9 @@ public class SchemaCreate extends TestDataCreator<Schema> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-schema");
+        withName = randomKubernetesNameSuffix("test-schema");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
@@ -128,6 +132,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
+                .withName("conn-%s".formatted(withName))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();

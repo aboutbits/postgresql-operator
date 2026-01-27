@@ -16,7 +16,6 @@ import org.jooq.Field;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -209,9 +208,6 @@ class RoleReconcilerTest {
         assertThat(getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)).isFalse();
     }
 
-    @Disabled(
-            "The before each timeout will always be triggered by the deletion of the role (CRD cleanup) as the connection does not exist"
-    )
     @Test
     @DisplayName("When a Role references a missing ClusterConnection, status should be PENDING with a helpful message")
     void createRole_withMissingClusterConnection_setsPending() {
@@ -245,6 +241,12 @@ class RoleReconcilerTest {
                 now
         );
         assertThat(role.getStatus().getLastPhaseTransitionTime()).isNull();
+
+        // Cleanup manually
+        kubernetesClient.resource(role).delete();
+        role.getMetadata().setFinalizers(null);
+        role.getMetadata().setResourceVersion(null);
+        kubernetesClient.resource(role).patch();
     }
 
     @Test

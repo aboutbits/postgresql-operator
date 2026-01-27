@@ -136,7 +136,9 @@ public class RoleCreate extends TestDataCreator<Role> {
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -144,7 +146,9 @@ public class RoleCreate extends TestDataCreator<Role> {
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-role");
+        withName = randomKubernetesNameSuffix("test-role");
+
+        return withName;
     }
 
     private String getClusterConnectionName() {
@@ -154,6 +158,7 @@ public class RoleCreate extends TestDataCreator<Role> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
+                .withName("conn-%s".formatted(withName))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();

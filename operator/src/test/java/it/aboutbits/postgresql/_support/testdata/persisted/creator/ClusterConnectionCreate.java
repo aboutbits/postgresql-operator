@@ -116,7 +116,9 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             return withNamespace;
         }
 
-        return kubernetesClient.getNamespace();
+        withNamespace = kubernetesClient.getNamespace();
+
+        return withNamespace;
     }
 
     private String getName() {
@@ -124,7 +126,9 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             return withName;
         }
 
-        return randomKubernetesNameSuffix("test-cluster-connection");
+        withName = randomKubernetesNameSuffix("test-cluster-connection");
+
+        return withName;
     }
 
     private String getHost() {
@@ -132,7 +136,9 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             return withHost;
         }
 
-        return "localhost";
+        withHost = "localhost";
+
+        return withHost;
     }
 
     private int getPort() {
@@ -140,14 +146,18 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             return withPort;
         }
 
-        return dbConnectionDetails.port();
+        withPort = dbConnectionDetails.port();
+
+        return withPort;
     }
 
     private String getDatabase() {
-        return Objects.requireNonNullElse(
+        withDatabase = Objects.requireNonNullElse(
                 withDatabase,
                 "postgres"
         );
+
+        return withDatabase;
     }
 
     private SecretRef getAdminSecretRef() {
