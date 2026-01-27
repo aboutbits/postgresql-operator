@@ -158,7 +158,7 @@ public class RoleCreate extends TestDataCreator<Role> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
-                .withName("conn-%s".formatted(getName()))
+                .withName("%s-conn".formatted(getName()))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
