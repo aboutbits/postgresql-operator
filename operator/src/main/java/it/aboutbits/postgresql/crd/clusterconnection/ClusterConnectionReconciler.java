@@ -26,6 +26,16 @@ public class ClusterConnectionReconciler
     ) {
         var status = initializeStatus(resource);
 
+        var name = resource.getMetadata().getName();
+        var namespace = resource.getMetadata().getNamespace();
+
+        log.info(
+                "Reconciling ClusterConnection [resource={}/{}, status.phase={}]",
+                namespace,
+                name,
+                status.getPhase()
+        );
+
         try (var dsl = contextFactory.getDSLContext(resource)) {
             var version = dsl.fetchSingle("select version()").into(String.class);
 

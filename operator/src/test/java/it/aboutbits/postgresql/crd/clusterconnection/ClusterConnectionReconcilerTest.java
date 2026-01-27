@@ -33,6 +33,7 @@ class ClusterConnectionReconcilerTest {
     private final Given given;
 
     private final PostgreSQLContextFactory postgreSQLContextFactory;
+
     private final KubernetesClient kubernetesClient;
 
     @BeforeEach
