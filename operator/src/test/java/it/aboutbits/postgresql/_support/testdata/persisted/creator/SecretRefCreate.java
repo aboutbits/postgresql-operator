@@ -141,7 +141,7 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
             return withPassword;
         }
 
-        withPassword = FAKER.credentials().username();
+        withPassword = FAKER.credentials().password(8, 16, true, true);
 
         return withPassword;
     }
