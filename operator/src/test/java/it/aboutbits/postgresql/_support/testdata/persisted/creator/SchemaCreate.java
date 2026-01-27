@@ -132,7 +132,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
         var clusterConnection = given.one()
                 .clusterConnection()
-                .withName("conn-%s".formatted(withName))
+                .withName("conn-%s".formatted(getName()))
                 .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
