@@ -2,11 +2,11 @@ package it.aboutbits.postgresql.crd.database;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,11 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 @NullMarked
 @QuarkusTest
@@ -34,21 +32,7 @@ class DatabaseReconcilerTest {
 
     @BeforeEach
     void resetEnvironment() {
-        kubernetesClient.resources(Database.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(Database.class).list().getItems().isEmpty()
-                );
-
-        kubernetesClient.resources(ClusterConnection.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(ClusterConnection.class).list().getItems().isEmpty()
-                );
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Test

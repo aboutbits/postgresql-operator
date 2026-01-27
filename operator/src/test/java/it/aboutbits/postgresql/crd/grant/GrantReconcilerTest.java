@@ -3,6 +3,7 @@ package it.aboutbits.postgresql.crd.grant;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql._support.valuesource.BlankSource;
 import it.aboutbits.postgresql.core.CRPhase;
@@ -10,9 +11,6 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-import it.aboutbits.postgresql.crd.database.Database;
-import it.aboutbits.postgresql.crd.role.Role;
-import it.aboutbits.postgresql.crd.schema.Schema;
 import lombok.RequiredArgsConstructor;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
@@ -47,7 +45,6 @@ import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.quotedName;
 
 @NullMarked
@@ -63,45 +60,7 @@ class GrantReconcilerTest {
 
     @BeforeEach
     void resetEnvironment() {
-        kubernetesClient.resources(Grant.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(Grant.class).list().getItems().isEmpty()
-                );
-
-        kubernetesClient.resources(Schema.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(Schema.class).list().getItems().isEmpty()
-                );
-
-        kubernetesClient.resources(Role.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(Role.class).list().getItems().isEmpty()
-                );
-
-        kubernetesClient.resources(Database.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(Database.class).list().getItems().isEmpty()
-                );
-
-        kubernetesClient.resources(ClusterConnection.class).delete();
-
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() ->
-                        kubernetesClient.resources(ClusterConnection.class).list().getItems().isEmpty()
-                );
+        TestUtil.resetEnvironment(kubernetesClient);
     }
 
     @Nested
