@@ -44,6 +44,9 @@ jobs:
         shell: bash
       - name: Build package
         run: ./gradlew --console=colored build -x test
+        env:
+          GITHUB_USER_NAME: ${{ github.actor }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Docker image
         uses: aboutbits/github-actions-docker/build-push@v1
         with:
