@@ -734,7 +734,7 @@ class GrantReconcilerTest {
             );
         }
 
-        @SuppressWarnings("CheckStyle:MethodLength")
+        @SuppressWarnings("checkstyle:MethodLength")
         @ParameterizedTest
         @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on all tables")
@@ -1053,7 +1053,7 @@ class GrantReconcilerTest {
             );
         }
 
-        @SuppressWarnings("CheckStyle:MethodLength")
+        @SuppressWarnings("checkstyle:MethodLength")
         @Test
         @DisplayName("Should grant and revoke privileges on all sequences")
         void grantOnAllSequences() {

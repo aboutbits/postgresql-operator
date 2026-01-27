@@ -19,7 +19,7 @@ test:
 	./gradlew --console=colored :operator:clean :operator:test --rerun-tasks
 
 test-pg18:
-	./gradlew --console=colored :operator:clean :operator:test --fail-fast --rerun-tasks -Dquarkus.test.profile=test-pg18
+	./gradlew --console=colored :operator:clean :operator:test --rerun-tasks -Dquarkus.test.profile=test-pg18
 
 test-pg17:
 	./gradlew --console=colored :operator:clean :operator:test --rerun-tasks -Dquarkus.test.profile=test-pg17
