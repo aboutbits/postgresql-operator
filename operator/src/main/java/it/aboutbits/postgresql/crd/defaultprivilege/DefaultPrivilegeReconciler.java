@@ -141,7 +141,7 @@ public class DefaultPrivilegeReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(250, TimeUnit.MILLISECONDS);
         }
 
         var clusterRef = spec.getClusterRef();
