@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import static org.awaitility.Awaitility.await;
 
 @NullMarked
-public class TestUtil {
+public final class TestUtil {
     public static void resetEnvironment(KubernetesClient kubernetesClient) {
         // Reverse Dependency Deletion
         deleteResource(kubernetesClient, DefaultPrivilege.class);
@@ -37,5 +37,8 @@ public class TestUtil {
         await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(100, TimeUnit.MILLISECONDS)
                 .until(() -> kubernetesClient.resources(resourceClass).list().getItems().isEmpty());
+    }
+
+    private TestUtil() {
     }
 }
