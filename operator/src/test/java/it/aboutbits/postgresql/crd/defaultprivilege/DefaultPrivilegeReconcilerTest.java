@@ -42,7 +42,7 @@ import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjec
 import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType.TABLE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
 
 @NullMarked
@@ -111,7 +111,7 @@ class DefaultPrivilegeReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .defaultPrivilege()
@@ -119,8 +119,7 @@ class DefaultPrivilegeReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege database must not be empty.");
+                ).withMessageContaining("The DefaultPrivilege database must not be empty.");
             }
 
             @Disabled("Test is way too slow with all combinations")
@@ -131,7 +130,7 @@ class DefaultPrivilegeReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .defaultPrivilege()
@@ -139,8 +138,7 @@ class DefaultPrivilegeReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege role must not be empty.");
+                ).withMessageContaining("The DefaultPrivilege role must not be empty.");
             }
 
             @Disabled("Test is way too slow with all combinations")
@@ -151,7 +149,7 @@ class DefaultPrivilegeReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .defaultPrivilege()
@@ -159,8 +157,7 @@ class DefaultPrivilegeReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege owner must not be empty.");
+                ).withMessageContaining("The DefaultPrivilege owner must not be empty.");
             }
 
             @Disabled("Test is way too slow with all combinations")
@@ -171,7 +168,7 @@ class DefaultPrivilegeReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .defaultPrivilege()
@@ -179,23 +176,21 @@ class DefaultPrivilegeReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege schema must not be empty.");
+                ).withMessageContaining("The DefaultPrivilege schema must not be empty.");
             }
 
             @Test
             @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
             void failWhenPrivilegesAreAnEmptyList() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .defaultPrivilege()
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(List.of())
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege privileges must not be empty.");
+                ).withMessageContaining("The DefaultPrivilege privileges must not be empty.");
             }
         }
 
@@ -212,7 +207,7 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setDatabase("new-database");
 
@@ -220,8 +215,7 @@ class DefaultPrivilegeReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege database is immutable.");
+                }).withMessageContaining("The DefaultPrivilege database is immutable.");
             }
 
             @Test
@@ -235,7 +229,7 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setRole("new-role");
 
@@ -243,8 +237,7 @@ class DefaultPrivilegeReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege role is immutable.");
+                }).withMessageContaining("The DefaultPrivilege role is immutable.");
             }
 
             @Test
@@ -258,7 +251,7 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setOwner("new-owner");
 
@@ -266,8 +259,7 @@ class DefaultPrivilegeReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege owner is immutable.");
+                }).withMessageContaining("The DefaultPrivilege owner is immutable.");
             }
 
             @Test
@@ -281,7 +273,7 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setSchema("new-schema");
 
@@ -289,8 +281,7 @@ class DefaultPrivilegeReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege schema is immutable.");
+                }).withMessageContaining("The DefaultPrivilege schema is immutable.");
             }
 
             @Test
@@ -304,7 +295,7 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setObjectType(SEQUENCE);
 
@@ -312,8 +303,7 @@ class DefaultPrivilegeReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege objectType is immutable.");
+                }).withMessageContaining("The DefaultPrivilege objectType is immutable.");
             }
         }
 
@@ -323,7 +313,7 @@ class DefaultPrivilegeReconcilerTest {
             @DisplayName("Should fail when objectType is SCHEMA but schema is set (CEL rule)")
             void failWhenDatabaseHasSchema() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .defaultPrivilege()
@@ -331,8 +321,7 @@ class DefaultPrivilegeReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The DefaultPrivilege schema must be not set if objectType is 'schema'");
+                ).withMessageContaining("The DefaultPrivilege schema must be not set if objectType is 'schema'");
             }
 
             @Test

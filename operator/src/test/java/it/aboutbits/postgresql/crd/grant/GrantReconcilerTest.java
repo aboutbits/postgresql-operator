@@ -46,7 +46,7 @@ import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SCHEMA;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.quotedName;
 
@@ -116,7 +116,7 @@ class GrantReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -124,8 +124,7 @@ class GrantReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant database must not be empty.");
+                ).withMessageContaining("The Grant database must not be empty.");
             }
 
             @Disabled("Test is way too slow with all combinations")
@@ -136,7 +135,7 @@ class GrantReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -144,8 +143,7 @@ class GrantReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant role must not be empty.");
+                ).withMessageContaining("The Grant role must not be empty.");
             }
 
             @Disabled("Test is way too slow with all combinations")
@@ -156,7 +154,7 @@ class GrantReconcilerTest {
                     String blankOrEmptyString
             ) {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -164,23 +162,21 @@ class GrantReconcilerTest {
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(USAGE)
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant schema must not be empty.");
+                ).withMessageContaining("The Grant schema must not be empty.");
             }
 
             @Test
             @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
             void failWhenPrivilegesAreAnEmptyList() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
                                 .withObjectType(SCHEMA)
                                 .withPrivileges(List.of())
                                 .apply()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant privileges must not be empty.");
+                ).withMessageContaining("The Grant privileges must not be empty.");
             }
         }
 
@@ -197,7 +193,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setDatabase("new-database");
 
@@ -205,8 +201,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant database is immutable.");
+                }).withMessageContaining("The Grant database is immutable.");
             }
 
             @Test
@@ -220,7 +215,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setRole("new-role");
 
@@ -228,8 +223,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant role is immutable.");
+                }).withMessageContaining("The Grant role is immutable.");
             }
 
             @Test
@@ -243,7 +237,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setSchema("new-schema");
 
@@ -251,8 +245,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant schema is immutable.");
+                }).withMessageContaining("The Grant schema is immutable.");
             }
 
             @Test
@@ -266,7 +259,7 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 // then
-                assertThatThrownBy(() -> {
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
                     // when
                     item.getSpec().setObjectType(SEQUENCE);
 
@@ -274,8 +267,7 @@ class GrantReconcilerTest {
                             .inNamespace(item.getMetadata().getNamespace())
                             .withName(item.getMetadata().getName())
                             .patch(item);
-                }).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant objectType is immutable.");
+                }).withMessageContaining("The Grant objectType is immutable.");
             }
         }
 
@@ -285,7 +277,7 @@ class GrantReconcilerTest {
             @DisplayName("Should fail when objectType is DATABASE but schema is set (CEL rule)")
             void failWhenDatabaseHasSchema() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -293,15 +285,14 @@ class GrantReconcilerTest {
                                 .withObjectType(DATABASE)
                                 .withPrivileges(CONNECT)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant schema must be not set if objectType is 'database'");
+                ).withMessageContaining("The Grant schema must be not set if objectType is 'database'");
             }
 
             @Test
             @DisplayName("Should fail when objectType is DATABASE but objects has items (CEL rule)")
             void failWhenDatabaseHasObjects() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -309,15 +300,14 @@ class GrantReconcilerTest {
                                 .withObjects("some_object", "other_object")
                                 .withPrivileges(CONNECT)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
             @DisplayName("Should fail when objectType is SCHEMA but objects has items (CEL rule)")
             void failWhenSchemaHasObjects() {
                 // then
-                assertThatThrownBy(() ->
+                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
                         // given / when
                         given.one()
                                 .grant()
@@ -325,8 +315,7 @@ class GrantReconcilerTest {
                                 .withObjects("some_object", "other_object")
                                 .withPrivileges(USAGE)
                                 .returnFirst()
-                ).isInstanceOf(KubernetesClientException.class)
-                        .hasMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
