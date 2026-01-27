@@ -269,7 +269,7 @@ class RoleReconcilerTest {
         );
         assertThat(role.getStatus().getLastPhaseTransitionTime()).isNull();
 
-        // Cleanup manually
+        // We have to manually clean up this as the RoleController#cleanup will always fail as the ClusterConnection does not exist
         kubernetesClient.resource(role).delete();
         role.getMetadata().setFinalizers(null);
         role.getMetadata().setResourceVersion(null);
