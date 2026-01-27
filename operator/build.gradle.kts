@@ -71,6 +71,10 @@ tasks.quarkusDev {
     jvmArgs = listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
+tasks.quarkusAppPartsBuild {
+    doNotTrackState("Always execute Gradle task quarkusAppPartsBuild to generate the K8s deploy manifest kubernetes.yml and to publish the Helm chart")
+}
+
 tasks.withType<Test> {
     val mockitoAgent = configurations.testRuntimeClasspath.get().find {
         it.name.contains("mockito-core")
