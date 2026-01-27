@@ -149,7 +149,7 @@ public class RoleReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(250, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
         }
 
         var clusterRef = spec.getClusterRef();

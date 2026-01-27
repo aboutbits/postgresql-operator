@@ -119,7 +119,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(250, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
         }
 
         // We do not actually delete the database if the reclaimPolicy is set to RETAIN, we only delete the CR instance
