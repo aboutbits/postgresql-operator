@@ -146,7 +146,7 @@ public class GrantReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(0, TimeUnit.SECONDS);
+                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
         }
 
         var clusterRef = spec.getClusterRef();
