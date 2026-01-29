@@ -57,22 +57,15 @@ dependencies {
     /**
      * Testing
      */
-    testImplementation("io.quarkus:quarkus-junit5")
-    testImplementation("io.quarkus:quarkus-junit5-mockito")
+    testImplementation("io.quarkus:quarkus-junit")
+    testImplementation("io.quarkus:quarkus-junit-mockito")
     testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)
 }
 
-tasks.quarkusDev {
-    // Java 24+ issue. Remove after this has been fixed.
-    // https://github.com/quarkusio/quarkus/issues/47769#issuecomment-3148789105
-    // https://github.com/quarkusio/quarkus/pull/49920
-    jvmArgs = listOf("--add-opens", "java.base/java.lang=ALL-UNNAMED")
-}
-
 tasks.quarkusAppPartsBuild {
-    doNotTrackState("Always execute Gradle task quarkusAppPartsBuild to generate the K8s deploy manifest kubernetes.yml and to publish the Helm chart")
+    doNotTrackState("Always execute Gradle task quarkusAppPartsBuild to generate the K8s deploy manifest kubernetes.yml, the CRDs, and to publish the Helm chart")
 }
 
 tasks.withType<Test> {
