@@ -18,7 +18,7 @@ assertj = "3.27.7"
 checkstyle = "13.0.0"
 datafaker = "2.5.3"
 errorProne = "2.46.0"
-errorPronePlugin = "4.4.0"
+errorPronePlugin = "5.0.0"
 nullAway = "0.13.1"
 
 [plugins]
