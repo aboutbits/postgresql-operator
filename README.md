@@ -31,6 +31,18 @@ AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage Pos
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
+## Installation
+
+### Helm Chart
+
+```bash
+helm install postgresql-operator https://github.com/aboutbits/postgresql-operator/releases/download/v0.1.1/postgresql-operator-0.1.1.tgz
+```
+
+With the Helm chart, the Custom Resource Definitions (CRDs) are installed automatically.  
+However, if you deploy the operator directly from the OCI image, the CRDs are not automatically applied and must be installed separately.  
+See the release notes for the [latest version](https://github.com/aboutbits/postgresql-operator/releases/latest) for more information.
+
 ## Usage
 
 This operator allows you to manage PostgreSQL resources using Kubernetes manifests.  
@@ -42,6 +54,30 @@ Further documentation of each Custom Resource can be found here:
 - [Schema](docs/schema.md) - Manage schemas.
 - [Grant](docs/grant.md) - Manage privileges.
 - [DefaultPrivilege](docs/default-privilege.md) - Manage default privileges.
+
+### Declarative Management
+
+The Operator leverages the power of Kubernetes Custom Resource Definitions (CRDs) to manage PostgreSQL resources declaratively.
+This means the Operator continuously reconciles the state of the cluster to match your desired state defined in the CRs.
+
+**Updates**
+
+If you modify a mutable field in a Custom Resource, the Operator automatically applies these changes to the PostgreSQL cluster.  
+The operator, for example, handles:
+
+- Changing a `Role`'s flags, password, or comment.
+- Updating the `Role` password if the password in the referenced Secret changes.
+- Updating `Grant`/`DefaultPrivilege` objects or privileges.
+- Changing a `Schema` or `Database` owner.
+
+**Deletions**
+
+Deleting a Custom Resource triggers the cleanup of the corresponding PostgreSQL object:
+
+- For `Grant`, `DefaultPrivilege`, and `Role` resources, the operator revokes privileges or drops the role.
+- For `Database` and `Schema` resources, the behavior depends on the `reclaimPolicy` (defaults to `Retain` to prevent accidental data loss).
+
+This ensures that your PostgreSQL cluster configuration always reflects your Kubernetes manifests, simplifying management and automation.
 
 ### Showcase
 
@@ -211,6 +247,28 @@ make test
 2. Click on "+" and select "Quarkus"
 
 Afterward, the project can be started in IntelliJ by navigating to `Run` -> `Run '...'`.
+
+#### Generating jOOQ sources
+
+To update the generated jOOQ sources from schema `pg_catalog`, you need to run the application in dev mode first to start the PostgreSQL Dev Service:
+
+```bash
+make run
+
+# or
+
+./gradlew :operator:quarkusDev
+```
+
+Once the application is running (and the database is available on port 5432), run the following command:
+
+```bash
+make generate-jooq
+
+# or
+
+./gradlew :generated:jooqCodegen
+```
 
 ### Docker Environment
 

@@ -47,8 +47,7 @@ jobs:
         env:
           GITHUB_USER_NAME: ${{ github.actor }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build Docker image
-        uses: aboutbits/github-actions-docker/build-push@v1
+      - uses: aboutbits/github-actions-docker/build-push@v1
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -70,6 +69,9 @@ jobs:
             helm install postgresql-operator https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz
             ```
             
+            With the Helm chart, the Custom Resource Definitions (CRDs) are installed automatically.
+            However, if you deploy the operator directly from the OCI image, the CRDs are not automatically applied and must be installed separately.
+            
             ### Manual CRD Installation
             ```bash
             kubectl apply -f https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/clusterconnections.postgresql.aboutbits.it-v1.yml
@@ -85,4 +87,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         run: |
           gh release upload v${{ steps.nextVersion.outputs.version }} operator/build/helm/kubernetes/*.tgz operator/build/kubernetes/*.postgresql.aboutbits.it-v1.yml
+        shell: bash
+      - name: Update README.md
+        run: |
+          sed -i "s|releases/download/v[0-9.]*/postgresql-operator-[0-9.]*.tgz|releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz|g" README.md
+          git add README.md
+          git diff-index --quiet HEAD || git commit -m "update README.md with version ${{ steps.nextVersion.outputs.version }}"
+          git push
         shell: bash
