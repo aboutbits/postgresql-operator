@@ -1,7 +1,4 @@
 quarkus:
-  operator-sdk:
-    activate-leader-election-for-profiles:
-      - test
   log:
     category:
       "org.jooq":
