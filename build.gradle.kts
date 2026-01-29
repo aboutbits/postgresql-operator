@@ -92,7 +92,6 @@ subprojects {
         useJUnitPlatform()
 
         systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
-        jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
