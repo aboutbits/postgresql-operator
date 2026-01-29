@@ -103,6 +103,12 @@ quarkus:
         value: ${quarkus.kubernetes.image-pull-secrets[0]}
         paths:
           - (kind == Deployment).spec.template.spec.imagePullSecrets[0].name
+        description: Kubernetes image pull secret to use if the OCI image is hosted on a private registry
+      affinity:
+        property: affinity
+        value-as-map: {}
+        path: (kind == Deployment).spec.template.spec.affinity
+        description: Kubernetes affinity configuration for Pod scheduling
     expressions:
       release-name-labels:
         expression: "{{ .Release.Name }}"
@@ -116,6 +122,9 @@ quarkus:
       release-name-deployment-labels:
         expression: "{{ .Release.Name }}"
         path: (kind == Deployment).spec.template.metadata.labels.'app.kubernetes.io/name'
+      affinity:
+        expression: "{{- toYaml (.Values.app.affinity | default dict) | nindent 8 }}"
+        path: (kind == Deployment).spec.template.spec.affinity
   kubernetes:
     name: postgresql-operator
     version: ${quarkus.application.version}
