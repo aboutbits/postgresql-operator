@@ -22,9 +22,9 @@ AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage Pos
 │  │ │ - Grant            │ │   │  ├──────────────────────────────────┤  │ │
 │  │ │ - DefaultPrivilege │ │   │  │   DefaultPrivilege Controller    │  │ │
 │  │ └────────────────────┘ │   │  └──────────────────────────────────┘  │ │
-│  └────────────────────────┘   └────────────────────┬───────────────────┘ │
-│                                                    │                     │
-│                                  ┌─────────────────▼────────────────┐    │
+│  └────────────────────────┘   └───────────────────┬────────────────────┘ │
+│                                                   │                      │
+│                                  ┌────────────────▼─────────────────┐    │
 │                                  │        PostgreSQL Server         │    │
 │                                  │              (SQL)               │    │
 │                                  └──────────────────────────────────┘    │
@@ -57,7 +57,7 @@ Further documentation of each Custom Resource can be found here:
 
 ### Declarative Management
 
-The Operator leverages the power of Kubernetes Custom Resource Definitions (CRDs) to manage PostgreSQL resources declaratively.
+The Operator leverages the power of Kubernetes Custom Resource Definitions (CRDs) to manage PostgreSQL resources declaratively.  
 This means the Operator continuously reconciles the state of the cluster to match your desired state defined in the CRs.
 
 **Updates**
