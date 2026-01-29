@@ -55,6 +55,29 @@ Further documentation of each Custom Resource can be found here:
 - [Grant](docs/grant.md) - Manage privileges.
 - [DefaultPrivilege](docs/default-privilege.md) - Manage default privileges.
 
+### Declarative Management
+
+The Operator leverages the power of Kubernetes Custom Resource Definitions (CRDs) to manage PostgreSQL resources declaratively.
+This means the Operator continuously reconciles the state of the cluster to match your desired state defined in the CRs.
+
+**Updates**
+
+If you modify a mutable field in a Custom Resource, the Operator automatically applies these changes to the PostgreSQL cluster. This includes:
+
+- Changing a `Role` flags, password or comment.
+- Updating `Grant` objects or privileges.
+- Changing a `Schema` or `Database` owner.
+- Updating the `Role` password if the password in the referenced Secret changes.
+
+**Deletions**
+
+Deleting a Custom Resource triggers the cleanup of the corresponding PostgreSQL object:
+
+- For `Grant`, `DefaultPrivilege`, and `Role` resources, the operator revokes privileges or drops the role.
+- For `Database` and `Schema` resources, the behavior depends on the `reclaimPolicy` (defaulting to `Retain` to prevent accidental data loss).
+
+This ensures that your PostgreSQL cluster configuration always reflects your Kubernetes manifests, simplifying management and automation.
+
 ### Showcase
 
 The following example shows how to set up a connection to a PostgreSQL cluster, create a database and schema, a login role (user), and configure permissions.
