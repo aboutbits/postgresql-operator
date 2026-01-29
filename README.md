@@ -62,19 +62,20 @@ This means the Operator continuously reconciles the state of the cluster to matc
 
 **Updates**
 
-If you modify a mutable field in a Custom Resource, the Operator automatically applies these changes to the PostgreSQL cluster. This includes:
+If you modify a mutable field in a Custom Resource, the Operator automatically applies these changes to the PostgreSQL cluster.  
+The operator, for example, handles:
 
-- Changing a `Role` flags, password or comment.
-- Updating `Grant` objects or privileges.
-- Changing a `Schema` or `Database` owner.
+- Changing a `Role`'s flags, password, or comment.
 - Updating the `Role` password if the password in the referenced Secret changes.
+- Updating `Grant`/`DefaultPrivilege` objects or privileges.
+- Changing a `Schema` or `Database` owner.
 
 **Deletions**
 
 Deleting a Custom Resource triggers the cleanup of the corresponding PostgreSQL object:
 
 - For `Grant`, `DefaultPrivilege`, and `Role` resources, the operator revokes privileges or drops the role.
-- For `Database` and `Schema` resources, the behavior depends on the `reclaimPolicy` (defaulting to `Retain` to prevent accidental data loss).
+- For `Database` and `Schema` resources, the behavior depends on the `reclaimPolicy` (defaults to `Retain` to prevent accidental data loss).
 
 This ensures that your PostgreSQL cluster configuration always reflects your Kubernetes manifests, simplifying management and automation.
 
