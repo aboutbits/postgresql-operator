@@ -47,8 +47,7 @@ jobs:
         env:
           GITHUB_USER_NAME: ${{ github.actor }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build Docker image
-        uses: aboutbits/github-actions-docker/build-push@v1
+      - uses: aboutbits/github-actions-docker/build-push@v1
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -59,8 +58,7 @@ jobs:
       - name: Push tag to remote
         run: ./gradlew --console=colored pushRelease
         shell: bash
-      - name: Create GitHub Release
-        uses: aboutbits/github-actions-base/github-create-release@v2
+      - uses: aboutbits/github-actions-base/github-create-release@v2
         with:
           tag-name: 'v${{ steps.nextVersion.outputs.version }}'
           release-description: |
@@ -94,7 +92,6 @@ jobs:
         run: |
           sed -i "s|releases/download/v[0-9.]*/postgresql-operator-[0-9.]*.tgz|releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz|g" README.md
           git add README.md
-          # Guard against failing if there are no changes
-          git diff-index --quiet HEAD || git commit -m "Update README.md with version ${{ steps.nextVersion.outputs.version }}"
+          git diff-index --quiet HEAD || git commit -m "update README.md with version ${{ steps.nextVersion.outputs.version }}"
           git push
         shell: bash
