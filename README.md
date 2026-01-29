@@ -224,6 +224,28 @@ make test
 
 Afterward, the project can be started in IntelliJ by navigating to `Run` -> `Run '...'`.
 
+#### Generating jOOQ sources
+
+To update the generated jOOQ sources from schema `pg_catalog`, you need to run the application in dev mode first to start the PostgreSQL Dev Service:
+
+```bash
+make run
+
+# or
+
+./gradlew :operator:quarkusDev
+```
+
+Once the application is running (and the database is available on port 5432), run the following command:
+
+```bash
+make generate-jooq
+
+# or
+
+./gradlew :generated:jooqCodegen
+```
+
 ### Docker Environment
 
 See [Docker Environment](docs/docker-environment.md) for setting up a local development environment using Quarkus Dev Services.
