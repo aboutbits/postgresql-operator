@@ -109,13 +109,13 @@ quarkus:
       affinity:
         property: affinity
         value-as-map: {}
-        path: (kind == Deployment).spec.template.spec.affinity
+        paths:
+          - (kind == Deployment).spec.template.spec.affinity
         description: Kubernetes affinity configuration for Pod scheduling
     values-schema:
       properties:
         "affinity":
           name: app.affinity
-          description: Kubernetes affinity configuration for Pod scheduling
           type: object
     expressions:
       release-name-labels:
