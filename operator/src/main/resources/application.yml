@@ -75,7 +75,7 @@ quarkus:
     values:
       replicas:
         property: replicas
-        value: 1
+        value-as-int: 1
         paths:
           - (kind == Deployment).spec.replicas
       image-pull-policy:
@@ -109,6 +109,12 @@ quarkus:
         value-as-map: {}
         path: (kind == Deployment).spec.template.spec.affinity
         description: Kubernetes affinity configuration for Pod scheduling
+    values-schema:
+      properties:
+        "affinity":
+          name: app.affinity
+          description: Kubernetes affinity configuration for Pod scheduling
+          type: object
     expressions:
       release-name-labels:
         expression: "{{ .Release.Name }}"

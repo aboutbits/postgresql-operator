@@ -26,7 +26,7 @@ AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage Pos
 │                                                   │                      │
 │                                  ┌────────────────▼─────────────────┐    │
 │                                  │        PostgreSQL Server         │    │
-│                                  │              (SQL)               │    │
+│                                  │            (JDBC/SQL)            │    │
 │                                  └──────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
