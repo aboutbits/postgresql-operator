@@ -1,4 +1,6 @@
 quarkus:
+  console:
+    color: true
   kubernetes-client:
     devservices:
       enabled: true
