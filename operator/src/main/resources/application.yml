@@ -70,7 +70,7 @@ quarkus:
         name: AboutBits
         email: info@aboutbits.it
         url: https://aboutbits.it/
-    create-tar-file: true
+    create-tar-file: false
     extension: tgz
     values:
       replicas:
