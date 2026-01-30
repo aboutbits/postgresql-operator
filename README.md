@@ -13,10 +13,10 @@ AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage Pos
 │  │                        │   │  │   ClusterConnection Controller   │  │ │
 │  │ ┌────────────────────┐ │   │  ├──────────────────────────────────┤  │ │
 │  │ │ ClusterConnection  │ │   │  │       Database Controller        │  │ │
-│  │ └──────────▲─────────┘ │   │  ├──────────────────────────────────┤  │ │
-│  │            │           │   │  │         Role Controller          │  │ │
-│  │ ┌──────────┴─────────┐ │   │  ├──────────────────────────────────┤  │ │
-│  │ │ - Database         │ │   │  │        Schema Controller         │  │ │
+│  │ └─────────▲──────────┘ │   │  ├──────────────────────────────────┤  │ │
+│  │           │            │   │  │        Schema Controller         │  │ │
+│  │ ┌─────────┴──────────┐ │   │  ├──────────────────────────────────┤  │ │
+│  │ │ - Database         │ │   │  │         Role Controller          │  │ │
 │  │ │ - Schema           │ │   │  ├──────────────────────────────────┤  │ │
 │  │ │ - Role             │ │   │  │         Grant Controller         │  │ │
 │  │ │ - Grant            │ │   │  ├──────────────────────────────────┤  │ │
