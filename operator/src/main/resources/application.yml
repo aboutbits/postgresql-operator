@@ -147,6 +147,16 @@ quarkus:
         memory: 300Mi
       limits:
         memory: 512Mi
+    # Report bug as this or adding the ClusterRole and ClusterRoleBinding in operator/src/main/kubernetes/kubernetes.yml does not work, JOSDK simply ignores the ClusterRoleBinding
+    #rbac:
+    #  cluster-roles:
+    #    "rolereconciler-cluster-role":
+    #      name: rolereconciler-cluster-role
+    #      policy-rules:
+    #        "secrets":
+    #          api-groups: [""]
+    #          resources: ["secrets"]
+    #          verbs: ["get", "list", "watch"]
     startup-probe:
       http-action-port-name: http
       initial-delay: PT2S
