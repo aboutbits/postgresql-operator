@@ -113,12 +113,15 @@ quarkus:
         description: Kubernetes affinity configuration for Pod scheduling
       console-color:
         property: envs.QUARKUS_CONSOLE_COLOR
+        value-as-bool: ${quarkus.console.color}
         description: If color should be enabled or disabled. If this is unset, then an attempt will be made to guess if the terminal supports color.
       log-console-json-enabled:
         property: envs.QUARKUS_LOG_CONSOLE_JSON_ENABLED
+        value-as-bool: ${quarkus.log.console.json.enabled}
         description: Determine whether to enable the JSON console formatting extension, which disables "normal" console formatting.
       log-console-json-log-format:
         property: envs.QUARKUS_LOG_CONSOLE_JSON_LOG_FORMAT
+        value: ${quarkus.log.console.json.log-format}
         description: Specify the format of the produced JSON. Supported values are "DEFAULT", "ECS", and "GCP".
     values-schema:
       properties:
