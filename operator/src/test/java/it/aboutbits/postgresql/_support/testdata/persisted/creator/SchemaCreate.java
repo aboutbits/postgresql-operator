@@ -16,6 +16,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+
 @NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
@@ -37,6 +39,9 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
     @Nullable
     private String withClusterConnectionNamespace;
+
+    @Nullable
+    private String withDatabase;
 
     private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
 
@@ -72,15 +77,20 @@ public class SchemaCreate extends TestDataCreator<Schema> {
                 .build()
         );
 
-        var spec = new SchemaSpec();
-        spec.setName(name);
-        spec.setReclaimPolicy(withReclaimPolicy);
-        spec.setOwner(withOwner);
+        // We have to create the database first which also modifies the specified withClusterConnectionName so the connection points to the newly created DB
+        var database = getDatabase();
 
         var clusterRef = new ClusterReference();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
+
+        var spec = new SchemaSpec();
+
         spec.setClusterRef(clusterRef);
+        spec.setDatabase(database);
+        spec.setName(name);
+        spec.setReclaimPolicy(withReclaimPolicy);
+        spec.setOwner(withOwner);
 
         item.setSpec(spec);
 
@@ -138,5 +148,31 @@ public class SchemaCreate extends TestDataCreator<Schema> {
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
         return clusterConnection.getMetadata().getName();
+    }
+
+    private String getDatabase() {
+        if (withDatabase != null) {
+            return withDatabase;
+        }
+
+        var item = given.one()
+                .database()
+                .withClusterConnectionName(getClusterConnectionName())
+                .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                .withReclaimPolicy(DELETE)
+                .returnFirst();
+
+        withDatabase = item.getSpec().getName();
+
+        var clusterConnectionDb = given.one()
+                .clusterConnection()
+                .withName(getClusterConnectionName() + "-db")
+                .withNamespace(withClusterConnectionNamespace)
+                .withDatabase(withDatabase)
+                .returnFirst();
+
+        withClusterConnectionName = clusterConnectionDb.getMetadata().getName();
+
+        return withDatabase;
     }
 }

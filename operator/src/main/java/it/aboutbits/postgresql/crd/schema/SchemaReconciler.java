@@ -67,11 +67,12 @@ public class SchemaReconciler
                     .rescheduleAfter(60, TimeUnit.SECONDS);
         }
 
+        var database = spec.getDatabase();
         var clusterConnection = clusterConnectionOptional.get();
 
         UpdateControl<Schema> updateControl;
 
-        try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+        try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
             // Run everything in a single transaction
             updateControl = dsl.transactionResult(
                     cfg -> reconcileInTransaction(
@@ -149,9 +150,10 @@ public class SchemaReconciler
                     .rescheduleAfter(60, TimeUnit.SECONDS);
         }
 
+        var database = spec.getDatabase();
         var clusterConnection = clusterConnectionOptional.get();
 
-        try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+        try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
             schemaService.dropSchema(dsl, spec);
 
             return DeleteControl.defaultDelete();

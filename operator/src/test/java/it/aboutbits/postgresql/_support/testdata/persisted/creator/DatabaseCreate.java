@@ -72,15 +72,16 @@ public class DatabaseCreate extends TestDataCreator<Database> {
                 .build()
         );
 
-        var spec = new DatabaseSpec();
-        spec.setName(name);
-        spec.setReclaimPolicy(withReclaimPolicy);
-        spec.setOwner(withOwner);
-
         var clusterRef = new ClusterReference();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
+
+        var spec = new DatabaseSpec();
+
         spec.setClusterRef(clusterRef);
+        spec.setName(name);
+        spec.setReclaimPolicy(withReclaimPolicy);
+        spec.setOwner(withOwner);
 
         item.setSpec(spec);
 
