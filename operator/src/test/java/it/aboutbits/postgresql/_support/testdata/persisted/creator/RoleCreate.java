@@ -93,15 +93,15 @@ public class RoleCreate extends TestDataCreator<Role> {
                 .build()
         );
 
-        var spec = new RoleSpec();
-        spec.setName(name);
-        spec.setComment(withComment);
-
         var clusterRef = new ClusterReference();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
-        spec.setClusterRef(clusterRef);
 
+        var spec = new RoleSpec();
+
+        spec.setClusterRef(clusterRef);
+        spec.setName(name);
+        spec.setComment(withComment);
         spec.setPasswordSecretRef(withPasswordSecretRef);
 
         if (withFlags != null) {

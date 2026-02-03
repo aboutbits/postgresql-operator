@@ -19,6 +19,17 @@ public class SchemaSpec {
     @Required
     @ValidationRule(
             value = "self == oldSelf",
+            message = "The Schema database is immutable. Moving a schema to another database requires dumping and restoring the schema to the new database."
+    )
+    @ValidationRule(
+            value = "self.trim().size() > 0",
+            message = "The Schema database must not be empty."
+    )
+    private String database = "";
+
+    @Required
+    @ValidationRule(
+            value = "self == oldSelf",
             message = "The Schema name is immutable. Allowing to rename the Schema name using 'alter schema <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
     )
     @ValidationRule(

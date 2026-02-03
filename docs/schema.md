@@ -7,6 +7,7 @@ The `Schema` Custom Resource Definition (CRD) is responsible for managing Postgr
 | Field           | Type               | Description                                                                                        | Required | Immutable |
 |-----------------|--------------------|----------------------------------------------------------------------------------------------------|----------|-----------|
 | `clusterRef`    | `ClusterReference` | Reference to the `ClusterConnection` to use.                                                       | Yes      | No        |
+| `database`      | `string`           | The name of the database in which the schema is created.                                           | Yes      | Yes       |
 | `name`          | `string`           | The name of the schema to create.                                                                  | Yes      | Yes       |
 | `owner`         | `string`           | The owner of the schema.                                                                           | No       | No        |
 | `reclaimPolicy` | `string`           | The policy for reclaiming the schema when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | No        |
@@ -35,6 +36,7 @@ metadata:
 spec:
   clusterRef:
     name: my-postgres-connection
+  database: my_database
   name: my_schema
   owner: my_role
   reclaimPolicy: Retain

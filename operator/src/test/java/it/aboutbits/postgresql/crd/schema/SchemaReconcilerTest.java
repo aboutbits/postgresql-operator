@@ -39,9 +39,21 @@ class SchemaReconcilerTest {
     @DisplayName("When a Schema is created, it should be reconciled to READY")
     void createSchema_andStatusReady() {
         // given
-        var clusterConnection = given.one()
+        var clusterConnectionMain = given.one()
                 .clusterConnection()
                 .withName("test-connection-schema")
+                .returnFirst();
+
+        var database = given.one()
+                .database()
+                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                .returnFirst();
+
+        // Creating a second ClusterConnection CR is only required for the tests
+        var clusterConnectionDb = given.one()
+                .clusterConnection()
+                .withName("test-connection-schema-db")
+                .withDatabase(database.getSpec().getName())
                 .returnFirst();
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
@@ -50,8 +62,9 @@ class SchemaReconcilerTest {
         // when
         var schema = given.one()
                 .schema()
+                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                .withDatabase(database.getSpec().getName())
                 .withName(schemaName)
-                .withClusterConnectionName(clusterConnection.getMetadata().getName())
                 .withReclaimPolicy(DELETE)
                 .returnFirst();
 
@@ -67,7 +80,7 @@ class SchemaReconcilerTest {
                 now
         );
 
-        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnectionDb);
 
         assertThat(schemaService.schemaExists(dsl, schema.getSpec())).isTrue();
     }

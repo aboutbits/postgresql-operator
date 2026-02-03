@@ -82,6 +82,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         );
 
         var spec = new ClusterConnectionSpec();
+
         spec.setHost(getHost());
         spec.setPort(getPort());
         spec.setDatabase(getDatabase());
