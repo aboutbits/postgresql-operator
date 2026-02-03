@@ -1,6 +1,11 @@
 quarkus:
   console:
     color: true
+  log:
+    console:
+      json:
+        enabled: false
+        log-format: ECS
   kubernetes-client:
     devservices:
       enabled: true
@@ -36,12 +41,6 @@ quarkus:
     generation-aware: true
   test:
     hang-detection-timeout: PT1M
-  #log:
-  #  category:
-  #    "io.javaoperatorsdk":
-  #      level: DEBUG
-  #    "io.quarkiverse.operatorsdk":
-  #      level: DEBUG
 
   # Config for the generated Helm chart #
   # Container Image config for Kubernetes Helm #
@@ -112,6 +111,15 @@ quarkus:
         paths:
           - (kind == Deployment).spec.template.spec.affinity
         description: Kubernetes affinity configuration for Pod scheduling
+      console-color:
+        property: envs.QUARKUS_CONSOLE_COLOR
+        description: If color should be enabled or disabled. If this is unset, then an attempt will be made to guess if the terminal supports color.
+      log-console-json-enabled:
+        property: envs.QUARKUS_LOG_CONSOLE_JSON_ENABLED
+        description: Determine whether to enable the JSON console formatting extension, which disables "normal" console formatting.
+      log-console-json-log-format:
+        property: envs.QUARKUS_LOG_CONSOLE_JSON_LOG_FORMAT
+        description: Specify the format of the produced JSON. Supported values are "DEFAULT", "ECS", and "GCP".
     values-schema:
       properties:
         "affinity":
@@ -185,3 +193,7 @@ quarkus:
     env:
       fields:
         KUBERNETES_NODE_NAME: spec.nodeName
+      vars:
+        QUARKUS_CONSOLE_COLOR: ${quarkus.console.color}
+        QUARKUS_LOG_CONSOLE_JSON_ENABLED: ${quarkus.log.console.json.enabled}
+        QUARKUS_LOG_CONSOLE_JSON_LOG_FORMAT: ${quarkus.log.console.json.log-format}
