@@ -234,29 +234,11 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withSchema;
         }
 
-        var databaseName = getDatabase();
-        if (databaseName.isBlank()) {
-            databaseName = given.one()
-                    .database()
-                    .withClusterConnectionName(getClusterConnectionName())
-                    .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst()
-                    .getSpec()
-                    .getName();
-        }
-
-        var clusterConnectionDb = given.one()
-                .clusterConnection()
-                .withName(getClusterConnectionName() + "-db")
-                .withNamespace(withClusterConnectionNamespace)
-                .withDatabase(databaseName)
-                .returnFirst();
-
         var item = given.one()
                 .schema()
-                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                .withClusterConnectionNamespace(clusterConnectionDb.getMetadata().getNamespace())
+                .withClusterConnectionName(getClusterConnectionName())
+                .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                .withDatabase(getDatabase())
                 .withReclaimPolicy(DELETE)
                 .returnFirst();
 

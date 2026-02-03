@@ -236,9 +236,9 @@ public class GrantCreate extends TestDataCreator<Grant> {
             return withSchema;
         }
 
-        var databaseName = getDatabase();
-        if (databaseName.isBlank()) {
-            databaseName = given.one()
+        var database = getDatabase();
+        if (database.isBlank()) {
+            database = given.one()
                     .database()
                     .withClusterConnectionName(getClusterConnectionName())
                     .withClusterConnectionNamespace(withClusterConnectionNamespace)
@@ -248,17 +248,11 @@ public class GrantCreate extends TestDataCreator<Grant> {
                     .getName();
         }
 
-        var clusterConnectionDb = given.one()
-                .clusterConnection()
-                .withName(getClusterConnectionName() + "-db")
-                .withNamespace(withClusterConnectionNamespace)
-                .withDatabase(databaseName)
-                .returnFirst();
-
         var item = given.one()
                 .schema()
-                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                .withClusterConnectionNamespace(clusterConnectionDb.getMetadata().getNamespace())
+                .withClusterConnectionName(getClusterConnectionName())
+                .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                .withDatabase(database)
                 .withReclaimPolicy(DELETE)
                 .returnFirst();
 

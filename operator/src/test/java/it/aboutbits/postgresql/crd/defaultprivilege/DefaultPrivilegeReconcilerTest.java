@@ -497,6 +497,7 @@ class DefaultPrivilegeReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
                     .withReclaimPolicy(DELETE)
                     .returnFirst();
 
@@ -623,6 +624,7 @@ class DefaultPrivilegeReconcilerTest {
             var schema = given.one()
                     .schema()
                     .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
                     .withReclaimPolicy(DELETE)
                     .returnFirst();
 
