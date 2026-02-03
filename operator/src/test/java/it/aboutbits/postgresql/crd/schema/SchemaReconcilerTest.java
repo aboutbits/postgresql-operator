@@ -62,9 +62,9 @@ class SchemaReconcilerTest {
         // when
         var schema = given.one()
                 .schema()
-                .withDatabase(database.getName())
-                .withName(schemaName)
                 .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                .withDatabase(database.getSpec().getName())
+                .withName(schemaName)
                 .withReclaimPolicy(DELETE)
                 .returnFirst();
 

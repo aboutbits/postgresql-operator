@@ -164,15 +164,6 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
         withDatabase = item.getSpec().getName();
 
-        var clusterConnectionDb = given.one()
-                .clusterConnection()
-                .withName(getClusterConnectionName() + "-db")
-                .withNamespace(withClusterConnectionNamespace)
-                .withDatabase(withDatabase)
-                .returnFirst();
-
-        withClusterConnectionName = clusterConnectionDb.getMetadata().getName();
-
         return withDatabase;
     }
 }
