@@ -208,10 +208,27 @@ To build the project, the following prerequisites must be met:
 
 ### Setup
 
-To get started, call:
+To get started, you first need to configure the GitHub Maven Package registry to be able to pull the [AbouBits Java Checkstyle Config](https://github.com/aboutbits/java-checkstyle-config) from the GitHub Gradle registry.
+
+Follow https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry  
+The guide basically tells you to click on `Generate new token (classic)` on https://github.com/settings/tokens, add the permission `read:packages` and copy the token which we need below.
+
+If it does not exist yet, create a file `~/.gradle/gradle.properties` in your home directory and add the following lines.
+
+```properties
+gpr.user=<your_github_user>
+# The token generated above
+gpr.key=<your_github_token>
+```
+
+Then call:
 
 ```bash
 make init
+
+# or
+
+../gradlew :operator:quarkusBuild
 ```
 
 ### Development
