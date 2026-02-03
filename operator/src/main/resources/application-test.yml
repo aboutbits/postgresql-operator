@@ -1,6 +1,4 @@
 quarkus:
-  console:
-    color: false
   operator-sdk:
     activate-leader-election-for-profiles:
       - test
