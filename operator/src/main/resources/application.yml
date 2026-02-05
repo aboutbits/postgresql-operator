@@ -168,21 +168,21 @@ quarkus:
       period: PT10S
       timeout: PT3S
       success-threshold: 1
-      failure-threshold: 3
+      failure-threshold: 10
     readiness-probe:
       http-action-port-name: http
       initial-delay: PT0S
+      period: PT5S
+      timeout: PT3S
+      success-threshold: 1
+      failure-threshold: 10
+    liveness-probe:
+      http-action-port-name: http
+      initial-delay: PT5S
       period: PT10S
       timeout: PT3S
       success-threshold: 1
-      failure-threshold: 3
-    liveness-probe:
-      http-action-port-name: http
-      initial-delay: PT10S
-      period: PT30S
-      timeout: PT10S
-      success-threshold: 1
-      failure-threshold: 3
+      failure-threshold: 10
     env:
       fields:
         KUBERNETES_NODE_NAME: spec.nodeName
