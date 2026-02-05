@@ -1,6 +1,6 @@
 # AboutBits PostgreSQL Operator
 
-AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage PostgreSQL databases, roles (users), and privileges in a declarative way using Custom Resource Definitions (CRDs).
+AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage PostgreSQL databases, schemas, roles (users), and privileges in a declarative way using Custom Resource Definitions (CRDs).
 
 ## Architecture
 
@@ -130,6 +130,7 @@ metadata:
 spec:
   clusterRef:
     name: my-postgres-connection
+  database: my_app_db
   name: my_app_schema
   reclaimPolicy: Retain
   owner: dba_user
@@ -208,7 +209,7 @@ To build the project, the following prerequisites must be met:
 
 ### Setup
 
-To get started, you first need to configure the GitHub Maven Package registry to be able to pull the [AbouBits Java Checkstyle Config](https://github.com/aboutbits/java-checkstyle-config) from the GitHub Gradle registry.
+To get started, you first need to configure the GitHub Gradle Packages registry to be able to pull the [AbouBits Java Checkstyle Config](https://github.com/aboutbits/java-checkstyle-config) from the GitHub Packages registry.
 
 Follow https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry  
 The guide basically tells you to click on `Generate new token (classic)` on https://github.com/settings/tokens, add the permission `read:packages` and copy the token which we need below.

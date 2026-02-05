@@ -13,6 +13,8 @@ import io.javaoperatorsdk.operator.processing.event.ResourceID;
 import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import io.javaoperatorsdk.operator.processing.event.source.SecondaryToPrimaryMapper;
 import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
+import io.quarkiverse.operatorsdk.annotations.AdditionalRBACRules;
+import io.quarkiverse.operatorsdk.annotations.RBACRule;
 import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
@@ -32,6 +34,13 @@ import java.util.stream.Collectors;
 
 @NullMarked
 @Slf4j
+@AdditionalRBACRules({
+        @RBACRule(
+                apiGroups = {""},
+                resources = {"secrets"},
+                verbs = {"get", "list", "watch"}
+        )
+})
 @RequiredArgsConstructor
 public class RoleReconciler
         extends BaseReconciler<Role, CRStatus>
