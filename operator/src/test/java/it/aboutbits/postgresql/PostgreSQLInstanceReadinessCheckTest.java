@@ -11,6 +11,7 @@ import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,13 +68,35 @@ class PostgreSQLInstanceReadinessCheckTest {
         given.one()
                 .clusterConnection()
                 .withName("db-1")
-                .returnFirst();
+                .apply();
 
         given.one()
                 .clusterConnection()
                 .withName("db-2")
-                .withHost("non-existent-host")
-                .returnFirst();
+                .withHost("localhost")
+                .withPort(2345) // Wrong port
+                .apply();
+
+        given.one()
+                .clusterConnection()
+                .withName("db-3")
+                .withHost("127.0.0.1")
+                .withPort(2345) // Wrong port
+                .apply();
+
+        given.one()
+                .clusterConnection()
+                .withName("db-4")
+                .withHost("::1")
+                .withPort(2345) // Wrong port
+                .apply();
+
+        given.one()
+                .clusterConnection()
+                .withName("db-5")
+                .withHost("0:0:0:0:0:0:0:1")
+                .withPort(2345) // Wrong port
+                .apply();
 
         var response = readinessCheck.call();
 
@@ -93,7 +116,12 @@ class PostgreSQLInstanceReadinessCheckTest {
 
                     assertThat(dbStatus.toString()).startsWith("UP (PostgreSQL");
 
-                    assertThat(data).containsEntry("db-2", "DOWN");
+                    assertThat(data).containsAllEntriesOf(Map.of(
+                            "db-2", "DOWN",
+                            "db-3", "DOWN",
+                            "db-4", "DOWN",
+                            "db-5", "DOWN"
+                    ));
                 });
     }
 }

@@ -1,4 +1,4 @@
-package it.aboutbits.postgresql.core;
+package it.aboutbits.postgresql.core.schema_customizer;
 
 import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
@@ -6,15 +6,17 @@ import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /// A [SchemaCustomizer.Customizer] that sets the `format` of string properties
-/// to `"hostname"` (RFC 1123) in the generated CRD JSON Schema.
+/// to `{"anyOf":[{"format":"hostname"},{"format":"ipv4"},{"format":"ipv6"}]}`
+/// in the generated CRD JSON Schema.
 ///
 /// This customizer is intended to be used with the
 /// [@SchemaCustomizer][SchemaCustomizer] annotation on a class whose properties
-/// should be validated as RFC 1123 hostnames by the Kubernetes API server.
+/// should be validated to valid hosts defined.
 ///
 /// ### Behavior
 ///
@@ -28,28 +30,28 @@ import java.util.stream.Collectors;
 /// **Apply to all string properties:**
 ///
 /// ```java
-/// @SchemaCustomizer(HostnameRFC1123Customizer.class)
-/// public class SecretRef {
-///     private String name = ""; // gets format: "hostname"
-///     private String namespace; // gets format: "hostname"
+/// @SchemaCustomizer(value = HostCustomizer.class)
+/// public class ClusterConnectionSpec {
+///     private String host = "";        // gets custom format
+///     private String anotherHost = ""; // gets custom format
 /// }
 /// ```
 ///
 /// **Apply to specific properties only:**
 ///
 /// ```java
-/// @SchemaCustomizer(value = HostnameRFC1123Customizer.class, input = "host")
+/// @SchemaCustomizer(value = HostCustomizer.class, input = "host,anotherHost")
 /// public class ClusterConnectionSpec {
-///     private String host = "";        // gets format: "hostname"
-///     private String anotherHost = ""; // gets format: "hostname"
-///     private String database = "";    // unchanged
+///     private String host = "";          // gets custom format
+///     private String anotherHost = "";   // gets custom format
+///     private String unchangedHost = ""; // unchanged
 /// }
 /// ```
 ///
 /// @see SchemaCustomizer
 /// @see SchemaCustomizer.Customizer
 @NullMarked
-public class HostnameRFC1123Customizer implements SchemaCustomizer.Customizer {
+public class HostCustomizer implements SchemaCustomizer.Customizer {
     @Override
     public JSONSchemaProps apply(
             JSONSchemaProps jsonSchemaProps,
@@ -69,10 +71,25 @@ public class HostnameRFC1123Customizer implements SchemaCustomizer.Customizer {
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();
-            if ("string".equals(prop.getType())) {
-                if (targetFields.isEmpty() || targetFields.contains(entry.getKey())) {
-                    prop.setFormat("hostname");
-                }
+            if ("string".equals(prop.getType())
+                    && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))
+            ) {
+                prop.setFormat(null);
+
+                var hostnameProp = new JSONSchemaProps();
+                hostnameProp.setFormat("hostname");
+
+                var ipv4Prop = new JSONSchemaProps();
+                ipv4Prop.setFormat("ipv4");
+
+                var ipv6Prop = new JSONSchemaProps();
+                ipv6Prop.setFormat("ipv6");
+
+                prop.setAnyOf(List.of(
+                        hostnameProp,
+                        ipv4Prop,
+                        ipv6Prop
+                ));
             }
         }
 
