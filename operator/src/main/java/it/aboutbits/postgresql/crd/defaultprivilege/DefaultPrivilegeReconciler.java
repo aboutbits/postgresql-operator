@@ -22,9 +22,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@NullMarked
 @Slf4j
 @RequiredArgsConstructor
+@NullMarked
 public class DefaultPrivilegeReconciler
         extends BaseReconciler<DefaultPrivilege, CRStatus>
         implements Reconciler<DefaultPrivilege>, Cleaner<DefaultPrivilege> {

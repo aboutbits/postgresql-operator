@@ -28,9 +28,9 @@ import static org.jooq.impl.DSL.keyword;
  * https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html
  * </a>
  */
-@NullMarked
 @Getter
 @Accessors(fluent = true)
+@NullMarked
 public enum DefaultPrivilegeObjectType {
     SCHEMA(
             "n",

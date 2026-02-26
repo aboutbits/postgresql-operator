@@ -13,9 +13,9 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@NullMarked
 @Getter
 @Setter
+@NullMarked
 public class RoleSpec {
     @Required
     private ResourceRef clusterRef = new ResourceRef();
@@ -31,13 +31,11 @@ public class RoleSpec {
     )
     private String name = "";
 
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
-    private String comment;
+    private @Nullable String comment;
 
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
-    private ResourceRef passwordSecretRef;
+    private @Nullable ResourceRef passwordSecretRef;
 
     @io.fabric8.generator.annotation.Nullable
     private Flags flags = new Flags();
@@ -69,9 +67,8 @@ public class RoleSpec {
         @io.fabric8.generator.annotation.Nullable
         private int connectionLimit = -1;
 
-        @Nullable
         @io.fabric8.generator.annotation.Nullable
-        private OffsetDateTime validUntil = null;
+        private @Nullable OffsetDateTime validUntil = null;
 
         @io.fabric8.generator.annotation.Nullable
         private List<String> inRole = new ArrayList<>();

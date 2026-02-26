@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 
-@NullMarked
 @RequiredArgsConstructor
+@NullMarked
 public enum ReclaimPolicy {
     RETAIN("Retain"),
     DELETE("Delete");

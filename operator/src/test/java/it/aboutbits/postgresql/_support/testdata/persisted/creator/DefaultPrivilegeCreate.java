@@ -21,39 +21,32 @@ import java.util.concurrent.TimeUnit;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 
-@NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
+@NullMarked
 public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
 
-    @Nullable
-    private String withNamespace;
+    private @Nullable String withNamespace;
+
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
 
-    @Nullable
-    private String withName;
+    private @Nullable String withName;
 
-    @Nullable
-    private String withClusterConnectionName;
+    private @Nullable String withClusterConnectionName;
 
-    @Nullable
-    private String withClusterConnectionNamespace;
+    private @Nullable String withClusterConnectionNamespace;
 
-    @Nullable
-    private String withDatabase;
+    private @Nullable String withDatabase;
 
-    @Nullable
-    private String withRole;
+    private @Nullable String withRole;
 
-    @Nullable
-    private String withOwner;
+    private @Nullable String withOwner;
 
-    @Nullable
-    private String withSchema;
+    private @Nullable String withSchema;
 
     private DefaultPrivilegeObjectType withObjectType = DefaultPrivilegeObjectType.SCHEMA;
 
@@ -140,8 +133,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
                 );
     }
 
-    @Nullable
-    private String getNamespace() {
+    private @Nullable String getNamespace() {
         if (withoutNamespace) {
             return null;
         }

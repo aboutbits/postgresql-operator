@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@NullMarked
 @Slf4j
 @AdditionalRBACRules({
         @RBACRule(
@@ -42,6 +41,7 @@ import java.util.stream.Collectors;
         )
 })
 @RequiredArgsConstructor
+@NullMarked
 public class RoleReconciler
         extends BaseReconciler<Role, CRStatus>
         implements Reconciler<Role>, Cleaner<Role> {

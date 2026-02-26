@@ -11,8 +11,8 @@ import static org.jooq.impl.DSL.quotedName;
 import static org.jooq.impl.DSL.role;
 import static org.jooq.impl.DSL.selectOne;
 
-@NullMarked
 @Singleton
+@NullMarked
 public class DatabaseService {
     public boolean databaseExists(
             DSLContext dsl,

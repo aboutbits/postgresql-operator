@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-@NullMarked
 @Slf4j
+@NullMarked
 public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S extends CRStatus> {
     protected abstract S newStatus();
 

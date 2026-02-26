@@ -30,9 +30,9 @@ import static org.jooq.impl.DSL.keyword;
  * https://www.postgresql.org/docs/current/sql-grant.html
  * </a>
  */
-@NullMarked
 @Getter
 @Accessors(fluent = true)
+@NullMarked
 public enum GrantObjectType {
     DATABASE(
             List.of(

@@ -21,9 +21,9 @@ import java.util.Locale;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 
-@NullMarked
 @Slf4j
 @Singleton
+@NullMarked
 public final class PostgreSQLAuthenticationService {
     private static final String MD5 = "MD5";
     private static final String SHA_256 = "SHA-256";

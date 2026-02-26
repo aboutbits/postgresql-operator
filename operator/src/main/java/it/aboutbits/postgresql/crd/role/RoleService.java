@@ -27,8 +27,8 @@ import static org.jooq.impl.DSL.selectOne;
 import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.val;
 
-@NullMarked
 @Singleton
+@NullMarked
 public final class RoleService {
     public boolean roleExists(
             DSLContext tx,

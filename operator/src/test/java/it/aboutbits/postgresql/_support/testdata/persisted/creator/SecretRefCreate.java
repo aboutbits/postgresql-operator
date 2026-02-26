@@ -14,27 +14,26 @@ import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_A
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_USERNAME_KEY;
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_AUTH;
 
-@NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
+@NullMarked
 public class SecretRefCreate extends TestDataCreator<ResourceRef> {
     private final KubernetesClient kubernetesClient;
 
-    @Nullable
-    private String withNamespace;
+    private @Nullable String withNamespace;
+
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
 
-    @Nullable
-    private String withName;
+    private @Nullable String withName;
 
-    @Nullable
-    private String withUsername;
+    private @Nullable String withUsername;
+
     @Setter(AccessLevel.NONE)
     private boolean withoutUsername = false;
 
-    @Nullable
-    private String withPassword;
+    private @Nullable String withPassword;
+
     @Setter(AccessLevel.NONE)
     private boolean withoutPassword = false;
 
@@ -91,8 +90,7 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
         return secretRef;
     }
 
-    @Nullable
-    private String getNamespace() {
+    private @Nullable String getNamespace() {
         if (withoutNamespace) {
             return null;
         }
@@ -116,8 +114,7 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
         return withName;
     }
 
-    @Nullable
-    private String getUsername() {
+    private @Nullable String getUsername() {
         if (withoutUsername) {
             return null;
         }
@@ -131,8 +128,7 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
         return withUsername;
     }
 
-    @Nullable
-    private String getPassword() {
+    private @Nullable String getPassword() {
         if (withoutPassword) {
             return null;
         }

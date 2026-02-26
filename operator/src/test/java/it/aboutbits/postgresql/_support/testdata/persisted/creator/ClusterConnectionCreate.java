@@ -17,37 +17,31 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-@NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
+@NullMarked
 public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> {
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
     private final Given.DBConnectionDetails dbConnectionDetails;
 
-    @Nullable
-    private String withNamespace;
+    private @Nullable String withNamespace;
+
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
 
-    @Nullable
-    private String withName;
+    private @Nullable String withName;
 
-    @Nullable
-    private String withHost;
+    private @Nullable String withHost;
 
-    @Nullable
-    private Integer withPort;
+    private @Nullable Integer withPort;
 
-    @Nullable
-    private String withDatabase;
+    private @Nullable String withDatabase;
 
-    @Nullable
-    private ResourceRef withAdminSecretRef;
+    private @Nullable ResourceRef withAdminSecretRef;
 
-    @Nullable
-    private String withApplicationName;
+    private @Nullable String withApplicationName;
 
     public ClusterConnectionCreate(
             int numberOfItems,
@@ -107,8 +101,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
                 );
     }
 
-    @Nullable
-    private String getNamespace() {
+    private @Nullable String getNamespace() {
         if (withoutNamespace) {
             return null;
         }

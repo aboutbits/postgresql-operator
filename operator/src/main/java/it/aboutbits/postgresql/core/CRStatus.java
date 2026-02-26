@@ -15,16 +15,15 @@ import java.time.ZoneOffset;
  * <p>
  * This object captures the current state of a Custom Resource as observed by the reconciler.
  */
-@NullMarked
 @Getter
 @Setter
 @Accessors(chain = true)
+@NullMarked
 public class CRStatus {
     /**
      * The Custom Resource name (may differ from metadata.name).
      */
-    @Nullable
-    private String name = null;
+    private @Nullable String name = null;
 
     /**
      * Current lifecycle phase of the Bucket.
@@ -35,21 +34,18 @@ public class CRStatus {
     /**
      * Human-readable message providing details about the current state.
      */
-    @Nullable
-    private String message = null;
+    private @Nullable String message = null;
 
     /**
      * Last time the condition was probed/updated.
      */
-    @Nullable
-    private OffsetDateTime lastProbeTime = null;
+    private @Nullable OffsetDateTime lastProbeTime = null;
 
     /**
      * Last time the condition transitioned from one status to another.
      */
-    @Nullable
     @Setter(AccessLevel.NONE)
-    private OffsetDateTime lastPhaseTransitionTime = null;
+    private @Nullable OffsetDateTime lastPhaseTransitionTime = null;
 
     /**
      * Observed resource generation that the controller acted upon.

@@ -25,16 +25,15 @@ import org.jspecify.annotations.Nullable;
 /// |-------------------|-----------------------------------------------------|
 /// | non-null          | the explicit namespace                              |
 /// | `null` (omitted)  | the namespace of the CR that owns this reference    |
-@NullMarked
 @Getter
 @Setter
 @SchemaCustomizer(KubernetesNameCustomizer.class)
+@NullMarked
 public class ResourceRef {
     /// The namespace of the referenced Kubernetes resource.
     /// If `null`, defaults to the namespace of the CR that defines this reference.
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
-    private String namespace;
+    private @Nullable String namespace;
 
     @Required
     @ValidationRule(

@@ -14,7 +14,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-@NullMarked
 @Getter
 @Setter
 @ValidationRule(
@@ -25,6 +24,7 @@ import java.util.List;
         value = "self.objectType in ['database', 'schema'] ? !has(self.objects) : has(self.objects)",
         message = "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required."
 )
+@NullMarked
 public class GrantSpec {
     @Required
     private ResourceRef clusterRef = new ResourceRef();
@@ -54,7 +54,6 @@ public class GrantSpec {
     private String role = "";
 
     /// The database schema to grant privileges on for this role (required except if objectType is "database")
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @ValidationRule(
@@ -65,7 +64,7 @@ public class GrantSpec {
             value = "self.trim().size() > 0",
             message = "The Grant schema must not be empty."
     )
-    private String schema = null;
+    private @Nullable String schema = null;
 
     /// The PostgreSQL object type to grant the privileges on.
     ///
@@ -85,10 +84,9 @@ public class GrantSpec {
     /// The PostgreSQL objects to grant privileges on.
     /// As these are quoted, case-sensitivity is very important.
     /// In PostgreSQL leave everything as lower-case except you have a special case.
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<String> objects = null;
+    private @Nullable List<String> objects = null;
 
     /// The privileges to grant on the PostgreSQL objects.
     /// The Operator also validates if the objectType supports the privileges.
