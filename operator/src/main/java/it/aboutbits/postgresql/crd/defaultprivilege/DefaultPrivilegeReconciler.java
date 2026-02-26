@@ -41,8 +41,8 @@ public class DefaultPrivilegeReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Reconciling DefaultPrivilege [resource={}/{}, status.phase={}]",
@@ -124,8 +124,8 @@ public class DefaultPrivilegeReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Deleting DefaultPrivilege [resource={}/{}, status.phase={}]",
@@ -213,8 +213,8 @@ public class DefaultPrivilegeReconciler
     ) {
         var spec = resource.getSpec();
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         var expectedPrivileges = Set.copyOf(spec.getPrivileges());
 

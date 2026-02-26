@@ -38,8 +38,8 @@ public class DatabaseReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Reconciling Database [resource={}/{}, status.phase={}]",
@@ -97,8 +97,8 @@ public class DatabaseReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "{}ing Database [resource={}/{}, spec.name={}, status.phase={}]",
@@ -183,8 +183,8 @@ public class DatabaseReconciler
             Database resource,
             CRStatus status
     ) {
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         var spec = resource.getSpec();
 
