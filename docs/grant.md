@@ -4,15 +4,15 @@ The `Grant` Custom Resource Definition (CRD) is responsible for managing privile
 
 ## Spec
 
-| Field        | Type               | Description                                                                                                                                | Required    | Immutable |
-|--------------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------|-------------|-----------|
-| `clusterRef` | `ClusterReference` | Reference to the `ClusterConnection` to use.                                                                                               | Yes         | No        |
-| `database`   | `string`           | The database containing the objects.                                                                                                       | Yes         | Yes       |
-| `role`       | `string`           | The role to which privileges are granted.                                                                                                  | Yes         | Yes       |
-| `schema`     | `string`           | The schema containing the objects. Required, unless `objectType` is `database`.                                                            | Conditional | Yes       |
-| `objectType` | `string`           | The type of object.                                                                                                                        | Yes         | Yes       |
-| `objects`    | `array[string]`    | List of object names. If empty, all objects of this `objectType` will be granted. Required, unless `objectType` is `database` or `schema`. | Conditional | No        |
-| `privileges` | `array[string]`    | List of privileges to grant.                                                                                                               | Yes         | No        |
+| Field        | Type            | Description                                                                                                                                | Required    | Immutable |
+|--------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|-------------|-----------|
+| `clusterRef` | `ResourceRef`   | Reference to the `ClusterConnection` to use.                                                                                               | Yes         | No        |
+| `database`   | `string`        | The database containing the objects.                                                                                                       | Yes         | Yes       |
+| `role`       | `string`        | The role to which privileges are granted.                                                                                                  | Yes         | Yes       |
+| `schema`     | `string`        | The schema containing the objects. Required, unless `objectType` is `database`.                                                            | Conditional | Yes       |
+| `objectType` | `string`        | The type of object.                                                                                                                        | Yes         | Yes       |
+| `objects`    | `array[string]` | List of object names. If empty, all objects of this `objectType` will be granted. Required, unless `objectType` is `database` or `schema`. | Conditional | No        |
+| `privileges` | `array[string]` | List of privileges to grant.                                                                                                               | Yes         | No        |
 
 ### Object Types
 
@@ -40,12 +40,12 @@ Supported privileges depend on the `objectType`:
 - `update`
 - `usage`
 
-### ClusterReference
+### ResourceRef (`clusterRef`)
 
-| Field       | Type     | Description                                                                      | Required |
-|-------------|----------|----------------------------------------------------------------------------------|----------|
-| `name`      | `string` | Name of the `ClusterConnection`.                                                 | Yes      |
-| `namespace` | `string` | Namespace of the `ClusterConnection`. If not specified, uses the CR's namespace. | No       |
+| Field       | Type     | Description                                                                                        | Required |
+|-------------|----------|----------------------------------------------------------------------------------------------------|----------|
+| `namespace` | `string` | Namespace of the referenced `ClusterConnection`. If not specified, uses the owning CR's namespace. | No       |
+| `name`      | `string` | Name of the referenced `ClusterConnection`.                                                        | Yes      |
 
 ## Example
 

@@ -4,20 +4,24 @@ The `Role` Custom Resource Definition (CRD) manages PostgreSQL roles (users).
 
 ## Spec
 
-| Field               | Type               | Description                                                                         | Required | Immutable |
-|---------------------|--------------------|-------------------------------------------------------------------------------------|----------|-----------|
-| `clusterRef`        | `ClusterReference` | Reference to the `ClusterConnection` to use.                                        | Yes      | No        |
-| `name`              | `string`           | The name of the role to create in the database.                                     | Yes      | Yes       |
-| `comment`           | `string`           | A comment to add to the role.                                                       | No       | No        |
-| `passwordSecretRef` | `SecretRef`        | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | No        |
-| `flags`             | `RoleFlags`        | Flags and attributes for the role.                                                  | No       | No        |
+| Field               | Type          | Description                                                                         | Required | Immutable |
+|---------------------|---------------|-------------------------------------------------------------------------------------|----------|-----------|
+| `clusterRef`        | `ResourceRef` | Reference to the `ClusterConnection` to use.                                        | Yes      | No        |
+| `name`              | `string`      | The name of the role to create in the database.                                     | Yes      | Yes       |
+| `comment`           | `string`      | A comment to add to the role.                                                       | No       | No        |
+| `passwordSecretRef` | `ResourceRef` | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | No        |
+| `flags`             | `RoleFlags`   | Flags and attributes for the role.                                                  | No       | No        |
 
-### ClusterReference
+### ResourceRef (`clusterRef` and `passwordSecretRef`)
 
-| Field       | Type     | Description                                                                      | Required |
-|-------------|----------|----------------------------------------------------------------------------------|----------|
-| `name`      | `string` | Name of the `ClusterConnection`.                                                 | Yes      |
-| `namespace` | `string` | Namespace of the `ClusterConnection`. If not specified, uses the CR's namespace. | No       |
+| Field       | Type     | Description                                                                             | Required |
+|-------------|----------|-----------------------------------------------------------------------------------------|----------|
+| `namespace` | `string` | Namespace of the referenced resource. If not specified, uses the owning CR's namespace. | No       |
+| `name`      | `string` | Name of the referenced Kubernetes resource.                                             | Yes      |
+
+**Note**:
+When used as `passwordSecretRef`, the referenced Kubernetes Secret must be of type `kubernetes.io/basic-auth`.  
+The `username` key in the Secret is not strictly required, as the role name is specified by the `name` field in the CRD. Only the `password` key is used.
 
 ### RoleFlags
 
@@ -33,17 +37,6 @@ The `Role` Custom Resource Definition (CRD) manages PostgreSQL roles (users).
 | `role`            | `array[string]` | `[]`    | List of roles that should be members of this role.                      |
 | `superuser`       | `boolean`       | `false` | Superuser status.                                                       |
 | `validUntil`      | `string`        | `null`  | Date and time until the password is valid (ISO 8601).                   |
-
-### SecretRef
-
-| Field       | Type     | Description                                                         | Required |
-|-------------|----------|---------------------------------------------------------------------|----------|
-| `name`      | `string` | Name of the secret.                                                 | Yes      |
-| `namespace` | `string` | Namespace of the secret. If not specified, uses the CR's namespace. | No       |
-
-The referenced secret must be of type `kubernetes.io/basic-auth`.
-
-**Note**: The `username` key in the secret is not strictly required, as the role name is specified by the `name` field in the CRD. Only the `password` key is used.
 
 ### Login vs No-Login Roles
 

@@ -60,8 +60,8 @@ public class RoleReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Reconciling Role [resource={}/{}, status.phase={}]",
@@ -140,8 +140,8 @@ public class RoleReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Deleting Role [resource={}/{}, spec.name={}, status.phase={}]",
@@ -249,8 +249,8 @@ public class RoleReconciler
             CRStatus status,
             @Nullable String password
     ) {
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         var spec = resource.getSpec();
         var expectedFlags = spec.getFlags();

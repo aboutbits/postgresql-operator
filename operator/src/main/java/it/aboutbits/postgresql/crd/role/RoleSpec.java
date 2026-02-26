@@ -2,8 +2,7 @@ package it.aboutbits.postgresql.crd.role;
 
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-import it.aboutbits.postgresql.core.ClusterReference;
-import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.core.ResourceRef;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +18,7 @@ import java.util.List;
 @Setter
 public class RoleSpec {
     @Required
-    private ClusterReference clusterRef = new ClusterReference();
+    private ResourceRef clusterRef = new ResourceRef();
 
     @Required
     @ValidationRule(
@@ -38,7 +37,7 @@ public class RoleSpec {
 
     @Nullable
     @io.fabric8.generator.annotation.Nullable
-    private SecretRef passwordSecretRef;
+    private ResourceRef passwordSecretRef;
 
     @io.fabric8.generator.annotation.Nullable
     private Flags flags = new Flags();

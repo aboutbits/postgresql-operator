@@ -4,7 +4,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
 import lombok.AccessLevel;
@@ -44,7 +44,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     private String withDatabase;
 
     @Nullable
-    private SecretRef withAdminSecretRef;
+    private ResourceRef withAdminSecretRef;
 
     @Nullable
     private String withApplicationName;
@@ -161,7 +161,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         return withDatabase;
     }
 
-    private SecretRef getAdminSecretRef() {
+    private ResourceRef getAdminSecretRef() {
         if (withAdminSecretRef != null) {
             return withAdminSecretRef;
         }

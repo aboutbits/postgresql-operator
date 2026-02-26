@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-import it.aboutbits.postgresql.core.ClusterReference;
 import it.aboutbits.postgresql.core.Privilege;
+import it.aboutbits.postgresql.core.ResourceRef;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
@@ -23,7 +23,7 @@ import java.util.List;
 )
 public class DefaultPrivilegeSpec {
     @Required
-    private ClusterReference clusterRef = new ClusterReference();
+    private ResourceRef clusterRef = new ResourceRef();
 
     /// The database to grant default privileges on for this role.
     @Required

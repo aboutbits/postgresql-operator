@@ -4,8 +4,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-import it.aboutbits.postgresql.core.ClusterReference;
-import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
 import lombok.AccessLevel;
@@ -42,7 +41,7 @@ public class RoleCreate extends TestDataCreator<Role> {
     private String withClusterConnectionNamespace;
 
     @Nullable
-    private SecretRef withPasswordSecretRef;
+    private ResourceRef withPasswordSecretRef;
 
     private RoleSpec.@Nullable Flags withFlags;
 
@@ -93,7 +92,7 @@ public class RoleCreate extends TestDataCreator<Role> {
                 .build()
         );
 
-        var clusterRef = new ClusterReference();
+        var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
 

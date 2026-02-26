@@ -3,7 +3,7 @@ package it.aboutbits.postgresql._support.testdata.persisted.creator;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
-import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.core.ResourceRef;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -17,7 +17,7 @@ import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_A
 @NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
-public class SecretRefCreate extends TestDataCreator<SecretRef> {
+public class SecretRefCreate extends TestDataCreator<ResourceRef> {
     private final KubernetesClient kubernetesClient;
 
     @Nullable
@@ -65,7 +65,7 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
     }
 
     @Override
-    protected SecretRef create(int index) {
+    protected ResourceRef create(int index) {
         var namespace = getNamespace();
         var name = getName();
 
@@ -84,7 +84,7 @@ public class SecretRefCreate extends TestDataCreator<SecretRef> {
                 .resource(secret)
                 .serverSideApply();
 
-        var secretRef = new SecretRef();
+        var secretRef = new ResourceRef();
         secretRef.setName(name);
         secretRef.setNamespace(namespace);
 

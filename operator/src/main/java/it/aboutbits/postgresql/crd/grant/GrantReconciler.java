@@ -46,8 +46,8 @@ public class GrantReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Reconciling Grant [resource={}/{}, status.phase={}]",
@@ -129,8 +129,8 @@ public class GrantReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Deleting Grant [resource={}/{}, status.phase={}]",
@@ -220,8 +220,8 @@ public class GrantReconciler
             Grant resource,
             CRStatus status
     ) {
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         var spec = resource.getSpec();
 
