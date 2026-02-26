@@ -4,19 +4,19 @@ The `Database` Custom Resource Definition (CRD) is responsible for managing Post
 
 ## Spec
 
-| Field           | Type               | Description                                                                                          | Required | Immutable |
-|-----------------|--------------------|------------------------------------------------------------------------------------------------------|----------|-----------|
-| `clusterRef`    | `ClusterReference` | Reference to the `ClusterConnection` to use.                                                         | Yes      | No        |
-| `name`          | `string`           | The name of the database to create.                                                                  | Yes      | Yes       |
-| `owner`         | `string`           | The owner of the database.                                                                           | No       | No        |
-| `reclaimPolicy` | `string`           | The policy for reclaiming the database when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | No        |
+| Field           | Type          | Description                                                                                          | Required | Immutable |
+|-----------------|---------------|------------------------------------------------------------------------------------------------------|----------|-----------|
+| `clusterRef`    | `ResourceRef` | Reference to the `ClusterConnection` to use.                                                         | Yes      | No        |
+| `name`          | `string`      | The name of the database to create.                                                                  | Yes      | Yes       |
+| `owner`         | `string`      | The owner of the database.                                                                           | No       | No        |
+| `reclaimPolicy` | `string`      | The policy for reclaiming the database when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | No        |
 
-### ClusterReference
+### ResourceRef (`clusterRef`)
 
-| Field       | Type     | Description                                                                      | Required |
-|-------------|----------|----------------------------------------------------------------------------------|----------|
-| `name`      | `string` | Name of the `ClusterConnection`.                                                 | Yes      |
-| `namespace` | `string` | Namespace of the `ClusterConnection`. If not specified, uses the CR's namespace. | No       |
+| Field       | Type     | Description                                                                                        | Required |
+|-------------|----------|----------------------------------------------------------------------------------------------------|----------|
+| `namespace` | `string` | Namespace of the referenced `ClusterConnection`. If not specified, uses the owning CR's namespace. | No       |
+| `name`      | `string` | Name of the referenced `ClusterConnection`.                                                        | Yes      |
 
 ### Reclaim Policy
 

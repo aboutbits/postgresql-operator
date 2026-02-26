@@ -28,7 +28,7 @@ public final class KubernetesService {
 
     public Credentials getSecretRefCredentials(
             KubernetesClient kubernetesClient,
-            SecretRef secretRef,
+            ResourceRef secretRef,
             String defaultNamespace
     ) {
         var secretNamespace = secretRef.getNamespace() != null
@@ -43,14 +43,14 @@ public final class KubernetesService {
                 .get();
 
         if (secret == null) {
-            throw new IllegalStateException("SecretRef not found [secret.namespace=%s, secret.name=%s]".formatted(
+            throw new IllegalStateException("Secret reference not found [secret.namespace=%s, secret.name=%s]".formatted(
                     secretNamespace,
                     secretName
             ));
         }
 
         if (!secret.getType().equals(SECRET_TYPE_BASIC_AUTH)) {
-            throw new IllegalArgumentException("The SecretRef is of the wrong type [secret.namespace=%s, secret.name=%s, expected.secret.type=%s, actual.secret.type=%s]".formatted(
+            throw new IllegalArgumentException("The Secret reference is of the wrong type [secret.namespace=%s, secret.name=%s, expected.secret.type=%s, actual.secret.type=%s]".formatted(
                     secretNamespace,
                     secretName,
                     SECRET_TYPE_BASIC_AUTH,
@@ -60,7 +60,7 @@ public final class KubernetesService {
 
         var data = secret.getData();
         if (data == null || data.isEmpty()) {
-            throw new IllegalStateException("The SecretRef has no data set [secret.namespace=%s, secret.name=%s]".formatted(
+            throw new IllegalStateException("The Secret reference has no data set [secret.namespace=%s, secret.name=%s]".formatted(
                     secretNamespace,
                     secretName
             ));
@@ -76,7 +76,7 @@ public final class KubernetesService {
 
         var passwordBase64 = data.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
         if (passwordBase64 == null) {
-            throw new IllegalStateException("The SecretRef is missing required data password [secret.namespace=%s, secret.name=%s]".formatted(
+            throw new IllegalStateException("The Secret reference is missing required data password [secret.namespace=%s, secret.name=%s]".formatted(
                     secretNamespace,
                     secretName
             ));

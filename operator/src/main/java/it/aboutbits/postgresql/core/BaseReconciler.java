@@ -49,7 +49,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     public Optional<ClusterConnection> getReferencedClusterConnection(
             KubernetesClient kubernetesClient,
             CR resource,
-            ClusterReference clusterRef
+            ResourceRef clusterRef
     ) {
         var connectionName = clusterRef.getName();
         var connectionNamespace = getResourceNamespaceOrOwn(resource, clusterRef.getNamespace());

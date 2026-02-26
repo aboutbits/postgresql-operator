@@ -2,7 +2,7 @@ package it.aboutbits.postgresql.crd.database;
 
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-import it.aboutbits.postgresql.core.ClusterReference;
+import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.core.ReclaimPolicy;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
 @Setter
 public class DatabaseSpec {
     @Required
-    private ClusterReference clusterRef = new ClusterReference();
+    private ResourceRef clusterRef = new ResourceRef();
 
     @Required
     @ValidationRule(

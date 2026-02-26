@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-import it.aboutbits.postgresql.core.ClusterReference;
+import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.core.Privilege;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +27,7 @@ import java.util.List;
 )
 public class GrantSpec {
     @Required
-    private ClusterReference clusterRef = new ClusterReference();
+    private ResourceRef clusterRef = new ResourceRef();
 
     /// The database to grant privileges on for this role.
     @Required

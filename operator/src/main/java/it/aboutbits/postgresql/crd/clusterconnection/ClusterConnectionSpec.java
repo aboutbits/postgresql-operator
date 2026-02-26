@@ -5,8 +5,8 @@ import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-import it.aboutbits.postgresql.core.SecretRef;
 import it.aboutbits.postgresql.core.HostnameRFC1123Customizer;
+import it.aboutbits.postgresql.core.ResourceRef;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
@@ -39,7 +39,7 @@ public class ClusterConnectionSpec {
     private String database = "postgres";
 
     @Required
-    private SecretRef adminSecretRef = new SecretRef();
+    private ResourceRef adminSecretRef = new ResourceRef();
 
     @io.fabric8.generator.annotation.Nullable
     private Map<String, String> parameters = new HashMap<>();

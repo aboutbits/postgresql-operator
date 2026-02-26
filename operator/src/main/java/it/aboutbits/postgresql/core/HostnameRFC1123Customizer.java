@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 ///
 /// ```java
 /// @SchemaCustomizer(HostnameRFC1123Customizer.class)
-/// public class SecretRef {
+/// public class ResourceRef {
 ///     private String name = ""; // gets format: "hostname"
 ///     private String namespace; // gets format: "hostname"
 /// }

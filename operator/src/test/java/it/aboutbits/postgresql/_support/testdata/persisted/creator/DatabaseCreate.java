@@ -4,7 +4,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-import it.aboutbits.postgresql.core.ClusterReference;
+import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.core.ReclaimPolicy;
 import it.aboutbits.postgresql.crd.database.Database;
 import it.aboutbits.postgresql.crd.database.DatabaseSpec;
@@ -72,7 +72,7 @@ public class DatabaseCreate extends TestDataCreator<Database> {
                 .build()
         );
 
-        var clusterRef = new ClusterReference();
+        var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
         clusterRef.setNamespace(withClusterConnectionNamespace);
 

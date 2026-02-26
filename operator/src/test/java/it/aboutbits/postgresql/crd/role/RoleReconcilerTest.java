@@ -9,7 +9,7 @@ import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.core.ResourceRef;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -203,7 +203,7 @@ class RoleReconcilerTest {
 
         var now = OffsetDateTime.now(ZoneOffset.UTC);
 
-        var dummySecretRef = new SecretRef();
+        var dummySecretRef = new ResourceRef();
         dummySecretRef.setName("dummy");
 
         // when

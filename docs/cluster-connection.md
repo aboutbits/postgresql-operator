@@ -12,15 +12,15 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 | `host`           | `string`            | The hostname of the PostgreSQL instance.                              | Yes      |
 | `port`           | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      |
 | `database`       | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      |
-| `adminSecretRef` | `SecretRef`         | Reference to the secret containing admin credentials.                 | Yes      |
+| `adminSecretRef` | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | Yes      |
 | `parameters`     | `map[string]string` | Additional connection parameters.                                     | No       |
 
-### SecretRef
+### ResourceRef (`adminSecretRef`)
 
-| Field       | Type     | Description                                                         | Required |
-|-------------|----------|---------------------------------------------------------------------|----------|
-| `name`      | `string` | Name of the secret.                                                 | Yes      |
-| `namespace` | `string` | Namespace of the secret. If not specified, uses the CR's namespace. | No       |
+| Field       | Type     | Description                                                                                        | Required |
+|-------------|----------|----------------------------------------------------------------------------------------------------|----------|
+| `namespace` | `string` | Namespace of the referenced Kubernetes `Secret`. If not specified, uses the owning CR's namespace. | No       |
+| `name`      | `string` | Name of the referenced Kubernetes `Secret`.                                                        | Yes      |
 
 The referenced secret must be of type `kubernetes.io/basic-auth` and contain the keys `username` and `password`.
 
