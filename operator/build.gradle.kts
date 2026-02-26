@@ -20,6 +20,7 @@ dependencies {
      * Fabric8 Kubernetes Client
      */
     implementation("io.fabric8:generator-annotations")
+    implementation("io.fabric8:crd-generator-api-v2")
 
     /**
      * jOOQ

@@ -5,6 +5,7 @@ import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import org.jooq.CloseableDSLContext;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 
@@ -21,7 +22,7 @@ public class PostgreSQLContextFactory {
     private final KubernetesClient kubernetesClient;
 
     /// Create a DSLContext with a JDBC connection to the PostgreSQL maintenance database.
-    public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) {
+    public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) throws DataAccessException {
         return getDSLContext(
                 clusterConnection,
                 clusterConnection.getSpec().getDatabase()
@@ -32,7 +33,7 @@ public class PostgreSQLContextFactory {
     public CloseableDSLContext getDSLContext(
             ClusterConnection clusterConnection,
             String database
-    ) {
+    ) throws DataAccessException {
         var credentials = kubernetesService.getSecretRefCredentials(
                 kubernetesClient,
                 clusterConnection
