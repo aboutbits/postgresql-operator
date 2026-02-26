@@ -7,13 +7,13 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 
 ## Spec
 
-| Field            | Type                | Description                                                           | Required |
-|------------------|---------------------|-----------------------------------------------------------------------|----------|
-| `host`           | `string`            | The hostname of the PostgreSQL instance.                              | Yes      |
-| `port`           | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      |
-| `database`       | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      |
-| `adminSecretRef` | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | Yes      |
-| `parameters`     | `map[string]string` | Additional connection parameters.                                     | No       |
+| Field            | Type                | Description                                                           | Required | Mutable |
+|------------------|---------------------|-----------------------------------------------------------------------|----------|---------|
+| `host`           | `string`            | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
+| `port`           | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
+| `database`       | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
+| `adminSecretRef` | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | Yes      | Yes     |
+| `parameters`     | `map[string]string` | Additional connection parameters.                                     | No       | Yes     |
 
 ### ResourceRef (`adminSecretRef`)
 

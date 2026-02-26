@@ -4,13 +4,13 @@ The `Role` Custom Resource Definition (CRD) manages PostgreSQL roles (users).
 
 ## Spec
 
-| Field               | Type          | Description                                                                         | Required | Immutable |
-|---------------------|---------------|-------------------------------------------------------------------------------------|----------|-----------|
-| `clusterRef`        | `ResourceRef` | Reference to the `ClusterConnection` to use.                                        | Yes      | No        |
-| `name`              | `string`      | The name of the role to create in the database.                                     | Yes      | Yes       |
-| `comment`           | `string`      | A comment to add to the role.                                                       | No       | No        |
-| `passwordSecretRef` | `ResourceRef` | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | No        |
-| `flags`             | `RoleFlags`   | Flags and attributes for the role.                                                  | No       | No        |
+| Field               | Type          | Description                                                                         | Required | Mutable |
+|---------------------|---------------|-------------------------------------------------------------------------------------|----------|---------|
+| `clusterRef`        | `ResourceRef` | Reference to the `ClusterConnection` to use.                                        | Yes      | Yes     |
+| `name`              | `string`      | The name of the role to create in the database.                                     | Yes      | No      |
+| `comment`           | `string`      | A comment to add to the role.                                                       | No       | Yes     |
+| `passwordSecretRef` | `ResourceRef` | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | Yes     |
+| `flags`             | `RoleFlags`   | Flags and attributes for the role.                                                  | No       | Yes     |
 
 ### ResourceRef (`clusterRef` and `passwordSecretRef`)
 

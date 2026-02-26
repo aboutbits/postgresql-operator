@@ -312,7 +312,7 @@ public class GrantService {
                                         OID_DATA_TYPE,
                                         val(schema)
                                 )),
-                                objects.isEmpty() ? noCondition() : PG_CLASS.RELNAME.in(objects),
+                                isAllMode ? noCondition() : PG_CLASS.RELNAME.in(objects),
                                 // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
                                 PG_CLASS.RELKIND.in(
                                         "r", // Ordinary Table
@@ -324,7 +324,7 @@ public class GrantService {
                         )
                         .fetchMap(PG_CLASS.RELNAME, isOwnerCondition);
 
-                if (objects.isEmpty()) {
+                if (isAllMode) {
                     objectExistenceAndOwnershipMap.putAll(existingObjectsOwner);
                 } else {
                     for (var object : objects) {
