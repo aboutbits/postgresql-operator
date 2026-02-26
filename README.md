@@ -2,6 +2,15 @@
 
 AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage PostgreSQL databases, schemas, roles (users), and privileges in a declarative way using Custom Resource Definitions (CRDs).
 
+## Compatibility
+
+| Component      | Supported Versions |
+|----------------|--------------------|
+| **PostgreSQL** | 15, 16, 17, 18     |
+| **Kubernetes** | 1.29+              |
+
+> **Note:** Kubernetes 1.29+ is required due to the use of CRD CEL validations (GA in 1.29, Beta in 1.25).
+
 ## Architecture
 
 ```
