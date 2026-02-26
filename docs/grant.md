@@ -4,15 +4,15 @@ The `Grant` Custom Resource Definition (CRD) is responsible for managing privile
 
 ## Spec
 
-| Field        | Type            | Description                                                                                                                                | Required    | Immutable |
-|--------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|-------------|-----------|
-| `clusterRef` | `ResourceRef`   | Reference to the `ClusterConnection` to use.                                                                                               | Yes         | No        |
-| `database`   | `string`        | The database containing the objects.                                                                                                       | Yes         | Yes       |
-| `role`       | `string`        | The role to which privileges are granted.                                                                                                  | Yes         | Yes       |
-| `schema`     | `string`        | The schema containing the objects. Required, unless `objectType` is `database`.                                                            | Conditional | Yes       |
-| `objectType` | `string`        | The type of object.                                                                                                                        | Yes         | Yes       |
-| `objects`    | `array[string]` | List of object names. If empty, all objects of this `objectType` will be granted. Required, unless `objectType` is `database` or `schema`. | Conditional | No        |
-| `privileges` | `array[string]` | List of privileges to grant.                                                                                                               | Yes         | No        |
+| Field        | Type            | Description                                                                                                                                | Required    | Mutable |
+|--------------|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|-------------|---------|
+| `clusterRef` | `ResourceRef`   | Reference to the `ClusterConnection` to use.                                                                                               | Yes         | Yes     |
+| `database`   | `string`        | The database containing the objects.                                                                                                       | Yes         | No      |
+| `role`       | `string`        | The role to which privileges are granted.                                                                                                  | Yes         | No      |
+| `schema`     | `string`        | The schema containing the objects. Required, unless `objectType` is `database`.                                                            | Conditional | No      |
+| `objectType` | `string`        | The type of object.                                                                                                                        | Yes         | No      |
+| `objects`    | `array[string]` | List of object names. If empty, all objects of this `objectType` will be granted. Required, unless `objectType` is `database` or `schema`. | Conditional | Yes     |
+| `privileges` | `array[string]` | List of privileges to grant.                                                                                                               | Yes         | Yes     |
 
 ### Object Types
 
