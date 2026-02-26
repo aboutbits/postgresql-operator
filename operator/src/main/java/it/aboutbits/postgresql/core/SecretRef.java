@@ -1,6 +1,7 @@
 package it.aboutbits.postgresql.core;
 
 import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
+import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.schema_customizer.KubernetesNameCustomizer;
@@ -15,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 @SchemaCustomizer(KubernetesNameCustomizer.class)
 public class SecretRef {
     @Required
+    @Max(63)
     @ValidationRule(
             value = "self.trim().size() > 0",
             message = "The SecretRef name must not be empty."
@@ -26,6 +28,7 @@ public class SecretRef {
      * If it is null, it means the Secret is in the same namespace as the resource referencing it.
      */
     @Nullable
+    @Max(63)
     @io.fabric8.generator.annotation.Nullable
     private String namespace;
 }
