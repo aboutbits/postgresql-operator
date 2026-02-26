@@ -30,10 +30,11 @@ public class PostgreSQLInstanceReadinessCheck implements HealthCheck {
         var connections = kubernetesClient.resources(ClusterConnection.class).list().getItems();
 
         boolean allUp = connections.stream()
-                .allMatch(connection -> checkInstance(
+                .map(connection -> checkInstance(
                         connection,
                         builder
-                ));
+                ))
+                .reduce(true, Boolean::logicalAnd);
 
         return builder.status(allUp).build();
     }
