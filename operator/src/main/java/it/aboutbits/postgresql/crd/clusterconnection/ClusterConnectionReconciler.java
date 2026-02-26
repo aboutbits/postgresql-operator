@@ -26,8 +26,8 @@ public class ClusterConnectionReconciler
     ) {
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Reconciling ClusterConnection [resource={}/{}, status.phase={}]",

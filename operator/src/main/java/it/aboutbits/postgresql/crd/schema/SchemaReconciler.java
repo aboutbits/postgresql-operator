@@ -38,8 +38,8 @@ public class SchemaReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "Reconciling Schema [resource={}/{}, status.phase={}]",
@@ -100,8 +100,8 @@ public class SchemaReconciler
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         log.info(
                 "{}ing Schema [resource={}/{}, spec.name={}, status.phase={}]",
@@ -187,8 +187,8 @@ public class SchemaReconciler
             Schema resource,
             CRStatus status
     ) {
-        var name = resource.getMetadata().getName();
         var namespace = resource.getMetadata().getNamespace();
+        var name = resource.getMetadata().getName();
 
         var spec = resource.getSpec();
 
