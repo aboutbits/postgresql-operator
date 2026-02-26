@@ -1,6 +1,7 @@
 package it.aboutbits.postgresql.core;
 
 import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
+import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.schema_customizer.KubernetesNameCustomizer;
@@ -33,10 +34,12 @@ public class ResourceRef {
     /// The namespace of the referenced Kubernetes resource.
     /// If `null`, defaults to the namespace of the CR that defines this reference.
     @Nullable
+    @Max(63)
     @io.fabric8.generator.annotation.Nullable
     private String namespace;
 
     @Required
+    @Max(63)
     @ValidationRule(
             value = "self.trim().size() > 0",
             message = "The name must not be empty."
