@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.core;
 
+import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 @Getter
 @Setter
+@SchemaCustomizer(HostnameRFC1123Customizer.class)
 public class ClusterReference {
     @Required
     @ValidationRule(

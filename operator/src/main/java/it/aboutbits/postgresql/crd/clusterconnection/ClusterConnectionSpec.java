@@ -1,10 +1,12 @@
 package it.aboutbits.postgresql.crd.clusterconnection;
 
+import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.SecretRef;
+import it.aboutbits.postgresql.core.HostnameRFC1123Customizer;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
@@ -15,6 +17,7 @@ import java.util.Map;
 @NullMarked
 @Getter
 @Setter
+@SchemaCustomizer(value = HostnameRFC1123Customizer.class, input = "host")
 public class ClusterConnectionSpec {
     @Required
     @ValidationRule(
