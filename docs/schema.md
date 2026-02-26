@@ -4,13 +4,13 @@ The `Schema` Custom Resource Definition (CRD) is responsible for managing Postgr
 
 ## Spec
 
-| Field           | Type          | Description                                                                                        | Required | Immutable |
-|-----------------|---------------|----------------------------------------------------------------------------------------------------|----------|-----------|
-| `clusterRef`    | `ResourceRef` | Reference to the `ClusterConnection` to use.                                                       | Yes      | No        |
-| `database`      | `string`      | The name of the database in which the schema is created.                                           | Yes      | Yes       |
-| `name`          | `string`      | The name of the schema to create.                                                                  | Yes      | Yes       |
-| `owner`         | `string`      | The owner of the schema.                                                                           | No       | No        |
-| `reclaimPolicy` | `string`      | The policy for reclaiming the schema when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | No        |
+| Field           | Type          | Description                                                                                        | Required | Mutable |
+|-----------------|---------------|----------------------------------------------------------------------------------------------------|----------|---------|
+| `clusterRef`    | `ResourceRef` | Reference to the `ClusterConnection` to use.                                                       | Yes      | Yes     |
+| `database`      | `string`      | The name of the database in which the schema is created.                                           | Yes      | No      |
+| `name`          | `string`      | The name of the schema to create.                                                                  | Yes      | No      |
+| `owner`         | `string`      | The owner of the schema.                                                                           | No       | Yes     |
+| `reclaimPolicy` | `string`      | The policy for reclaiming the schema when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | Yes     |
 
 ### ResourceRef (`clusterRef`)
 

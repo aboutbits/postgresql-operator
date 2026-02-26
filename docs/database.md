@@ -4,12 +4,12 @@ The `Database` Custom Resource Definition (CRD) is responsible for managing Post
 
 ## Spec
 
-| Field           | Type          | Description                                                                                          | Required | Immutable |
-|-----------------|---------------|------------------------------------------------------------------------------------------------------|----------|-----------|
-| `clusterRef`    | `ResourceRef` | Reference to the `ClusterConnection` to use.                                                         | Yes      | No        |
-| `name`          | `string`      | The name of the database to create.                                                                  | Yes      | Yes       |
-| `owner`         | `string`      | The owner of the database.                                                                           | No       | No        |
-| `reclaimPolicy` | `string`      | The policy for reclaiming the database when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | No        |
+| Field           | Type          | Description                                                                                          | Required | Mutable |
+|-----------------|---------------|------------------------------------------------------------------------------------------------------|----------|---------|
+| `clusterRef`    | `ResourceRef` | Reference to the `ClusterConnection` to use.                                                         | Yes      | Yes     |
+| `name`          | `string`      | The name of the database to create.                                                                  | Yes      | No      |
+| `owner`         | `string`      | The owner of the database.                                                                           | No       | Yes     |
+| `reclaimPolicy` | `string`      | The policy for reclaiming the database when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | Yes     |
 
 ### ResourceRef (`clusterRef`)
 
