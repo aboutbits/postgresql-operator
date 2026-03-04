@@ -9,9 +9,9 @@ import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@NullMarked
 @Getter
 @Setter
+@NullMarked
 public class SchemaSpec {
     @Required
     private ResourceRef clusterRef = new ResourceRef();
@@ -44,7 +44,6 @@ public class SchemaSpec {
 
     /// The owner of the schema.
     /// If not specified, the schema will be owned by the logged-in admin user specified in the clusterRef -> ClusterConnection#adminSecretRef CR instance.
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
-    private String owner = null;
+    private @Nullable String owner = null;
 }

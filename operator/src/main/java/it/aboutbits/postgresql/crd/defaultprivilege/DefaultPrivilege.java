@@ -10,7 +10,6 @@ import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.Named;
 import org.jspecify.annotations.NullMarked;
 
-@NullMarked
 @Version("v1")
 @Group("postgresql.aboutbits.it")
 @AdditionalPrinterColumn(
@@ -38,6 +37,7 @@ import org.jspecify.annotations.NullMarked;
         jsonPath = ".metadata.creationTimestamp",
         type = AdditionalPrinterColumn.Type.DATE
 )
+@NullMarked
 public class DefaultPrivilege
         extends CustomResource<DefaultPrivilegeSpec, CRStatus>
         implements Namespaced, Named {

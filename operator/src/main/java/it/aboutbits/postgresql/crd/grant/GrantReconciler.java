@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 
 import static org.jooq.impl.DSL.quotedName;
 
-@NullMarked
 @Slf4j
 @RequiredArgsConstructor
+@NullMarked
 public class GrantReconciler
         extends BaseReconciler<Grant, CRStatus>
         implements Reconciler<Grant>, Cleaner<Grant> {

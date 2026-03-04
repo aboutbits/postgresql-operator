@@ -14,10 +14,10 @@ import org.jspecify.annotations.NullMarked;
 import java.util.HashMap;
 import java.util.Map;
 
-@NullMarked
 @Getter
 @Setter
 @SchemaCustomizer(value = HostCustomizer.class, input = "host")
+@NullMarked
 public class ClusterConnectionSpec {
     @Required
     @ValidationRule(

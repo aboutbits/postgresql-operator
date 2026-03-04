@@ -25,9 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.within;
 
-@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
+@NullMarked
 class ClusterConnectionReconcilerTest {
     private final Given given;
 

@@ -14,13 +14,13 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-@NullMarked
 @Getter
 @Setter
 @ValidationRule(
         value = "self.objectType == 'schema' ? !has(self.schema) : (has(self.schema) && self.schema.trim().size() > 0)",
         message = "The DefaultPrivilege schema must be not set if objectType is 'schema', for all other objectType's it is required."
 )
+@NullMarked
 public class DefaultPrivilegeSpec {
     @Required
     private ResourceRef clusterRef = new ResourceRef();
@@ -62,7 +62,6 @@ public class DefaultPrivilegeSpec {
     private String owner = "";
 
     /// The database schema to grant default privileges on for this role
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @ValidationRule(
@@ -73,7 +72,7 @@ public class DefaultPrivilegeSpec {
             value = "self.trim().size() > 0",
             message = "The DefaultPrivilege schema must not be empty."
     )
-    private String schema = null;
+    private @Nullable String schema = null;
 
     /// The PostgreSQL object type to grant default privileges on.
     ///

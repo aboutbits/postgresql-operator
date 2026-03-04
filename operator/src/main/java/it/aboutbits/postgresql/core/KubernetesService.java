@@ -8,8 +8,8 @@ import org.jspecify.annotations.NullMarked;
 import java.nio.charset.Charset;
 import java.util.Base64;
 
-@NullMarked
 @Singleton
+@NullMarked
 public final class KubernetesService {
     public static final String SECRET_TYPE_BASIC_AUTH = "kubernetes.io/basic-auth";
     public static final String SECRET_DATA_BASIC_AUTH_USERNAME_KEY = "username";

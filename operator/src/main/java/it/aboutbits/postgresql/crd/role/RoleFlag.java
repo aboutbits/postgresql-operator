@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 
-@NullMarked
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
+@NullMarked
 public enum RoleFlag {
     SUPERUSER("SUPERUSER"),
     NO_SUPERUSER("NOSUPERUSER"),

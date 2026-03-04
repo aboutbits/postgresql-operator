@@ -46,9 +46,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.jooq.impl.DSL.quotedName;
 
-@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
+@NullMarked
 class GrantReconcilerTest {
     private final Given given;
 

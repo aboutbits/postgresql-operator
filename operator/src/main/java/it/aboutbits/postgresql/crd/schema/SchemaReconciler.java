@@ -19,9 +19,9 @@ import org.jspecify.annotations.NullMarked;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-@NullMarked
 @Slf4j
 @RequiredArgsConstructor
+@NullMarked
 public class SchemaReconciler
         extends BaseReconciler<Schema, CRStatus>
         implements Reconciler<Schema>, Cleaner<Schema> {

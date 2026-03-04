@@ -19,9 +19,9 @@ import java.time.ZoneOffset;
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
+@NullMarked
 class DatabaseReconcilerTest {
     private final Given given;
 

@@ -14,7 +14,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.StringJoiner;
 
-@NullMarked
 @Version("v1")
 @Group("postgresql.aboutbits.it")
 @AdditionalPrinterColumn(
@@ -42,6 +41,7 @@ import java.util.StringJoiner;
         jsonPath = ".metadata.creationTimestamp",
         type = AdditionalPrinterColumn.Type.DATE
 )
+@NullMarked
 public class ClusterConnection
         extends CustomResource<ClusterConnectionSpec, CRStatus>
         implements Namespaced, Named {
