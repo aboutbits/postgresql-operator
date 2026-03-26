@@ -15,10 +15,10 @@ import java.util.Locale;
  * https://www.postgresql.org/docs/current/sql-grant.html
  * </a>
  */
-@NullMarked
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
+@NullMarked
 public enum Privilege {
     SELECT(null),
     INSERT(null),
@@ -33,8 +33,7 @@ public enum Privilege {
     USAGE(null),
     MAINTAIN(17);
 
-    @Nullable
-    private final Integer minimumPostgresVersion;
+    private final @Nullable Integer minimumPostgresVersion;
 
     @JsonValue
     public String toValue() {

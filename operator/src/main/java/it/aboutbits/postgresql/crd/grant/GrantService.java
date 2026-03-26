@@ -30,8 +30,8 @@ import static org.jooq.impl.DSL.quotedName;
 import static org.jooq.impl.DSL.role;
 import static org.jooq.impl.DSL.val;
 
-@NullMarked
 @Singleton
+@NullMarked
 public class GrantService {
     private static final DataType<Long> OID_DATA_TYPE = SQLDataType.BIGINT;
 

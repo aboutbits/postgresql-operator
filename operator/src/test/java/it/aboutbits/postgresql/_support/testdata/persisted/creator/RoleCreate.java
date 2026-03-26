@@ -15,33 +15,28 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
-@NullMarked
 @Setter
 @Accessors(fluent = true, chain = true)
+@NullMarked
 public class RoleCreate extends TestDataCreator<Role> {
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
 
-    @Nullable
-    private String withNamespace;
+    private @Nullable String withNamespace;
+
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
 
-    @Nullable
-    private String withName;
+    private @Nullable String withName;
 
-    @Nullable
-    private String withComment;
+    private @Nullable String withComment;
 
-    @Nullable
-    private String withClusterConnectionName;
+    private @Nullable String withClusterConnectionName;
 
-    @Nullable
-    private String withClusterConnectionNamespace;
+    private @Nullable String withClusterConnectionNamespace;
 
-    @Nullable
-    private ResourceRef withPasswordSecretRef;
+    private @Nullable ResourceRef withPasswordSecretRef;
 
     private RoleSpec.@Nullable Flags withFlags;
 
@@ -125,8 +120,7 @@ public class RoleCreate extends TestDataCreator<Role> {
                 );
     }
 
-    @Nullable
-    private String getNamespace() {
+    private @Nullable String getNamespace() {
         if (withoutNamespace) {
             return null;
         }

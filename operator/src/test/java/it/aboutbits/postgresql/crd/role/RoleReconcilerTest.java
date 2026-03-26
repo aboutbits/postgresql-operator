@@ -37,9 +37,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.role;
 
-@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
+@NullMarked
 class RoleReconcilerTest {
     private final Given given;
 

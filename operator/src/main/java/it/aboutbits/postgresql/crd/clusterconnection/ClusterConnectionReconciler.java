@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 
-@NullMarked
 @Slf4j
 @RequiredArgsConstructor
+@NullMarked
 public class ClusterConnectionReconciler
         extends BaseReconciler<ClusterConnection, CRStatus>
         implements Reconciler<ClusterConnection> {

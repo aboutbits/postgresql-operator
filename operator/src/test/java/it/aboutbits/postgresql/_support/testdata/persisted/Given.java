@@ -16,9 +16,9 @@ import org.jspecify.annotations.NullMarked;
 
 import java.net.URI;
 
-@NullMarked
 @ApplicationScoped
 @RequiredArgsConstructor
+@NullMarked
 public class Given {
     private final KubernetesClient kubernetesClient;
 

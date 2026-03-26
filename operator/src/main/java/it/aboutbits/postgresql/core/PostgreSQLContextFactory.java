@@ -11,9 +11,9 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.Properties;
 
-@NullMarked
 @ApplicationScoped
 @RequiredArgsConstructor
+@NullMarked
 public class PostgreSQLContextFactory {
     private static final String POSTGRESQL_AUTHENTICATION_USER_KEY = "user";
     private static final String POSTGRESQL_AUTHENTICATION_PASSWORD_KEY = "password";

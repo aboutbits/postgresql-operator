@@ -9,9 +9,9 @@ import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@NullMarked
 @Getter
 @Setter
+@NullMarked
 public class DatabaseSpec {
     @Required
     private ResourceRef clusterRef = new ResourceRef();
@@ -33,7 +33,6 @@ public class DatabaseSpec {
 
     /// The owner of the database.
     /// If not specified, the database will be owned by the logged-in admin user specified in the clusterRef -> ClusterConnection#adminSecretRef CR instance.
-    @Nullable
     @io.fabric8.generator.annotation.Nullable
-    private String owner = null;
+    private @Nullable String owner = null;
 }

@@ -16,8 +16,8 @@ import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@NullMarked
 @QuarkusTest
+@NullMarked
 class PostgreSQLInstanceReadinessCheckTest {
     @Inject
     Given given;

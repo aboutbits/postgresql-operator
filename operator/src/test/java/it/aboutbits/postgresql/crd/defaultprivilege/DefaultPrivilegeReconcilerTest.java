@@ -41,9 +41,9 @@ import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjec
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-@NullMarked
 @QuarkusTest
 @RequiredArgsConstructor
+@NullMarked
 class DefaultPrivilegeReconcilerTest {
     private final Given given;
 

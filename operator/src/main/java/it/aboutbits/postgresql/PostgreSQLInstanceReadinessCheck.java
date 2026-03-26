@@ -15,9 +15,9 @@ import org.jspecify.annotations.NullMarked;
  * configured PostgreSQL instances. Each instance is probed with a lightweight
  * operation, and the aggregated status is exposed.
  */
-@NullMarked
 @Readiness
 @RequiredArgsConstructor
+@NullMarked
 public class PostgreSQLInstanceReadinessCheck implements HealthCheck {
     private final PostgreSQLContextFactory postgreSQLContextFactory;
 
