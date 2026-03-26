@@ -6,7 +6,7 @@ checkstyleConfig = "2.0.0-RC2"
 axionReleasePlugin = "1.21.1"
 
 ## Libraries ##
-jooq = "3.20.11"
+jooq = "3.20.12"
 jSpecify = "1.0.0"
 lombok = "1.18.44"
 postgresql = "42.7.10"
