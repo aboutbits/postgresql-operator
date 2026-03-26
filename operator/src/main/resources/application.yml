@@ -71,7 +71,7 @@ quarkus:
         name: AboutBits
         email: info@aboutbits.it
         url: https://aboutbits.it/
-    create-tar-file: false
+    create-tar-file: true
     extension: tgz
     values:
       replicas:
@@ -168,21 +168,21 @@ quarkus:
       period: PT10S
       timeout: PT3S
       success-threshold: 1
-      failure-threshold: 10
+      failure-threshold: 20
     readiness-probe:
       http-action-port-name: http
       initial-delay: PT0S
       period: PT5S
       timeout: PT3S
       success-threshold: 1
-      failure-threshold: 10
+      failure-threshold: 20
     liveness-probe:
       http-action-port-name: http
       initial-delay: PT5S
       period: PT10S
       timeout: PT3S
       success-threshold: 1
-      failure-threshold: 10
+      failure-threshold: 20
     env:
       fields:
         KUBERNETES_NODE_NAME: spec.nodeName
