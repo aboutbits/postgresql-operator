@@ -22,46 +22,56 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - name: Build & Test
         run: |
-          # Create a directory for thread dumps
           mkdir -p thread-dumps
           
-          # Start a background process to take thread dumps every 15 seconds
-          (
-            count=1
-            while true; do
-              sleep 15
-              dump_file="thread-dumps/dump-${count}-$(date +%s).txt"
-              echo "Taking thread dump $count at $(date)" > "$dump_file"
-              
-              # Find the Java PIDs and save their thread dumps to the file
-              jps -q | while read -r pid; do
-                    echo "--- Thread dump for PID $pid ---" >> "$dump_file"
-                    jcmd "$pid" Thread.print >> "$dump_file" 2>&1 || true
-              done
-              
-              count=$((count+1))
-            done
-          ) &
-          DUMP_PID=$!
-
-          # Run the actual Gradle build
+          # Run Gradle in the background and pipe output to a file
           ./gradlew \
-            --console=colored \
+            --console=plain \
             :operator:test \
             --fail-fast \
-            -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }}
+            -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }} > gradle-output.log 2>&1 &
+          GRADLE_PID=$!
 
-          # Kill the background thread dump process once the build finishes successfully
-          kill $DUMP_PID || true
+          # Background watcher: tail the log and look for the exception
+          tail -f gradle-output.log | while read -r line; do
+            echo "$line" # Print the line to standard output so you still see the CI logs
+            
+            # Check if the line contains our target exception
+            if [[ "$line" == *"listSyncAndWatch failed for"* ]]; then
+              echo "========================================"
+              echo "Exception detected! Taking thread dumps..."
+              echo "========================================"
+              
+              # Take 3 consecutive thread dumps 2 seconds apart to see if threads are moving
+              for i in 1 2 3; do
+                jps -q | while read -r pid; do
+                  dump_file="thread-dumps/threaddump-pid${pid}-run${i}.txt"
+                  echo "Taking thread dump $i for PID $pid at $(date)" > "$dump_file"
+                  jcmd "$pid" Thread.print >> "$dump_file" 2>&1 || true
+                done
+                sleep 1
+              done
+              
+              # We break out of the loop after taking the dumps
+              break
+            fi
+          done &
+          WATCH_PID=$!
+
+          # Wait for the Gradle build to finish
+          wait $GRADLE_PID || true
+          
+          # Cleanup watcher
+          kill $WATCH_PID || true
         env:
           GITHUB_USER_NAME: ${{ github.actor }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               
       - name: Upload Thread Dumps
-        if: always() # Run this step even if the "Build & Test" step fails
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: thread-dumps-pg${{ matrix.postgres-version }}
-          path: thread-dumps/
+          path: thread-dumps/*.txt
           retention-days: 7
           compression-level: 3
