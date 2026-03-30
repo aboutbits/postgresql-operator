@@ -21,12 +21,47 @@ jobs:
           java-version: 25
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - name: Build & Test
-        run: >-
-          ./gradlew
-          --console=colored
-          :operator:test
-          --fail-fast
-          -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }}
+        run: |
+          # Create a directory for thread dumps
+          mkdir -p thread-dumps
+          
+          # Start a background process to take thread dumps every 15 seconds
+          (
+            count=1
+            while true; do
+              sleep 15
+              dump_file="thread-dumps/dump-${count}-$(date +%s).txt"
+              echo "Taking thread dump $count at $(date)" > "$dump_file"
+              
+              # Find the Java PIDs and save their thread dumps to the file
+              jps -q | while read -r pid; do
+                    echo "--- Thread dump for PID $pid ---" >> "$dump_file"
+                    jcmd "$pid" Thread.print >> "$dump_file" 2>&1 || true
+              done
+              
+              count=$((count+1))
+            done
+          ) &
+          DUMP_PID=$!
+
+          # Run the actual Gradle build
+          ./gradlew \
+            --console=colored \
+            :operator:test \
+            --fail-fast \
+            -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }}
+
+          # Kill the background thread dump process once the build finishes successfully
+          kill $DUMP_PID || true
         env:
           GITHUB_USER_NAME: ${{ github.actor }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              
+      - name: Upload Thread Dumps
+        if: always() # Run this step even if the "Build & Test" step fails
+        uses: actions/upload-artifact@v7
+        with:
+          name: thread-dumps-pg${{ matrix.postgres-version }}
+          path: thread-dumps/
+          retention-days: 7
+          compression-level: 3
