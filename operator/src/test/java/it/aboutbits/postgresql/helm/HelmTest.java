@@ -30,7 +30,7 @@ import static org.awaitility.Awaitility.await;
 class HelmTest {
     private static final String ENV_VAR_KUBECONFIG = "KUBECONFIG";
 
-    private static final String CRD_GROP = "postgresql.aboutbits.it";
+    private static final String CRD_GROUP = "postgresql.aboutbits.it";
     private static final List<String> CRD_NAMES = List.of(
             "clusterconnection",
             "database",
@@ -101,7 +101,7 @@ class HelmTest {
         for (var crdName : CRD_NAMES) {
             assertThat(chartPath.resolve("crds/%ss.%s-v1.yml".formatted(
                     crdName,
-                    CRD_GROP
+                    CRD_GROUP
             ))).exists();
         }
 
