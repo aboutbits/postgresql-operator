@@ -7,3 +7,4 @@ spec:
   template:
     spec:
       affinity: {}
+      imagePullSecrets: [{}]
