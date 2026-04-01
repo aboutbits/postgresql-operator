@@ -45,7 +45,7 @@ AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage Pos
 ### Helm Chart
 
 ```bash
-helm install postgresql-operator https://github.com/aboutbits/postgresql-operator/releases/download/v0.4.2/postgresql-operator-0.4.2.tgz
+helm install postgresql-operator https://github.com/aboutbits/postgresql-operator/releases/download/v0.4.3/postgresql-operator-0.4.3.tgz
 ```
 
 With the Helm chart, the Custom Resource Definitions (CRDs) are installed automatically.  
