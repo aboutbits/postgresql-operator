@@ -89,6 +89,7 @@ quarkus:
         value-as-list: []
         paths:
           - (kind == Deployment).spec.template.spec.imagePullSecrets
+        expression: "{{- toYaml .Values.app.imagePullSecrets | nindent 8 }}"
         description: Kubernetes image pull secrets to use if the OCI image is hosted on a private registry
       resource-requests-cpu:
         property: resources.requests.cpu
