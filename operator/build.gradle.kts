@@ -72,6 +72,9 @@ tasks.quarkusAppPartsBuild {
 }
 
 tasks.withType<Test> {
+    // Required for the HelmTest
+    dependsOn(tasks.quarkusAppPartsBuild)
+
     val mockitoAgent = configurations.testRuntimeClasspath.get().find {
         it.name.contains("mockito-core")
     }
