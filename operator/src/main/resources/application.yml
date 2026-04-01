@@ -86,7 +86,8 @@ quarkus:
           - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).imagePullPolicy
       image-pull-secrets:
         property: imagePullSecrets
-        value-as-list: []
+        value:
+          - null
         paths:
           - (kind == Deployment).spec.template.spec.imagePullSecrets
         expression: "{{- toYaml .Values.app.imagePullSecrets | nindent 8 }}"
