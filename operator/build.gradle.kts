@@ -71,14 +71,29 @@ tasks.quarkusAppPartsBuild {
     doNotTrackState("Always execute Gradle task quarkusAppPartsBuild to generate the K8s deploy manifest kubernetes.yml, the CRDs, and to publish the Helm chart")
 }
 
-tasks.withType<Test> {
+val mockitoAgentProvider = configurations.named("testRuntimeClasspath").map { classpath ->
+    classpath.find { it.name.contains("mockito-core") }
+}
+
+tasks.withType<Test>().configureEach {
     // Required for the HelmTest
     dependsOn(tasks.quarkusAppPartsBuild)
 
-    val mockitoAgent = configurations.testRuntimeClasspath.get().find {
-        it.name.contains("mockito-core")
-    }
-    if (mockitoAgent != null) {
-        jvmArgs("-javaagent:${mockitoAgent.absolutePath}")
+    jvmArgumentProviders.add(MockitoArgumentProvider(mockitoAgentProvider))
+}
+
+class MockitoArgumentProvider(
+    @get:Optional
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    val agentProvider: Provider<File>
+) : CommandLineArgumentProvider {
+    override fun asArguments(): Iterable<String> {
+        val agentFile = agentProvider.orNull
+        return if (agentFile != null) {
+            listOf("-javaagent:${agentFile.absolutePath}")
+        } else {
+            emptyList()
+        }
     }
 }
