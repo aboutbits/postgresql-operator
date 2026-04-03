@@ -1,7 +1,6 @@
 package it.aboutbits.postgresql.helm;
 
 import io.fabric8.kubernetes.api.model.ConfigBuilder;
-import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.junit.QuarkusTest;
@@ -173,11 +172,8 @@ class HelmTest {
 
                     assertThat(deployment.getSpec())
                             .isNotNull()
-                            .satisfies(spec -> assertThat(spec.getTemplate().getSpec().getImagePullSecrets())
-                                    .isNotEmpty()
-                                    .element(0)
-                                    .isNotNull()
-                                    .isEqualTo(new LocalObjectReference(null))
+                            .satisfies(spec ->
+                                    assertThat(spec.getTemplate().getSpec().getImagePullSecrets()).isEmpty()
                             );
 
                     var selector = deployment.getSpec().getSelector();
