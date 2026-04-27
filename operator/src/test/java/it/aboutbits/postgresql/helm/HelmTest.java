@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+/// See https://github.com/quarkiverse/quarkus-operator-sdk/blob/7.7.4/samples/exposedapp/src/test/java/io/halkyon/HelmDeploymentE2EIT.java
 @Slf4j
 @QuarkusTest
 @NullMarked
