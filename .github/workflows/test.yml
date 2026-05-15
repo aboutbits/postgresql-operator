@@ -14,8 +14,6 @@ jobs:
         postgres-version: [ 15, 16, 17, 18 ]
     steps:
       - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - uses: aboutbits/github-actions-java/setup-with-gradle@v4
         with:
           java-version: 25
