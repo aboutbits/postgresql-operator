@@ -6,16 +6,16 @@ checkstyleConfig = "2.0.0-RC2"
 axionReleasePlugin = "1.21.1"
 
 ## Libraries ##
-jooq = "3.21.2"
+jooq = "3.21.4"
 jSpecify = "1.0.0"
 lombok = "1.18.46"
-postgresql = "42.7.10"
+postgresql = "42.7.11"
 quarkiverse-helm = "1.4.0"
 scram-client = "3.2"
 
 ## Testing ##
 assertj = "3.27.7"
-checkstyle = "13.4.1"
+checkstyle = "13.4.2"
 datafaker = "2.5.4"
 errorProne = "2.49.0"
 errorPronePlugin = "5.1.0"
