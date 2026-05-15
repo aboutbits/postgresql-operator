@@ -1,4 +1,7 @@
 # AboutBits PostgreSQL Operator
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage PostgreSQL databases, schemas, roles (users), and privileges in a declarative way using Custom Resource Definitions (CRDs).
 
@@ -353,3 +356,16 @@ For support, please contact [info@aboutbits.it](mailto:info@aboutbits.it).
 ### License
 
 The MIT License (MIT). Please see the [license file](LICENSE) for more information.
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
