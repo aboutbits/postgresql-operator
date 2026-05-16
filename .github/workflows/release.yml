@@ -53,6 +53,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           docker-image: ${{ env.DOCKER_IMAGE }}
           docker-tag: ${{ steps.nextVersion.outputs.version }}
+          platforms: linux/amd64,linux/arm64
           working-directory: './operator'
           dockerfile: './operator/src/main/docker/Dockerfile.jvm'
       - name: Push tag to remote
