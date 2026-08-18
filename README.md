@@ -64,6 +64,10 @@ Further documentation of each Custom Resource can be found here:
 - [Grant](docs/grant.md) - Manage privileges.
 - [DefaultPrivilege](docs/default-privilege.md) - Manage default privileges.
 
+If you manage the Custom Resources with Terraform, please also read:
+
+- [Terraform](docs/terraform.md) - Pitfalls when using the `kubernetes_manifest` resource.
+
 ### Declarative Management
 
 The Operator leverages the power of Kubernetes Custom Resource Definitions (CRDs) to manage PostgreSQL resources declaratively.  
