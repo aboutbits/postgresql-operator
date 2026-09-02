@@ -7,13 +7,16 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 
 ## Spec
 
-| Field            | Type                | Description                                                           | Required | Mutable |
-|------------------|---------------------|-----------------------------------------------------------------------|----------|---------|
-| `host`           | `string`            | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
-| `port`           | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
-| `database`       | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
-| `adminSecretRef` | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | Yes      | Yes     |
-| `parameters`     | `map[string]string` | Additional connection parameters.                                     | No       | Yes     |
+| Field               | Type                | Description                                                           | Required | Mutable |
+|---------------------|---------------------|-----------------------------------------------------------------------|----------|---------|
+| `host`              | `string`            | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
+| `port`              | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
+| `database`          | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
+| `adminSecretRef`    | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | No       | Yes     |
+| `adminSecretFileRef`| `ResourceFileRef`   | Reference to a file containing the admin credentials.                 | No       | Yes     |
+| `parameters`        | `map[string]string` | Additional connection parameters.                                     | No       | Yes     |
+
+> **Note:** Exactly one of `adminSecretRef` or `adminSecretFileRef` must be provided.
 
 ### ResourceRef (`adminSecretRef`)
 
@@ -24,7 +27,17 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 
 The referenced secret must be of type `kubernetes.io/basic-auth` and contain the keys `username` and `password`.
 
-### Example
+### ResourceFileRef (`adminSecretFileRef`)
+
+| Field  | Type     | Description                                                    | Required |
+|--------|----------|----------------------------------------------------------------|----------|
+| `path` | `string` | The path to the file containing the admin credentials.         | Yes      |
+
+Use this option when credentials are mounted as a file (e.g. via AWS Secrets Manager) instead of a Kubernetes Secret.
+
+### Examples
+
+#### Using a Kubernetes Secret (`adminSecretRef`)
 
 ```yaml
 apiVersion: v1
@@ -53,4 +66,19 @@ spec:
     ApplicationName: "k8s-operator" # Helps identify this connection in Postgres logs
     #sslmode: "require" # Enforce SSL encryption
     #connectTimeout: "10" # Timeout in seconds for connection attempts
+```
+
+#### Using a file reference (`adminSecretFileRef`)
+
+```yaml
+apiVersion: postgresql.aboutbits.it/v1
+kind: ClusterConnection
+metadata:
+  name: my-postgres-connection
+spec:
+  adminSecretFileRef:
+    path: "/mnt/db-password"
+  host: localhost
+  port: 5432
+  database: postgres
 ```

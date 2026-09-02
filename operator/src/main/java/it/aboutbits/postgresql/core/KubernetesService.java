@@ -1,11 +1,16 @@
 package it.aboutbits.postgresql.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
+import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.NullMarked;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 
 @Singleton
@@ -19,11 +24,51 @@ public final class KubernetesService {
             KubernetesClient kubernetesClient,
             ClusterConnection clusterConnection
     ) {
-        return getSecretRefCredentials(
-                kubernetesClient,
-                clusterConnection.getSpec().getAdminSecretRef(),
-                clusterConnection.getMetadata().getNamespace()
-        );
+        ClusterConnectionSpec spec = clusterConnection.getSpec();
+        if (spec.getAdminSecretRef() != null) {
+            return getSecretRefCredentials(
+                    kubernetesClient,
+                    clusterConnection.getSpec().getAdminSecretRef(),
+                    clusterConnection.getMetadata().getNamespace()
+            );
+
+        } else if (spec.getAdminSecretFileRef() != null) {
+            return getSecretFileRefCredentials(spec.getAdminSecretFileRef());
+        }
+
+        throw new IllegalStateException("Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided");
+
+    }
+
+    public Credentials getSecretFileRefCredentials(ResourceFileRef fileRef) {
+        var path = Path.of(fileRef.getPath());
+
+        if (!Files.exists(path)) {
+            throw new IllegalStateException("AWS Secrets Manager file not found [path=%s]".formatted(path));
+        }
+
+        try {
+            var content = Files.readString(path);
+            var objectMapper = new ObjectMapper();
+            var json = objectMapper.readTree(content);
+
+            var usernameNode = json.get(SECRET_DATA_BASIC_AUTH_USERNAME_KEY);
+            var username = usernameNode != null && !usernameNode.isNull()
+                    ? usernameNode.asText()
+                    : null;
+
+            var passwordNode = json.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
+            if (passwordNode == null || passwordNode.isNull()) {
+                throw new IllegalStateException("AWS Secrets Manager file is missing required field '%s' [path=%s]".formatted(
+                        SECRET_DATA_BASIC_AUTH_PASSWORD_KEY,
+                        path
+                ));
+            }
+
+            return new Credentials(username, passwordNode.asText());
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read AWS Secrets Manager file [path=%s]".formatted(path), e);
+        }
     }
 
     public Credentials getSecretRefCredentials(
