@@ -33,7 +33,8 @@ The referenced secret must be of type `kubernetes.io/basic-auth` and contain the
 |--------|----------|----------------------------------------------------------------|----------|
 | `path` | `string` | The path to the file containing the admin credentials.         | Yes      |
 
-Use this option when credentials are mounted as a file (e.g. via AWS Secrets Manager) instead of a Kubernetes Secret.
+Use this option when the credentials are mounted as a file instead of a Kubernetes Secret. The file must be a JSON object with the keys `username` and `password`, for example `{"username": "postgres", "password": "password"}`.
+
 
 ### Examples
 
@@ -68,17 +69,62 @@ spec:
     #connectTimeout: "10" # Timeout in seconds for connection attempts
 ```
 
-#### Using a file reference (`adminSecretFileRef`)
+### Using a file reference (`adminSecretFileRef`)
+
+Instead of a Kubernetes Secret, you can mount a JSON credentials file into the operator pod and reference its path. This is useful when credentials are managed externally.
+
+#### File format
+
+The file must contain JSON with the following fields:
+
+```json
+{
+  "username": "root",
+  "password": "password"
+}
+```
+
+- `password` **required**
+- `username` **required**
+
+#### Mount the credentials file
+
+The file must be accessible inside the operator pod at the path specified in `adminSecretFileRef.path`. Mount it using a Volume and VolumeMount on the operator Deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-operator
+spec:
+  template:
+    spec:
+      containers:
+        - name: operator
+          volumeMounts:
+            - name: db-credentials
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: db-credentials
+          secret:
+            secretName: db-credentials-secret
+```
+
+> **Note:** The volume source can be any type that provides a file.
+
+> **Note:** The Helm chart does not support extra volumes yet. 
 
 ```yaml
 apiVersion: postgresql.aboutbits.it/v1
 kind: ClusterConnection
 metadata:
-  name: my-postgres-connection
+  name: quarkus-postgres-connection
 spec:
   adminSecretFileRef:
-    path: "/mnt/db-password"
+    path: "/mnt/secrets/db-credentials.json"
   host: localhost
   port: 5432
   database: postgres
 ```
+

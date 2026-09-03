@@ -1,11 +1,13 @@
 package it.aboutbits.postgresql.crd.clusterconnection;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
+import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -13,6 +15,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -23,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 @QuarkusTest
@@ -67,6 +71,35 @@ class ClusterConnectionReconcilerTest {
                 expectedStatus,
                 OffsetDateTime.now(ZoneOffset.UTC)
         );
+    }
+
+    @Nested
+    @DisplayName("CRD Validation: AdminSecret Exclusivity")
+    class AdminSecretExclusivity {
+        @Test
+        @DisplayName("when both adminSecretRef and adminSecretFileRef set, should reject")
+        void whenBothSet_shouldReject() {
+            var fileRef = new FileRef();
+            fileRef.setPath("/mnt/secrets/db-credentials.json");
+
+            assertThatThrownBy(() -> given.one()
+                    .clusterConnection()
+                    .withAdminSecretFileRef(fileRef)
+                    .returnFirst()
+            ).isInstanceOf(KubernetesClientException.class)
+                    .hasMessageContaining("Exactly one of");
+        }
+
+        @Test
+        @DisplayName("when neither adminSecretRef nor adminSecretFileRef set, should reject")
+        void whenNeitherSet_shouldReject() {
+            assertThatThrownBy(() -> given.one()
+                    .clusterConnection()
+                    .withoutAdminSecret()
+                    .returnFirst()
+            ).isInstanceOf(KubernetesClientException.class)
+                    .hasMessageContaining("Exactly one of");
+        }
     }
 
     private static void assertThatClusterConnectionHasExpectedStatus(

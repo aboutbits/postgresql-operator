@@ -10,14 +10,14 @@ import org.jspecify.annotations.NullMarked;
 ///
 /// This class is used wherever a CRD spec needs to point to a specific file
 /// The [#path] field identifies the file location
-/// inside the secret.
+/// within the container.
 ///
 /// ### Example usage in a CR manifest
 ///
 /// ```yaml
 ///  spec:
 ///     adminSecretFileRef:
-///         path: "/mnt/db-password"
+///         path: "/mnt/secrets/db-credentials.json"
 /// ```
 @Getter
 @Setter

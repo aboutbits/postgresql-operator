@@ -34,7 +34,7 @@ public class PostgreSQLContextFactory {
             ClusterConnection clusterConnection,
             String database
     ) throws DataAccessException {
-        var credentials = kubernetesService.getSecretRefCredentials(
+        var credentials = kubernetesService.getAdminCredentials(
                 kubernetesClient,
                 clusterConnection
         );

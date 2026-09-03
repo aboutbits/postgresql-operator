@@ -16,50 +16,55 @@ import java.util.Base64;
 @Singleton
 @NullMarked
 public final class KubernetesService {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     public static final String SECRET_TYPE_BASIC_AUTH = "kubernetes.io/basic-auth";
     public static final String SECRET_DATA_BASIC_AUTH_USERNAME_KEY = "username";
     public static final String SECRET_DATA_BASIC_AUTH_PASSWORD_KEY = "password";
 
-    public Credentials getSecretRefCredentials(
+    public Credentials getAdminCredentials(
             KubernetesClient kubernetesClient,
             ClusterConnection clusterConnection
     ) {
-        ClusterConnectionSpec spec = clusterConnection.getSpec();
+        var spec = clusterConnection.getSpec();
         if (spec.getAdminSecretRef() != null) {
             return getSecretRefCredentials(
                     kubernetesClient,
-                    clusterConnection.getSpec().getAdminSecretRef(),
+                    spec.getAdminSecretRef(),
                     clusterConnection.getMetadata().getNamespace()
             );
-
         } else if (spec.getAdminSecretFileRef() != null) {
             return getSecretFileRefCredentials(spec.getAdminSecretFileRef());
         }
 
         throw new IllegalStateException("Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided");
-
     }
 
-    public Credentials getSecretFileRefCredentials(ResourceFileRef fileRef) {
+    public Credentials getSecretFileRefCredentials(FileRef fileRef) {
         var path = Path.of(fileRef.getPath());
 
         if (!Files.exists(path)) {
-            throw new IllegalStateException("AWS Secrets Manager file not found [path=%s]".formatted(path));
+            throw new IllegalStateException("Credential file not found [path=%s]".formatted(path));
         }
 
         try {
             var content = Files.readString(path);
-            var objectMapper = new ObjectMapper();
-            var json = objectMapper.readTree(content);
+            var json = OBJECT_MAPPER.readTree(content);
 
             var usernameNode = json.get(SECRET_DATA_BASIC_AUTH_USERNAME_KEY);
             var username = usernameNode != null && !usernameNode.isNull()
                     ? usernameNode.asText()
                     : null;
+            if (username == null) {
+                throw new IllegalStateException("Credential file is missing required field '%s' [path=%s]".formatted(
+                        SECRET_DATA_BASIC_AUTH_USERNAME_KEY,
+                        path
+                ));
+            }
 
             var passwordNode = json.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
             if (passwordNode == null || passwordNode.isNull()) {
-                throw new IllegalStateException("AWS Secrets Manager file is missing required field '%s' [path=%s]".formatted(
+                throw new IllegalStateException("Credential file is missing required field '%s' [path=%s]".formatted(
                         SECRET_DATA_BASIC_AUTH_PASSWORD_KEY,
                         path
                 ));
@@ -67,7 +72,7 @@ public final class KubernetesService {
 
             return new Credentials(username, passwordNode.asText());
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to read AWS Secrets Manager file [path=%s]".formatted(path), e);
+            throw new IllegalStateException("Failed to read Credential file [path=%s]".formatted(path), e);
         }
     }
 

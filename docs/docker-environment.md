@@ -43,8 +43,8 @@ For the `postgresql` Dev Service, you can generate the necessary Custom Resource
 
 A `ClusterConnection` requires admin credentials, which can be provided in one of two ways:
 
-- **`adminSecretRef`** — references a Kubernetes `basic-auth` Secret (username + password).
-- **`adminSecretFileRef`** — references a JSON file mounted into the operator pod (e.g. from AWS Secrets Manager).
+- **`adminSecretRef`** references a Kubernetes `basic-auth` Secret (username + password).
+- **`adminSecretFileRef`** references a JSON file mounted into the operator pod.
 
 Exactly one of these must be specified.
 
@@ -83,65 +83,6 @@ metadata:
 spec:
   adminSecretRef:
     name: quarkus-db-secret
-  host: localhost
-  port: 5432
-  database: postgres
-```
-
-### Using a file reference (`adminSecretFileRef`)
-
-Instead of a Kubernetes Secret, you can mount a JSON credentials file into the operator pod and reference its path. This is useful when credentials are managed externally (e.g. AWS Secrets Manager).
-
-#### File format
-
-The file must contain JSON with the following fields:
-
-```json
-{
-  "username": "root",
-  "password": "password"
-}
-```
-
-- `password` — **required**
-- `username` — optional (can be omitted)
-
-#### Mount the credentials file
-
-The file must be accessible inside the operator pod at the path specified in `adminSecretFileRef.path`. Mount it using a Volume and VolumeMount on the operator Deployment:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgresql-operator
-spec:
-  template:
-    spec:
-      containers:
-        - name: operator
-          volumeMounts:
-            - name: db-credentials
-              mountPath: /mnt/secrets
-              readOnly: true
-      volumes:
-        - name: db-credentials
-          secret:
-            secretName: db-credentials-secret
-```
-
-> **Note:** The volume source can be any type that provides a file (e.g. a Kubernetes Secret, a CSI volume from AWS Secrets Manager, or a ConfigMap for testing).
-
-#### Example ClusterConnection
-
-```yaml
-apiVersion: postgresql.aboutbits.it/v1
-kind: ClusterConnection
-metadata:
-  name: quarkus-postgres-connection
-spec:
-  adminSecretFileRef:
-    path: "/mnt/secrets/db-credentials.json"
   host: localhost
   port: 5432
   database: postgres
