@@ -135,7 +135,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     }
 
     private String getName() {
-    if (withName != null) {
+        if (withName != null) {
             return withName;
         }
 
