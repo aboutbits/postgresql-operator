@@ -61,5 +61,4 @@ gradle-app.setting
 # Quinoa
 .quinoa/
 
-generated/out/
-operator/out/
+**/out/
