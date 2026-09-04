@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
@@ -21,6 +22,9 @@ import java.util.Base64;
 public final class KubernetesService {
     private final ObjectMapper objectMapper;
 
+    /// The JSON file may carry more keys than we need, for example, the AWS Secrets Manager
+    /// format also has `engine`, `host`, `port` and `dbname`. Unknown keys are ignored.
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record FileCredentials(
             @Nullable String username,
             @Nullable String password
