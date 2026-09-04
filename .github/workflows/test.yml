@@ -19,12 +19,57 @@ jobs:
           java-version: 25
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - name: Build & Test
-        run: >-
-          ./gradlew
-          --console=colored
-          :operator:test
-          --fail-fast
-          -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }}
+        run: |
+          mkdir -p thread-dumps
+          
+          # Run Gradle in the background and pipe output to a file
+          ./gradlew \
+            --console=plain \
+            :operator:test \
+            --fail-fast \
+            -Dquarkus.test.profile=test-pg${{ matrix.postgres-version }} > gradle-output.log 2>&1 &
+          GRADLE_PID=$!
+
+          # Background watcher: tail the log and look for the exception
+          tail -f gradle-output.log | while read -r line; do
+            echo "$line" # Print the line to standard output so you still see the CI logs
+            
+            # Check if the line contains our target exception
+            if [[ "$line" == *"listSyncAndWatch failed for"* ]]; then
+              echo "========================================"
+              echo "Exception detected! Taking thread dumps..."
+              echo "========================================"
+              
+              # Take 3 consecutive thread dumps 2 seconds apart to see if threads are moving
+              for i in 1 2 3; do
+                jps -q | while read -r pid; do
+                  dump_file="thread-dumps/threaddump-pid${pid}-run${i}.txt"
+                  echo "Taking thread dump $i for PID $pid at $(date)" > "$dump_file"
+                  jcmd "$pid" Thread.print >> "$dump_file" 2>&1 || true
+                done
+                sleep 1
+              done
+              
+              # We break out of the loop after taking the dumps
+              break
+            fi
+          done &
+          WATCH_PID=$!
+
+          # Wait for the Gradle build to finish
+          wait $GRADLE_PID || true
+          
+          # Cleanup watcher
+          kill $WATCH_PID || true
         env:
           GITHUB_USER_NAME: ${{ github.actor }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              
+      - name: Upload Thread Dumps
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: thread-dumps-pg${{ matrix.postgres-version }}
+          path: thread-dumps/*.txt
+          retention-days: 7
+          compression-level: 3
