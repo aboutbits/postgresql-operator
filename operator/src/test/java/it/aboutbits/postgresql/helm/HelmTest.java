@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.process.ProcessBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
@@ -92,6 +93,8 @@ class HelmTest {
 
         Objects.requireNonNull(appValues, "appValues should not be null");
         assertThat(appValues.get("image")).isNotNull();
+        assertThat(appValues).containsKey("extraVolumes");
+        assertThat(appValues).containsKey("extraVolumeMounts");
 
         assertThat(chartPath.resolve("LICENSE")).exists();
         assertThat(chartPath.resolve("README.md")).exists();
@@ -173,9 +176,11 @@ class HelmTest {
 
                     assertThat(deployment.getSpec())
                             .isNotNull()
-                            .satisfies(spec ->
-                                    assertThat(spec.getTemplate().getSpec().getImagePullSecrets()).isEmpty()
-                            );
+                            .satisfies(spec -> {
+                                    assertThat(spec.getTemplate().getSpec().getImagePullSecrets()).isEmpty();
+                                    assertThat(spec.getTemplate().getSpec().getVolumes()).isEmpty();
+                                    assertThat(spec.getTemplate().getSpec().getContainers().getFirst().getVolumeMounts()).isEmpty();
+                            });
 
                     var selector = deployment.getSpec().getSelector();
 

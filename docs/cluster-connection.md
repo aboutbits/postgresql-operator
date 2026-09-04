@@ -75,7 +75,19 @@ spec:
 
 > **Note:** The volume source can be any type that provides a file.
 
-> **Note:** The Helm chart does not support extra volumes yet.
+> **Tip:** When using the Helm chart, configure volumes via `extraVolumes` and `extraVolumeMounts` values:
+>
+> ```yaml
+> app:
+>   extraVolumes:
+>     - name: db-credentials
+>       secret:
+>         secretName: db-credentials-secret
+>   extraVolumeMounts:
+>     - name: db-credentials
+>       mountPath: /mnt/secrets
+>       readOnly: true
+> ```
 
 ### Examples
 

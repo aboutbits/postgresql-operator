@@ -113,6 +113,22 @@ quarkus:
         paths:
           - (kind == Deployment).spec.template.spec.affinity
         description: Kubernetes affinity configuration for Pod scheduling
+      extra-volumes:
+        property: extraVolumes
+        value:
+          - null
+        paths:
+          - (kind == Deployment).spec.template.spec.volumes
+        expression: "{{- if eq (toYaml .Values.app.extraVolumes | trim) \"- {}\" }} null{{- else }}{{ toYaml .Values.app.extraVolumes | nindent 8 }}{{- end }}"
+        description: Extra volumes to add to the operator pod
+      extra-volume-mounts:
+        property: extraVolumeMounts
+        value:
+          - null
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == postgresql-operator).volumeMounts
+        expression: "{{- if eq (toYaml .Values.app.extraVolumeMounts | trim) \"- {}\" }} null{{- else }}{{- toYaml .Values.app.extraVolumeMounts | nindent 12 }}{{- end }}"
+        description: Extra volume mounts to add to the operator container
       console-color:
         property: envs.QUARKUS_CONSOLE_COLOR
         value-as-bool: ${quarkus.console.color}
@@ -130,6 +146,12 @@ quarkus:
         "affinity":
           name: app.affinity
           type: object
+        "extraVolumeMounts":
+          name: app.extraVolumeMounts
+          type: array
+        "extraVolumes":
+          name: app.extraVolumes
+          type: array
     expressions:
       release-name-labels:
         expression: "{{ .Release.Name }}"

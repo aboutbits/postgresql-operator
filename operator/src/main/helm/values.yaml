@@ -1,0 +1,6 @@
+---
+# Workaround: quarkus-helm generates `extraVolumeMounts: {}` (object) instead of `[]` (array)
+# when the value path uses a container name filter like `containers.(name == ...)`.
+# This merge file corrects the default value type.
+app:
+  extraVolumeMounts: []
