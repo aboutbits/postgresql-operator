@@ -20,5 +20,8 @@ indent_size = 2
 [Makefile*]
 indent_style = tab
 
+[*.bat]
+end_of_line = crlf
+
 [src/main/resources/default_banner.txt]
 insert_final_newline = false
