@@ -1,1 +1,13 @@
-src/generated/** linguist-generated
+# Line endings: store LF in the repository and check out LF on every platform.
+# Git detects binary files itself through text=auto. The entries below are the exceptions.
+* text=auto eol=lf
+
+# Windows batch files need CRLF in the working tree.
+*.bat text eol=crlf
+
+# Binary files
+*.jar binary
+*.png binary
+
+# GitHub: mark the jOOQ generated sources as generated (collapsed in diffs, excluded from language statistics).
+generated/src/** linguist-generated
