@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
@@ -19,17 +20,11 @@ import java.util.Base64;
 @RequiredArgsConstructor
 @NullMarked
 public final class KubernetesService {
-    private final ObjectMapper objectMapper;
-
-    private record FileCredentials(
-            @Nullable String username,
-            @Nullable String password
-    ) {
-    }
-
     public static final String SECRET_TYPE_BASIC_AUTH = "kubernetes.io/basic-auth";
     public static final String SECRET_DATA_BASIC_AUTH_USERNAME_KEY = "username";
     public static final String SECRET_DATA_BASIC_AUTH_PASSWORD_KEY = "password";
+
+    private final ObjectMapper objectMapper;
 
     public Credentials getAdminCredentials(
             KubernetesClient kubernetesClient,
@@ -39,6 +34,7 @@ public final class KubernetesService {
         if (spec.getAdminSecretRef() != null) {
             var secretRef = spec.getAdminSecretRef();
             var defaultNamespace = clusterConnection.getMetadata().getNamespace();
+
             var credentials = getSecretRefCredentials(kubernetesClient, secretRef, defaultNamespace);
             if (credentials.username() == null) {
                 var secretNamespace = getSecretNamespace(secretRef, defaultNamespace);
@@ -46,6 +42,7 @@ public final class KubernetesService {
                         "The Secret reference is missing required data username [secret.namespace=%s, secret.name=%s]".formatted(
                                 secretNamespace, secretRef.getName()));
             }
+
             return credentials;
         } else if (spec.getAdminSecretFileRef() != null) {
             return getSecretFileRefCredentials(spec.getAdminSecretFileRef());
@@ -60,20 +57,17 @@ public final class KubernetesService {
         try (var in = Files.newInputStream(path)) {
             var file = objectMapper.readValue(in, FileCredentials.class);
             if (file.username() == null) {
-                throw new IllegalStateException(
-                        "Credentials file is missing required field 'username' [path=%s]".formatted(path));
+                throw new IllegalStateException("Credentials file is missing required field 'username' [path=%s]".formatted(path));
             }
             if (file.password() == null) {
-                throw new IllegalStateException(
-                        "Credentials file is missing required field 'password' [path=%s]".formatted(path));
+                throw new IllegalStateException("Credentials file is missing required field 'password' [path=%s]".formatted(path));
             }
+
             return new Credentials(file.username(), file.password());
         } catch (NoSuchFileException e) {
-            throw new IllegalStateException(
-                    "Credentials file not found [path=%s]".formatted(path), e);
+            throw new IllegalStateException("Credentials file not found [path=%s]".formatted(path), e);
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Failed to read the credentials file [path=%s]".formatted(path), e);
+            throw new IllegalStateException("Failed to read the credentials file [path=%s]".formatted(path), e);
         }
     }
 
@@ -141,9 +135,21 @@ public final class KubernetesService {
         );
     }
 
-    private String getSecretNamespace(ResourceRef secretRef, String defaultNamespace) {
+    private String getSecretNamespace(
+            ResourceRef secretRef,
+            String defaultNamespace
+    ) {
         return secretRef.getNamespace() != null
                 ? secretRef.getNamespace()
                 : defaultNamespace;
+    }
+
+    /// The JSON file may carry more keys than we need, for example, the AWS Secrets Manager
+    /// format also has `engine`, `host`, `port` and `dbname`. Unknown keys are ignored.
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record FileCredentials(
+            @Nullable String username,
+            @Nullable String password
+    ) {
     }
 }

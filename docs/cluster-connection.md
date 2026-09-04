@@ -35,7 +35,7 @@ The referenced secret must be of type `kubernetes.io/basic-auth` and contain the
 
 Use this option when the credentials are mounted as a file instead of a Kubernetes Secret.
 
-### File format
+#### File format
 
 The file must contain JSON with the following fields:
 

@@ -57,79 +57,6 @@ class ClusterConnectionReconcilerTest {
         TestUtil.resetEnvironment(kubernetesClient);
     }
 
-    @Test
-    @DisplayName("When a ClusterConnection is created, the status should be ready")
-    void createsCustomResource_andReconcilerStatusIsReady() {
-        // given / when
-        var customResource = given.one()
-                .clusterConnection()
-                .withName("test-connection")
-                .returnFirst();
-
-        // then
-        AtomicReference<@Nullable DSLContext> dslAtomic = new AtomicReference<>();
-        assertThatNoException().isThrownBy(
-                () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
-        );
-
-        var dsl = Objects.requireNonNull(dslAtomic.get());
-
-        var version = dsl.fetchSingle("select version()").into(String.class);
-
-        var expectedStatus = getInitialClusterConnectionStatus(customResource);
-        expectedStatus.setMessage(version);
-
-        assertThatClusterConnectionHasExpectedStatus(
-                customResource,
-                expectedStatus,
-                OffsetDateTime.now(ZoneOffset.UTC)
-        );
-    }
-
-    @Test
-    @DisplayName("When a ClusterConnection with adminSecretFileRef is created, the status should be ready")
-    void createsCustomResourceWithFileRef_andReconcilerStatusIsReady() throws IOException {
-        // given
-        var credentialsFile = Files.createTempFile("db-credentials", ".json");
-        try {
-            Files.writeString(credentialsFile, """
-                    {"username": "%s", "password": "%s"}
-                    """.formatted(dbUsername, dbPassword));
-
-            var fileRef = new FileRef();
-            fileRef.setPath(credentialsFile.toAbsolutePath().toString());
-
-            // when
-            var customResource = given.one()
-                    .clusterConnection()
-                    .withName("test-connection-file-ref")
-                    .withoutAdminSecret()
-                    .withAdminSecretFileRef(fileRef)
-                    .returnFirst();
-
-            // then
-            AtomicReference<@Nullable DSLContext> dslAtomic = new AtomicReference<>();
-            assertThatNoException().isThrownBy(
-                    () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
-            );
-
-            var dsl = Objects.requireNonNull(dslAtomic.get());
-
-            var version = dsl.fetchSingle("select version()").into(String.class);
-
-            var expectedStatus = getInitialClusterConnectionStatus(customResource);
-            expectedStatus.setMessage(version);
-
-            assertThatClusterConnectionHasExpectedStatus(
-                    customResource,
-                    expectedStatus,
-                    OffsetDateTime.now(ZoneOffset.UTC)
-            );
-        } finally {
-            Files.deleteIfExists(credentialsFile);
-        }
-    }
-
     @Nested
     class CRDValidation {
         @Test
@@ -171,6 +98,82 @@ class ClusterConnectionReconcilerTest {
                     .returnFirst()
             ).isInstanceOf(KubernetesClientException.class)
                     .hasMessageContaining("must not be empty");
+        }
+    }
+
+    @Test
+    @DisplayName("When a ClusterConnection is created, the status should be ready")
+    void createsCustomResource_andReconcilerStatusIsReady() {
+        // given / when
+        var customResource = given.one()
+                .clusterConnection()
+                .withName("test-connection")
+                .returnFirst();
+
+        // then
+        var dslAtomic = new AtomicReference<@Nullable DSLContext>();
+        assertThatNoException().isThrownBy(
+                () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
+        );
+
+        var dsl = Objects.requireNonNull(dslAtomic.get());
+
+        var version = dsl.fetchSingle("select version()").into(String.class);
+
+        var expectedStatus = getInitialClusterConnectionStatus(customResource);
+        expectedStatus.setMessage(version);
+
+        assertThatClusterConnectionHasExpectedStatus(
+                customResource,
+                expectedStatus,
+                OffsetDateTime.now(ZoneOffset.UTC)
+        );
+    }
+
+    @Test
+    @DisplayName("When a ClusterConnection with adminSecretFileRef is created, the status should be ready")
+    void createsCustomResourceWithFileRef_andReconcilerStatusIsReady() throws IOException {
+        // given
+        var credentialsFile = Files.createTempFile("db-credentials", ".json");
+        try {
+            Files.writeString(
+                    credentialsFile,
+                    """
+                    {"username": "%s", "password": "%s"}
+                    """.formatted(dbUsername, dbPassword)
+            );
+
+            var fileRef = new FileRef();
+            fileRef.setPath(credentialsFile.toAbsolutePath().toString());
+
+            // when
+            var customResource = given.one()
+                    .clusterConnection()
+                    .withName("test-connection-file-ref")
+                    .withoutAdminSecret()
+                    .withAdminSecretFileRef(fileRef)
+                    .returnFirst();
+
+            // then
+            var dslAtomic = new AtomicReference<@Nullable DSLContext>();
+            assertThatNoException().isThrownBy(
+                    () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
+            );
+
+            var dsl = Objects.requireNonNull(dslAtomic.get());
+
+            var version = dsl.fetchSingle("select version()").into(String.class);
+
+            var expectedStatus = getInitialClusterConnectionStatus(customResource);
+            expectedStatus.setMessage(version);
+
+            assertThatClusterConnectionHasExpectedStatus(
+                    customResource,
+                    expectedStatus,
+                    OffsetDateTime.now(ZoneOffset.UTC)
+            );
+        } finally {
+            Files.deleteIfExists(credentialsFile);
         }
     }
 
