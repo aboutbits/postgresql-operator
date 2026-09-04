@@ -1,5 +1,7 @@
 ### PostgreSQL Operator ###
 config/
+# Written by the fabric8 Kubernetes client when the tests run against the Dev Service
+operator/.kube/
 
 ### STS ###
 .apt_generated

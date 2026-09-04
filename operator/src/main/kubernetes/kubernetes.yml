@@ -1,10 +1,19 @@
 ---
+# See https://quarkus.io/guides/deploying-to-kubernetes#using-existing-resources
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  # The name must match `quarkus.kubernetes.name`, otherwise Dekorate adds a second Deployment.
+  # `HelmTest` has a test that makes sure this never drifts apart.
   name: postgresql-operator
 spec:
   template:
     spec:
       affinity: {}
+      # The `[~]` placeholders are required, see operator/src/main/helm/values.yaml for the reason.
       imagePullSecrets: [~]
+      volumes: [~]
+      containers:
+        # The name must match `quarkus.kubernetes.name`, otherwise Dekorate adds a second container.
+        - name: postgresql-operator
+          volumeMounts: [~]
