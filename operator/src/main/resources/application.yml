@@ -86,12 +86,9 @@ quarkus:
           - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).imagePullPolicy
       image-pull-secrets:
         property: imagePullSecrets
-        value:
-          - null
         paths:
           - (kind == Deployment).spec.template.spec.imagePullSecrets
-        expression: "{{- if eq (toYaml .Values.app.imagePullSecrets | trim) \"- {}\" }} null{{- else }}{{- toYaml .Values.app.imagePullSecrets | nindent 8 }}{{- end }}"
-        description: Kubernetes image pull secrets to use if the OCI image is hosted on a private registry
+        expression: "{{- toYaml (.Values.app.imagePullSecrets | default list) | nindent 8 }}"
       resource-requests-cpu:
         property: resources.requests.cpu
         value: ${quarkus.kubernetes.resources.requests.cpu}
@@ -113,6 +110,16 @@ quarkus:
         paths:
           - (kind == Deployment).spec.template.spec.affinity
         description: Kubernetes affinity configuration for Pod scheduling
+      volumes:
+        property: volumes
+        paths:
+          - (kind == Deployment).spec.template.spec.volumes
+        expression: "{{- toYaml (.Values.app.volumes | default list) | nindent 8 }}"
+      volume-mounts:
+        property: volumeMounts
+        paths:
+          - (kind == Deployment).spec.template.spec.containers.(name == ${quarkus.kubernetes.name}).volumeMounts
+        expression: "{{- toYaml (.Values.app.volumeMounts | default list) | nindent 12 }}"
       console-color:
         property: envs.QUARKUS_CONSOLE_COLOR
         value-as-bool: ${quarkus.console.color}
@@ -127,9 +134,26 @@ quarkus:
         description: Specify the format of the produced JSON. Supported values are "DEFAULT", "ECS", and "GCP".
     values-schema:
       properties:
+        # The type must be set explicitly for every non-scalar value, because the generated
+        # schema otherwise falls back to `string`.
+        #
+        # A value that `src/main/helm/values.yaml` provides also loses the `description` of its
+        # `quarkus.helm.values` entry, so the description belongs here instead.
         "affinity":
           name: app.affinity
           type: object
+        "imagePullSecrets":
+          name: app.imagePullSecrets
+          type: array
+          description: Kubernetes image pull secrets to use if the OCI image is hosted on a private registry
+        "volumes":
+          name: app.volumes
+          type: array
+          description: Additional volumes for the operator Pod, for example a Secret volume or a Secrets Store CSI volume
+        "volumeMounts":
+          name: app.volumeMounts
+          type: array
+          description: Additional volume mounts for the operator container
     expressions:
       release-name-labels:
         expression: "{{ .Release.Name }}"

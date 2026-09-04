@@ -75,7 +75,63 @@ spec:
 
 > **Note:** The volume source can be any type that provides a file.
 
-> **Note:** The Helm chart does not support extra volumes yet.
+##### With the Helm chart
+
+The chart exposes the `app.volumes` and `app.volumeMounts` values. Both take the raw Kubernetes syntax, so any volume source works. Pass them in your own values file:
+
+```yaml
+app:
+  volumes:
+    - name: db-credentials
+      secret:
+        secretName: db-credentials-secret
+  volumeMounts:
+    - name: db-credentials
+      mountPath: /mnt/secrets
+      readOnly: true
+```
+
+```bash
+helm install postgresql-operator <chart-url> --values values.yaml
+```
+
+See the [installation section](../README.md#helm-chart) of the README for the chart URL.
+
+##### With the Secrets Store CSI driver
+
+Use this option to read the credentials from an external secret store, for example AWS Secrets Manager. The chart does not create the `SecretProviderClass`, so you have to apply it yourself:
+
+```yaml
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: db-credentials
+spec:
+  provider: aws
+  parameters:
+    objects: |
+      - objectName: "my/db/credentials"
+        objectAlias: "db-credentials.json"
+```
+
+Then reference it from the chart values:
+
+```yaml
+app:
+  volumes:
+    - name: db-credentials
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: db-credentials
+  volumeMounts:
+    - name: db-credentials
+      mountPath: /mnt/secrets
+      readOnly: true
+```
+
+> **Note:** The `SecretProviderClass` must live in the namespace of the operator.
 
 ### Examples
 

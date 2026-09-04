@@ -7,4 +7,10 @@ spec:
   template:
     spec:
       affinity: {}
+      # The `[~]` placeholders are required, see operator/src/main/helm/values.yaml for the reason.
       imagePullSecrets: [~]
+      volumes: [~]
+      containers:
+        # The name must match `quarkus.kubernetes.name`, otherwise Dekorate adds a second container.
+        - name: postgresql-operator
+          volumeMounts: [~]

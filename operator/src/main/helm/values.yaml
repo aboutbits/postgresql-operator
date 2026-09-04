@@ -1,0 +1,15 @@
+---
+# This file overrides the default values that the quarkus-helm extension generates.
+#
+# Why it exists: a list field of the operator Deployment becomes a Helm value only if the key
+# already exists in `src/main/kubernetes/kubernetes.yml`. An empty list `[]` does not survive
+# there. The fabric8 model marks `PodSpec.imagePullSecrets`, `PodSpec.volumes` and
+# `Container.volumeMounts` with `@JsonInclude(NON_EMPTY)`. A list with one null element does
+# survive, but the generated default then reads `- {}`. That is not a usable default, so this
+# file replaces it with a real empty list.
+#
+# See https://github.com/quarkiverse/quarkus-helm/issues/453
+app:
+  imagePullSecrets: []
+  volumes: []
+  volumeMounts: []
