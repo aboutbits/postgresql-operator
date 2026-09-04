@@ -21,7 +21,7 @@ import java.util.Map;
 @SchemaCustomizer(value = HostCustomizer.class, input = "host")
 @NullMarked
 @ValidationRule(
-        value = "(has(self.adminSecretRef) ? 1 : 0) + (has(self.adminSecretFileRef) ? 1 : 0) == 1",
+        value = "has(self.adminSecretRef) != has(self.adminSecretFileRef)",
         message = "Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided"
 )
 public class ClusterConnectionSpec {
