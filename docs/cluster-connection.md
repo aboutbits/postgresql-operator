@@ -7,14 +7,14 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 
 ## Spec
 
-| Field                | Type                 | Description                                                           | Required | Mutable |
-|----------------------|----------------------|-----------------------------------------------------------------------|----------|---------|
-| `host`               | `string`             | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
-| `port`               | `integer`            | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
-| `database`           | `string`             | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
-| `adminSecretRef`     | `ResourceRef`        | Reference to the Kubernetes Secret containing the admin credentials.  | No       | Yes     |
-| `adminSecretFileRef` | `FileRef`            | Reference to a file containing the admin credentials.                 | No       | Yes     |
-| `parameters`         | `map[string]string`  | Additional connection parameters.                                     | No       | Yes     |
+| Field                | Type                | Description                                                           | Required | Mutable |
+|----------------------|---------------------|-----------------------------------------------------------------------|----------|---------|
+| `host`               | `string`            | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
+| `port`               | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
+| `database`           | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
+| `adminSecretRef`     | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | No       | Yes     |
+| `adminSecretFileRef` | `FileRef`           | Reference to a file containing the admin credentials.                 | No       | Yes     |
+| `parameters`         | `map[string]string` | Additional connection parameters.                                     | No       | Yes     |
 
 > **Note:** Exactly one of `adminSecretRef` or `adminSecretFileRef` must be provided.
 
@@ -29,11 +29,12 @@ The referenced secret must be of type `kubernetes.io/basic-auth` and contain the
 
 ### FileRef (`adminSecretFileRef`)
 
-| Field  | Type     | Description                                                    | Required |
-|--------|----------|----------------------------------------------------------------|----------|
-| `path` | `string` | The path to the file containing the admin credentials.         | Yes      |
+Use this option when the credentials should be mounted as a file inside the operator Pod instead of reading a Kubernetes Secret directly.
 
-Use this option when the credentials are mounted as a file instead of a Kubernetes Secret.
+| Field  | Type     | Description                                                                             | Required |
+|--------|----------|-----------------------------------------------------------------------------------------|----------|
+| `path` | `string` | The absolute path inside the operator Pod to the file containing the admin credentials. | Yes      |
+
 
 #### File format
 
@@ -51,91 +52,23 @@ The file must contain JSON with the following fields:
 
 #### Mount the credentials file
 
-The file must be accessible inside the operator pod at the path specified in `adminSecretFileRef.path`. Mount it using a Volume and VolumeMount on the operator Deployment:
+The file must be accessible inside the operator Pod at the path in `adminSecretFileRef.path`.
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgresql-operator
-spec:
-  template:
-    spec:
-      containers:
-        - name: postgresql-operator
-          volumeMounts:
-            - name: db-credentials
-              mountPath: /mnt/secrets
-              readOnly: true
-      volumes:
-        - name: db-credentials
-          secret:
-            secretName: db-credentials-secret
-```
+The Helm chart exposes the `app.volumes` and `app.volumeMounts` values for this.  
+Both take the raw Kubernetes syntax, so any volume source that provides a file works.
 
-> **Note:** The volume source can be any type that provides a file.
+The value of `adminSecretFileRef.path` is the `mountPath` plus the name of the file. The volume source decides the file name:
 
-##### With the Helm chart
+| Volume source                    | The file name comes from        |
+|----------------------------------|---------------------------------|
+| `secret`                         | the key of the Secret           |
+| `csi` (Secrets Store CSI driver) | the `objectAlias` of the object |
 
-The chart exposes the `app.volumes` and `app.volumeMounts` values. Both take the raw Kubernetes syntax, so any volume source works. Pass them in your own values file:
+See [Using a file reference](#using-a-file-reference-adminsecretfileref) in the examples for a complete setup with each volume source.
 
-```yaml
-app:
-  volumes:
-    - name: db-credentials
-      secret:
-        secretName: db-credentials-secret
-  volumeMounts:
-    - name: db-credentials
-      mountPath: /mnt/secrets
-      readOnly: true
-```
+## Examples
 
-```bash
-helm install postgresql-operator <chart-url> --values values.yaml
-```
-
-See the [installation section](../README.md#helm-chart) of the README for the chart URL.
-
-##### With the Secrets Store CSI driver
-
-Use this option to read the credentials from an external secret store, for example AWS Secrets Manager. The chart does not create the `SecretProviderClass`, so you have to apply it yourself:
-
-```yaml
-apiVersion: secrets-store.csi.x-k8s.io/v1
-kind: SecretProviderClass
-metadata:
-  name: db-credentials
-spec:
-  provider: aws
-  parameters:
-    objects: |
-      - objectName: "my/db/credentials"
-        objectAlias: "db-credentials.json"
-```
-
-Then reference it from the chart values:
-
-```yaml
-app:
-  volumes:
-    - name: db-credentials
-      csi:
-        driver: secrets-store.csi.k8s.io
-        readOnly: true
-        volumeAttributes:
-          secretProviderClass: db-credentials
-  volumeMounts:
-    - name: db-credentials
-      mountPath: /mnt/secrets
-      readOnly: true
-```
-
-> **Note:** The `SecretProviderClass` must live in the namespace of the operator.
-
-### Examples
-
-#### Using a Kubernetes Secret (`adminSecretRef`)
+### Using a Kubernetes Secret (`adminSecretRef`)
 
 ```yaml
 apiVersion: v1
@@ -166,18 +99,119 @@ spec:
     #connectTimeout: "10" # Timeout in seconds for connection attempts
 ```
 
-#### Using a file reference (`adminSecretFileRef`)
+### Using a file reference (`adminSecretFileRef`)
 
 ```yaml
 apiVersion: postgresql.aboutbits.it/v1
 kind: ClusterConnection
 metadata:
-  name: quarkus-postgres-connection
+  name: my-postgres-connection
 spec:
   adminSecretFileRef:
     path: "/mnt/secrets/db-credentials.json"
   host: localhost
   port: 5432
   database: postgres
+  # Example parameters
+  parameters:
+    ApplicationName: "k8s-operator" # Helps identify this connection in Postgres logs
+    #sslmode: "require" # Enforce SSL encryption
+    #connectTimeout: "10" # Timeout in seconds for connection attempts
 ```
 
+The mount that creates `/mnt/secrets/db-credentials.json` depends on the volume source.
+
+#### From a Secret volume
+
+Create the Secret. Its key becomes the file name:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials-secret
+stringData:
+  db-credentials.json: |
+    {
+      "username": "root",
+      "password": "password"
+    }
+```
+
+Then mount it through the chart values:
+
+```yaml
+app:
+  volumes:
+    - name: db-credentials
+      secret:
+        secretName: db-credentials-secret
+  volumeMounts:
+    - name: db-credentials
+      mountPath: /mnt/secrets
+      readOnly: true
+```
+
+#### From the Secrets Store CSI driver
+
+Use this option to read the credentials from an external secret store, for example AWS Secrets Manager.
+
+> **Note:** Install the [Secrets Store CSI driver](https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation) and the [provider](https://secrets-store-csi-driver.sigs.k8s.io/providers) for your secret store first. Neither the operator nor the chart installs them. Without the driver, the operator Pod stays in `ContainerCreating` and reports a failed mount.
+
+The chart does not create the `SecretProviderClass`, so you have to apply it yourself. Its `objectAlias` becomes the file name:
+
+```yaml
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: db-credentials
+spec:
+  provider: aws
+  parameters:
+    objects: |
+      - objectName: "my/db/credentials"
+        objectAlias: "db-credentials.json"
+```
+
+> **Note:** The `SecretProviderClass` must live in the namespace of the operator.
+
+Then mount it through the chart values:
+
+```yaml
+app:
+  volumes:
+    - name: db-credentials
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: db-credentials
+  volumeMounts:
+    - name: db-credentials
+      mountPath: /mnt/secrets
+      readOnly: true
+```
+
+#### Without the Helm chart
+
+If you deploy the operator directly from the OCI image, set the same `volumes` and `volumeMounts` fields on the Deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-operator
+spec:
+  template:
+    spec:
+      containers:
+        - name: postgresql-operator
+          volumeMounts:
+            - name: db-credentials
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: db-credentials
+          secret:
+            secretName: db-credentials-secret
+```
