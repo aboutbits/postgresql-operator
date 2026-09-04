@@ -1,5 +1,6 @@
 package it.aboutbits.postgresql.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -17,8 +18,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -32,13 +31,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @NullMarked
 @EnableKubernetesMockClient(crud = true)
 class KubernetesServiceTest {
-    private final KubernetesService service = new KubernetesService(new ObjectMapper());
-
     @SuppressWarnings("NullAway.Init")
     static KubernetesClient client;
 
     @TempDir
     Path tempDir;
+
+    private final KubernetesService service = new KubernetesService(new ObjectMapper());
 
     @BeforeEach
     void clearSecrets() {
@@ -52,9 +51,12 @@ class KubernetesServiceTest {
         void whenBothUsernameAndPassword_shouldReturnCredentials() throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
-            Files.writeString(file, """
+            Files.writeString(
+                    file,
+                    """
                     {"username": "admin", "password": "s3cret"}
-                    """);
+                    """
+            );
 
             var fileRef = new FileRef();
             fileRef.setPath(file.toString());
@@ -72,7 +74,9 @@ class KubernetesServiceTest {
         void whenFileHasExtraKeys_shouldIgnoreThem() throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
-            Files.writeString(file, """
+            Files.writeString(
+                    file,
+                    """
                     {
                       "engine": "postgres",
                       "host": "db.example.com",
@@ -81,7 +85,8 @@ class KubernetesServiceTest {
                       "dbname": "postgres",
                       "port": 5432
                     }
-                    """);
+                    """
+            );
 
             var fileRef = new FileRef();
             fileRef.setPath(file.toString());
@@ -340,9 +345,12 @@ class KubernetesServiceTest {
         void whenOnlyAdminSecretFileRefSet_shouldDelegateToFileRef() throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
-            Files.writeString(file, """
+            Files.writeString(
+                    file,
+                    """
                     {"username": "file-admin", "password": "file-s3cret"}
-                    """);
+                    """
+            );
 
             var fileRef = new FileRef();
             fileRef.setPath(file.toString());
@@ -415,8 +423,10 @@ class KubernetesServiceTest {
         return ref;
     }
 
-    private static Secret basicAuthSecret(String namespace, String name,
-            @Nullable String username, String password) {
+    private static Secret basicAuthSecret(
+            String namespace, String name,
+            @Nullable String username, String password
+    ) {
         var builder = new SecretBuilder()
                 .withNewMetadata().withNamespace(namespace).withName(name).endMetadata()
                 .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
