@@ -3,20 +3,29 @@ package it.aboutbits.postgresql.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
 import jakarta.inject.Singleton;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Base64;
 
 @Singleton
+@RequiredArgsConstructor
 @NullMarked
 public final class KubernetesService {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    private record FileCredentials(
+            @Nullable String username,
+            @Nullable String password
+    ) {
+    }
 
     public static final String SECRET_TYPE_BASIC_AUTH = "kubernetes.io/basic-auth";
     public static final String SECRET_DATA_BASIC_AUTH_USERNAME_KEY = "username";
@@ -28,11 +37,16 @@ public final class KubernetesService {
     ) {
         var spec = clusterConnection.getSpec();
         if (spec.getAdminSecretRef() != null) {
-            return getSecretRefCredentials(
-                    kubernetesClient,
-                    spec.getAdminSecretRef(),
-                    clusterConnection.getMetadata().getNamespace()
-            );
+            var secretRef = spec.getAdminSecretRef();
+            var defaultNamespace = clusterConnection.getMetadata().getNamespace();
+            var credentials = getSecretRefCredentials(kubernetesClient, secretRef, defaultNamespace);
+            if (credentials.username() == null) {
+                var secretNamespace = getSecretNamespace(secretRef, defaultNamespace);
+                throw new IllegalStateException(
+                        "The Secret reference is missing required data username [secret.namespace=%s, secret.name=%s]".formatted(
+                                secretNamespace, secretRef.getName()));
+            }
+            return credentials;
         } else if (spec.getAdminSecretFileRef() != null) {
             return getSecretFileRefCredentials(spec.getAdminSecretFileRef());
         }
@@ -43,36 +57,23 @@ public final class KubernetesService {
     public Credentials getSecretFileRefCredentials(FileRef fileRef) {
         var path = Path.of(fileRef.getPath());
 
-        if (!Files.exists(path)) {
-            throw new IllegalStateException("Credential file not found [path=%s]".formatted(path));
-        }
-
-        try {
-            var content = Files.readString(path);
-            var json = OBJECT_MAPPER.readTree(content);
-
-            var usernameNode = json.get(SECRET_DATA_BASIC_AUTH_USERNAME_KEY);
-            var username = usernameNode != null && !usernameNode.isNull()
-                    ? usernameNode.asText()
-                    : null;
-            if (username == null) {
-                throw new IllegalStateException("Credential file is missing required field '%s' [path=%s]".formatted(
-                        SECRET_DATA_BASIC_AUTH_USERNAME_KEY,
-                        path
-                ));
+        try (var in = Files.newInputStream(path)) {
+            var file = objectMapper.readValue(in, FileCredentials.class);
+            if (file.username() == null) {
+                throw new IllegalStateException(
+                        "Credentials file is missing required field 'username' [path=%s]".formatted(path));
             }
-
-            var passwordNode = json.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
-            if (passwordNode == null || passwordNode.isNull()) {
-                throw new IllegalStateException("Credential file is missing required field '%s' [path=%s]".formatted(
-                        SECRET_DATA_BASIC_AUTH_PASSWORD_KEY,
-                        path
-                ));
+            if (file.password() == null) {
+                throw new IllegalStateException(
+                        "Credentials file is missing required field 'password' [path=%s]".formatted(path));
             }
-
-            return new Credentials(username, passwordNode.asText());
+            return new Credentials(file.username(), file.password());
+        } catch (NoSuchFileException e) {
+            throw new IllegalStateException(
+                    "Credentials file not found [path=%s]".formatted(path), e);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to read Credential file [path=%s]".formatted(path), e);
+            throw new IllegalStateException(
+                    "Failed to read the credentials file [path=%s]".formatted(path), e);
         }
     }
 
@@ -81,9 +82,7 @@ public final class KubernetesService {
             ResourceRef secretRef,
             String defaultNamespace
     ) {
-        var secretNamespace = secretRef.getNamespace() != null
-                ? secretRef.getNamespace()
-                : defaultNamespace;
+        var secretNamespace = getSecretNamespace(secretRef, defaultNamespace);
 
         var secretName = secretRef.getName();
 
@@ -140,5 +139,11 @@ public final class KubernetesService {
                 username,
                 password
         );
+    }
+
+    private String getSecretNamespace(ResourceRef secretRef, String defaultNamespace) {
+        return secretRef.getNamespace() != null
+                ? secretRef.getNamespace()
+                : defaultNamespace;
     }
 }

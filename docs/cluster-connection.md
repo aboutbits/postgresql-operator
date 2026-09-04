@@ -7,14 +7,14 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 
 ## Spec
 
-| Field               | Type                | Description                                                           | Required | Mutable |
-|---------------------|---------------------|-----------------------------------------------------------------------|----------|---------|
-| `host`              | `string`            | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
-| `port`              | `integer`           | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
-| `database`          | `string`            | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
-| `adminSecretRef`    | `ResourceRef`       | Reference to the Kubernetes Secret containing the admin credentials.  | No       | Yes     |
-| `adminSecretFileRef`| `ResourceFileRef`   | Reference to a file containing the admin credentials.                 | No       | Yes     |
-| `parameters`        | `map[string]string` | Additional connection parameters.                                     | No       | Yes     |
+| Field                | Type                 | Description                                                           | Required | Mutable |
+|----------------------|----------------------|-----------------------------------------------------------------------|----------|---------|
+| `host`               | `string`             | The hostname of the PostgreSQL instance.                              | Yes      | Yes     |
+| `port`               | `integer`            | The port of the PostgreSQL instance (1-65535).                        | Yes      | Yes     |
+| `database`           | `string`             | The database to connect to (usually `postgres` for admin operations). | Yes      | Yes     |
+| `adminSecretRef`     | `ResourceRef`        | Reference to the Kubernetes Secret containing the admin credentials.  | No       | Yes     |
+| `adminSecretFileRef` | `FileRef`            | Reference to a file containing the admin credentials.                 | No       | Yes     |
+| `parameters`         | `map[string]string`  | Additional connection parameters.                                     | No       | Yes     |
 
 > **Note:** Exactly one of `adminSecretRef` or `adminSecretFileRef` must be provided.
 
@@ -27,14 +27,55 @@ Other Custom Resources (like `Database`, `Role`, `Schema`, `Grant`, `DefaultPriv
 
 The referenced secret must be of type `kubernetes.io/basic-auth` and contain the keys `username` and `password`.
 
-### ResourceFileRef (`adminSecretFileRef`)
+### FileRef (`adminSecretFileRef`)
 
 | Field  | Type     | Description                                                    | Required |
 |--------|----------|----------------------------------------------------------------|----------|
 | `path` | `string` | The path to the file containing the admin credentials.         | Yes      |
 
-Use this option when the credentials are mounted as a file instead of a Kubernetes Secret. The file must be a JSON object with the keys `username` and `password`, for example `{"username": "postgres", "password": "password"}`.
+Use this option when the credentials are mounted as a file instead of a Kubernetes Secret.
 
+### File format
+
+The file must contain JSON with the following fields:
+
+```json
+{
+  "username": "root",
+  "password": "password"
+}
+```
+
+- `password` **required**
+- `username` **required**
+
+#### Mount the credentials file
+
+The file must be accessible inside the operator pod at the path specified in `adminSecretFileRef.path`. Mount it using a Volume and VolumeMount on the operator Deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-operator
+spec:
+  template:
+    spec:
+      containers:
+        - name: postgresql-operator
+          volumeMounts:
+            - name: db-credentials
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: db-credentials
+          secret:
+            secretName: db-credentials-secret
+```
+
+> **Note:** The volume source can be any type that provides a file.
+
+> **Note:** The Helm chart does not support extra volumes yet.
 
 ### Examples
 
@@ -69,51 +110,7 @@ spec:
     #connectTimeout: "10" # Timeout in seconds for connection attempts
 ```
 
-### Using a file reference (`adminSecretFileRef`)
-
-Instead of a Kubernetes Secret, you can mount a JSON credentials file into the operator pod and reference its path. This is useful when credentials are managed externally.
-
-#### File format
-
-The file must contain JSON with the following fields:
-
-```json
-{
-  "username": "root",
-  "password": "password"
-}
-```
-
-- `password` **required**
-- `username` **required**
-
-#### Mount the credentials file
-
-The file must be accessible inside the operator pod at the path specified in `adminSecretFileRef.path`. Mount it using a Volume and VolumeMount on the operator Deployment:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: postgresql-operator
-spec:
-  template:
-    spec:
-      containers:
-        - name: operator
-          volumeMounts:
-            - name: db-credentials
-              mountPath: /mnt/secrets
-              readOnly: true
-      volumes:
-        - name: db-credentials
-          secret:
-            secretName: db-credentials-secret
-```
-
-> **Note:** The volume source can be any type that provides a file.
-
-> **Note:** The Helm chart does not support extra volumes yet. 
+#### Using a file reference (`adminSecretFileRef`)
 
 ```yaml
 apiVersion: postgresql.aboutbits.it/v1

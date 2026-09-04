@@ -6,11 +6,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 
-/// A reference to a file inside
+/// A reference to a file inside the operator container.
 ///
 /// This class is used wherever a CRD spec needs to point to a specific file
-/// The [#path] field identifies the file location
-/// within the container.
+/// The [#path] field identifies the file location within the container.
 ///
 /// ### Example usage in a CR manifest
 ///
