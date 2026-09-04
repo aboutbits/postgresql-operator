@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
+import it.aboutbits.postgresql._support.valuesource.BlankSource;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.FileRef;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -129,8 +131,7 @@ class ClusterConnectionReconcilerTest {
     }
 
     @Nested
-    @DisplayName("CRD Validation: AdminSecret Exclusivity")
-    class AdminSecretExclusivity {
+    class CRDValidation {
         @Test
         @DisplayName("when both adminSecretRef and adminSecretFileRef set, should reject")
         void whenBothSet_shouldReject() {
@@ -156,11 +157,12 @@ class ClusterConnectionReconcilerTest {
                     .hasMessageContaining("Exactly one of");
         }
 
-        @Test
+        @ParameterizedTest
+        @BlankSource
         @DisplayName("when adminSecretFileRef has blank path, should reject")
-        void whenFileRefBlankPath_shouldReject() {
+        void whenFileRefBlankPath_shouldReject(String blankOrEmptyString) {
             var fileRef = new FileRef();
-            fileRef.setPath("   ");
+            fileRef.setPath(blankOrEmptyString);
 
             assertThatThrownBy(() -> given.one()
                     .clusterConnection()
