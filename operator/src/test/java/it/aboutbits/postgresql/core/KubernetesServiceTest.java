@@ -67,6 +67,33 @@ class KubernetesServiceTest {
             assertThat(result.password()).isEqualTo("s3cret");
         }
 
+        @Test
+        @DisplayName("when file has extra keys (AWS Secrets Manager format), should ignore them")
+        void whenFileHasExtraKeys_shouldIgnoreThem() throws IOException {
+            // given
+            var file = tempDir.resolve("secret.json");
+            Files.writeString(file, """
+                    {
+                      "engine": "postgres",
+                      "host": "db.example.com",
+                      "username": "admin",
+                      "password": "s3cret",
+                      "dbname": "postgres",
+                      "port": 5432
+                    }
+                    """);
+
+            var fileRef = new FileRef();
+            fileRef.setPath(file.toString());
+
+            // when
+            var result = service.getSecretFileRefCredentials(fileRef);
+
+            // then
+            assertThat(result.username()).isEqualTo("admin");
+            assertThat(result.password()).isEqualTo("s3cret");
+        }
+
         @ParameterizedTest(name = "when username {0}, should throw")
         @ValueSource(strings = {
                 "{\"password\": \"s3cret\"}",
