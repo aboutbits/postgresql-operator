@@ -36,9 +36,6 @@ import static org.awaitility.Awaitility.await;
 class HelmTest {
     private static final String ENV_VAR_KUBECONFIG = "KUBECONFIG";
 
-    /// Must match `quarkus.kubernetes.name`.
-    private static final String CONTAINER_NAME = "postgresql-operator";
-
     /// The Pod and Container list fields that the chart exposes as free-form Helm values.
     private static final List<String> LIST_VALUES = List.of(
             "imagePullSecrets",
@@ -57,16 +54,20 @@ class HelmTest {
     );
 
     private final String chartName;
+    /// Dekorate uses this value for the Deployment name and for the container name.
+    private final String kubernetesName;
     private final String rootValuesAlias;
     private final KubernetesClient kubernetesClient;
 
     HelmTest(
             KubernetesClient kubernetesClient,
             @ConfigProperty(name = "quarkus.helm.name") String chartName,
+            @ConfigProperty(name = "quarkus.kubernetes.name") String kubernetesName,
             @ConfigProperty(name = "quarkus.helm.values-root-alias", defaultValue = "app") String rootValuesAlias
     ) {
         this.kubernetesClient = kubernetesClient;
         this.chartName = chartName;
+        this.kubernetesName = kubernetesName;
         this.rootValuesAlias = rootValuesAlias;
     }
 
@@ -238,7 +239,7 @@ class HelmTest {
                                 assertThat(podSpec.getContainers())
                                         .singleElement()
                                         .satisfies(container -> {
-                                            assertThat(container.getName()).isEqualTo(CONTAINER_NAME);
+                                            assertThat(container.getName()).isEqualTo(kubernetesName);
                                             assertThat(container.getVolumeMounts()).isEmpty();
                                         });
                             });
@@ -275,7 +276,7 @@ class HelmTest {
     @Test
     @DisplayName("When the chart is rendered with volumes, the deployment should mount them")
     void helmTemplate_rendersVolumes() throws IOException {
-    // given
+        // given
         var chartPath = chartPath();
 
         assertThat(chartPath)
@@ -311,17 +312,24 @@ class HelmTest {
                     .withFailMessage("Helm template failed, see the logged error output")
                     .isZero();
 
-            var deployment = kubernetesClient.load(new ByteArrayInputStream(
+            var deployments = kubernetesClient.load(new ByteArrayInputStream(
                             renderedOutput.toString().getBytes(StandardCharsets.UTF_8)
                     ))
                     .items()
                     .stream()
                     .filter(Deployment.class::isInstance)
                     .map(Deployment.class::cast)
-                    .findFirst()
-                    .orElseThrow(() -> new AssertionError(
-                            "The rendered chart contains no Deployment:%n%s".formatted(renderedOutput)
-                    ));
+                    .toList();
+
+            assertThat(deployments)
+                    .withFailMessage("The rendered chart must contain exactly one Deployment:%n%s", renderedOutput)
+                    .hasSize(1);
+
+            var deployment = deployments.getFirst();
+
+            // The baseline `kubernetes.yml` must name the Deployment `quarkus.kubernetes.name`.
+            // Dekorate keeps a different name as a second Deployment.
+            assertThat(deployment.getMetadata().getName()).isEqualTo(kubernetesName);
 
             var podSpec = deployment.getSpec().getTemplate().getSpec();
 
@@ -349,7 +357,7 @@ class HelmTest {
             assertThat(podSpec.getContainers())
                     .singleElement()
                     .satisfies(container -> {
-                        assertThat(container.getName()).isEqualTo(CONTAINER_NAME);
+                        assertThat(container.getName()).isEqualTo(kubernetesName);
                         assertThat(container.getVolumeMounts())
                                 .extracting(VolumeMount::getMountPath)
                                 .containsExactly("/mnt/secrets", "/mnt/aws");
@@ -366,7 +374,8 @@ class HelmTest {
     }
 
     private static Path createTempValuesWithVolumes() throws IOException {
-        var values = """
+        var values =
+                """
                 app:
                   image: postgresql-operator:test
                   imagePullSecrets:
