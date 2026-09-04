@@ -6,7 +6,6 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.process.ProcessBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
