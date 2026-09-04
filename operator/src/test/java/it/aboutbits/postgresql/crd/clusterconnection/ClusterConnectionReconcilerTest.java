@@ -111,7 +111,7 @@ class ClusterConnectionReconcilerTest {
                 .returnFirst();
 
         // then
-        AtomicReference<@Nullable DSLContext> dslAtomic = new AtomicReference<>();
+        var dslAtomic = new AtomicReference<@Nullable DSLContext>();
         assertThatNoException().isThrownBy(
                 () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
         );
@@ -155,7 +155,7 @@ class ClusterConnectionReconcilerTest {
                     .returnFirst();
 
             // then
-            AtomicReference<@Nullable DSLContext> dslAtomic = new AtomicReference<>();
+            var dslAtomic = new AtomicReference<@Nullable DSLContext>();
             assertThatNoException().isThrownBy(
                     () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
             );
