@@ -39,7 +39,16 @@ users:
 
 ## 2. Create PostgreSQL Connection and Secret
 
-For the `postgresql` Dev Service, you can generate the necessary Custom Resources to test the Operator:
+For the `postgresql` Dev Service, you can generate the necessary Custom Resources to test the Operator.
+
+A `ClusterConnection` requires admin credentials, which can be provided in one of two ways:
+
+- **`adminSecretRef`** references a Kubernetes `basic-auth` Secret (username + password).
+- **`adminSecretFileRef`** references a JSON file mounted into the operator pod.
+
+Exactly one of these must be specified.
+
+### Using a Kubernetes Secret (`adminSecretRef`)
 
 1. From the Dev UI, get the `postgresql` Dev Service properties (username, password, host, port).
 2. Convert the `postgresql` Dev Service properties to a **Basic Auth Secret** and a **ClusterConnection** CR instance.

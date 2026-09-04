@@ -62,6 +62,7 @@ dependencies {
      */
     testImplementation("io.quarkus:quarkus-junit")
     testImplementation("io.quarkus:quarkus-junit-mockito")
+    testImplementation("io.fabric8:kubernetes-server-mock")
     testImplementation("org.awaitility:awaitility")
     testImplementation(libs.assertj)
     testImplementation(libs.datafaker)

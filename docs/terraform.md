@@ -95,7 +95,7 @@ Every optional field of every Custom Resource is affected, in particular:
 
 | Custom Resource     | Optional fields                                                                                |
 |---------------------|------------------------------------------------------------------------------------------------|
-| `ClusterConnection` | `parameters`, `adminSecretRef.namespace`                                                       |
+| `ClusterConnection` | `parameters`, `adminSecretRef`, `adminSecretRef.namespace`, `adminSecretFileRef`               |
 | `Database`          | `owner`, `reclaimPolicy`, `clusterRef.namespace`                                               |
 | `Schema`            | `owner`, `reclaimPolicy`, `clusterRef.namespace`                                               |
 | `Role`              | `comment`, `passwordSecretRef`, `flags` (including `flags.validUntil`), `clusterRef.namespace` |

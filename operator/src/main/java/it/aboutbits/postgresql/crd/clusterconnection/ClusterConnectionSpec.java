@@ -5,11 +5,13 @@ import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
+import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.core.schema_customizer.HostCustomizer;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +20,10 @@ import java.util.Map;
 @Setter
 @SchemaCustomizer(value = HostCustomizer.class, input = "host")
 @NullMarked
+@ValidationRule(
+        value = "(has(self.adminSecretRef) ? 1 : 0) + (has(self.adminSecretFileRef) ? 1 : 0) == 1",
+        message = "Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided"
+)
 public class ClusterConnectionSpec {
     @Required
     @ValidationRule(
@@ -38,8 +44,11 @@ public class ClusterConnectionSpec {
     )
     private String database = "postgres";
 
-    @Required
-    private ResourceRef adminSecretRef = new ResourceRef();
+    @io.fabric8.generator.annotation.Nullable
+    private @Nullable ResourceRef adminSecretRef;
+
+    @io.fabric8.generator.annotation.Nullable
+    private @Nullable FileRef adminSecretFileRef;
 
     @io.fabric8.generator.annotation.Nullable
     private Map<String, String> parameters = new HashMap<>();

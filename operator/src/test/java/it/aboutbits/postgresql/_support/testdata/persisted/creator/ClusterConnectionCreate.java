@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
+import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
@@ -41,6 +42,11 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
     private @Nullable ResourceRef withAdminSecretRef;
 
+    private @Nullable FileRef withAdminSecretFileRef;
+
+    @Setter(AccessLevel.NONE)
+    private boolean withoutAdminSecret = false;
+
     private @Nullable String withApplicationName;
 
     public ClusterConnectionCreate(
@@ -58,6 +64,16 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     @SuppressWarnings("unused")
     public ClusterConnectionCreate withoutNamespace() {
         this.withoutNamespace = true;
+        return this;
+    }
+
+    public ClusterConnectionCreate withAdminSecretFileRef(FileRef fileRef) {
+        this.withAdminSecretFileRef = fileRef;
+        return this;
+    }
+
+    public ClusterConnectionCreate withoutAdminSecret() {
+        this.withoutAdminSecret = true;
         return this;
     }
 
@@ -81,6 +97,9 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         spec.setPort(getPort());
         spec.setDatabase(getDatabase());
         spec.setAdminSecretRef(getAdminSecretRef());
+        if (withAdminSecretFileRef != null) {
+            spec.setAdminSecretFileRef(withAdminSecretFileRef);
+        }
         spec.setParameters(getParameters());
 
         item.setSpec(spec);
@@ -154,7 +173,11 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         return withDatabase;
     }
 
-    private ResourceRef getAdminSecretRef() {
+    private @Nullable ResourceRef getAdminSecretRef() {
+        if (withoutAdminSecret) {
+            return null;
+        }
+
         if (withAdminSecretRef != null) {
             return withAdminSecretRef;
         }

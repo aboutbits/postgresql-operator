@@ -20,6 +20,7 @@ config/
 !.idea/misc.xml
 !.idea/sqldialects.xml
 !.idea/vcs.xml
+**/out/
 
 *.iml
 *.ipr
