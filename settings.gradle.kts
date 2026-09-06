@@ -23,33 +23,6 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 
     repositories {
-        val githubUser = providers.gradleProperty("gpr.user")
-            .orElse(providers.environmentVariable("GITHUB_USER_NAME"))
-        val githubToken = providers.gradleProperty("gpr.key")
-            .orElse(providers.environmentVariable("GITHUB_ACCESS_TOKEN"))
-
-        fun addGitHubRepo(name: String): MavenArtifactRepository {
-            return maven {
-                this.name = name
-                url = uri("https://maven.pkg.github.com/aboutbits/$name")
-                credentials {
-                    username = githubUser.orNull
-                    password = githubToken.orNull
-                }
-            }
-        }
-
-        // https://docs.gradle.org/current/userguide/best_practices_dependencies.html#use_content_filtering
-        exclusiveContent {
-            forRepositories(
-                addGitHubRepo("java-checkstyle-config"),
-                mavenLocal()
-            )
-            filter {
-                includeGroupAndSubgroups("it.aboutbits")
-            }
-        }
-
         mavenCentral()
         mavenLocal()
     }
