@@ -10,6 +10,8 @@ import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -30,7 +32,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.oid</code>.
      */
-    public PgDatabaseRecord setOid(Long value) {
+    public PgDatabaseRecord setOid(@NonNull Long value) {
         set(0, value);
         return this;
     }
@@ -38,6 +40,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.oid</code>.
      */
+    @NonNull
     public Long getOid() {
         return (Long) get(0);
     }
@@ -45,7 +48,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datname</code>.
      */
-    public PgDatabaseRecord setDatname(String value) {
+    public PgDatabaseRecord setDatname(@NonNull String value) {
         set(1, value);
         return this;
     }
@@ -53,6 +56,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datname</code>.
      */
+    @NonNull
     public String getDatname() {
         return (String) get(1);
     }
@@ -60,7 +64,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datdba</code>.
      */
-    public PgDatabaseRecord setDatdba(Long value) {
+    public PgDatabaseRecord setDatdba(@NonNull Long value) {
         set(2, value);
         return this;
     }
@@ -68,6 +72,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datdba</code>.
      */
+    @NonNull
     public Long getDatdba() {
         return (Long) get(2);
     }
@@ -75,7 +80,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.encoding</code>.
      */
-    public PgDatabaseRecord setEncoding(Integer value) {
+    public PgDatabaseRecord setEncoding(@NonNull Integer value) {
         set(3, value);
         return this;
     }
@@ -83,6 +88,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.encoding</code>.
      */
+    @NonNull
     public Integer getEncoding() {
         return (Integer) get(3);
     }
@@ -90,7 +96,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datlocprovider</code>.
      */
-    public PgDatabaseRecord setDatlocprovider(String value) {
+    public PgDatabaseRecord setDatlocprovider(@NonNull String value) {
         set(4, value);
         return this;
     }
@@ -98,6 +104,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datlocprovider</code>.
      */
+    @NonNull
     public String getDatlocprovider() {
         return (String) get(4);
     }
@@ -105,7 +112,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datistemplate</code>.
      */
-    public PgDatabaseRecord setDatistemplate(Boolean value) {
+    public PgDatabaseRecord setDatistemplate(@NonNull Boolean value) {
         set(5, value);
         return this;
     }
@@ -113,6 +120,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datistemplate</code>.
      */
+    @NonNull
     public Boolean getDatistemplate() {
         return (Boolean) get(5);
     }
@@ -120,7 +128,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datallowconn</code>.
      */
-    public PgDatabaseRecord setDatallowconn(Boolean value) {
+    public PgDatabaseRecord setDatallowconn(@NonNull Boolean value) {
         set(6, value);
         return this;
     }
@@ -128,6 +136,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datallowconn</code>.
      */
+    @NonNull
     public Boolean getDatallowconn() {
         return (Boolean) get(6);
     }
@@ -135,7 +144,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.dathasloginevt</code>.
      */
-    public PgDatabaseRecord setDathasloginevt(Boolean value) {
+    public PgDatabaseRecord setDathasloginevt(@NonNull Boolean value) {
         set(7, value);
         return this;
     }
@@ -143,6 +152,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.dathasloginevt</code>.
      */
+    @NonNull
     public Boolean getDathasloginevt() {
         return (Boolean) get(7);
     }
@@ -150,7 +160,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datconnlimit</code>.
      */
-    public PgDatabaseRecord setDatconnlimit(Integer value) {
+    public PgDatabaseRecord setDatconnlimit(@NonNull Integer value) {
         set(8, value);
         return this;
     }
@@ -158,6 +168,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datconnlimit</code>.
      */
+    @NonNull
     public Integer getDatconnlimit() {
         return (Integer) get(8);
     }
@@ -165,7 +176,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datfrozenxid</code>.
      */
-    public PgDatabaseRecord setDatfrozenxid(Long value) {
+    public PgDatabaseRecord setDatfrozenxid(@NonNull Long value) {
         set(9, value);
         return this;
     }
@@ -173,6 +184,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datfrozenxid</code>.
      */
+    @NonNull
     public Long getDatfrozenxid() {
         return (Long) get(9);
     }
@@ -180,7 +192,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datminmxid</code>.
      */
-    public PgDatabaseRecord setDatminmxid(Long value) {
+    public PgDatabaseRecord setDatminmxid(@NonNull Long value) {
         set(10, value);
         return this;
     }
@@ -188,6 +200,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datminmxid</code>.
      */
+    @NonNull
     public Long getDatminmxid() {
         return (Long) get(10);
     }
@@ -195,7 +208,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.dattablespace</code>.
      */
-    public PgDatabaseRecord setDattablespace(Long value) {
+    public PgDatabaseRecord setDattablespace(@NonNull Long value) {
         set(11, value);
         return this;
     }
@@ -203,6 +216,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.dattablespace</code>.
      */
+    @NonNull
     public Long getDattablespace() {
         return (Long) get(11);
     }
@@ -210,7 +224,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datcollate</code>.
      */
-    public PgDatabaseRecord setDatcollate(String value) {
+    public PgDatabaseRecord setDatcollate(@NonNull String value) {
         set(12, value);
         return this;
     }
@@ -218,6 +232,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datcollate</code>.
      */
+    @NonNull
     public String getDatcollate() {
         return (String) get(12);
     }
@@ -225,7 +240,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datctype</code>.
      */
-    public PgDatabaseRecord setDatctype(String value) {
+    public PgDatabaseRecord setDatctype(@NonNull String value) {
         set(13, value);
         return this;
     }
@@ -233,6 +248,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datctype</code>.
      */
+    @NonNull
     public String getDatctype() {
         return (String) get(13);
     }
@@ -240,7 +256,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datlocale</code>.
      */
-    public PgDatabaseRecord setDatlocale(String value) {
+    public PgDatabaseRecord setDatlocale(@Nullable String value) {
         set(14, value);
         return this;
     }
@@ -248,6 +264,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datlocale</code>.
      */
+    @Nullable
     public String getDatlocale() {
         return (String) get(14);
     }
@@ -255,7 +272,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.daticurules</code>.
      */
-    public PgDatabaseRecord setDaticurules(String value) {
+    public PgDatabaseRecord setDaticurules(@Nullable String value) {
         set(15, value);
         return this;
     }
@@ -263,6 +280,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.daticurules</code>.
      */
+    @Nullable
     public String getDaticurules() {
         return (String) get(15);
     }
@@ -270,7 +288,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datcollversion</code>.
      */
-    public PgDatabaseRecord setDatcollversion(String value) {
+    public PgDatabaseRecord setDatcollversion(@Nullable String value) {
         set(16, value);
         return this;
     }
@@ -278,6 +296,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datcollversion</code>.
      */
+    @Nullable
     public String getDatcollversion() {
         return (String) get(16);
     }
@@ -285,7 +304,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Setter for <code>pg_catalog.pg_database.datacl</code>.
      */
-    public PgDatabaseRecord setDatacl(String[] value) {
+    public PgDatabaseRecord setDatacl(@Nullable String[] value) {
         set(17, value);
         return this;
     }
@@ -293,6 +312,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Getter for <code>pg_catalog.pg_database.datacl</code>.
      */
+    @Nullable
     public String[] getDatacl() {
         return (String[]) get(17);
     }
@@ -302,6 +322,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     // -------------------------------------------------------------------------
 
     @Override
+    @NonNull
     public Record1<Long> key() {
         return (Record1) super.key();
     }
@@ -320,7 +341,7 @@ public class PgDatabaseRecord extends UpdatableRecordImpl<PgDatabaseRecord> {
     /**
      * Create a detached, initialised PgDatabaseRecord
      */
-    public PgDatabaseRecord(Long oid, String datname, Long datdba, Integer encoding, String datlocprovider, Boolean datistemplate, Boolean datallowconn, Boolean dathasloginevt, Integer datconnlimit, Long datfrozenxid, Long datminmxid, Long dattablespace, String datcollate, String datctype, String datlocale, String daticurules, String datcollversion, String[] datacl) {
+    public PgDatabaseRecord(@NonNull Long oid, @NonNull String datname, @NonNull Long datdba, @NonNull Integer encoding, @NonNull String datlocprovider, @NonNull Boolean datistemplate, @NonNull Boolean datallowconn, @NonNull Boolean dathasloginevt, @NonNull Integer datconnlimit, @NonNull Long datfrozenxid, @NonNull Long datminmxid, @NonNull Long dattablespace, @NonNull String datcollate, @NonNull String datctype, @Nullable String datlocale, @Nullable String daticurules, @Nullable String datcollversion, @Nullable String[] datacl) {
         super(PgDatabase.PG_DATABASE);
 
         setOid(oid);

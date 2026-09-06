@@ -29,6 +29,8 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -55,6 +57,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<PgDbRoleSettingRecord> getRecordType() {
         return PgDbRoleSettingRecord.class;
     }
@@ -106,26 +109,31 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public UniqueKey<PgDbRoleSettingRecord> getPrimaryKey() {
         return Keys.PG_DB_ROLE_SETTING_DATABASEID_ROL_INDEX;
     }
 
     @Override
+    @NonNull
     public PgDbRoleSetting as(String alias) {
         return new PgDbRoleSetting(DSL.name(alias), this);
     }
 
     @Override
+    @NonNull
     public PgDbRoleSetting as(Name alias) {
         return new PgDbRoleSetting(alias, this);
     }
 
     @Override
+    @NonNull
     public PgDbRoleSetting as(Table<?> alias) {
         return new PgDbRoleSetting(alias.getQualifiedName(), this);
     }
@@ -134,6 +142,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting rename(String name) {
         return new PgDbRoleSetting(DSL.name(name), null);
     }
@@ -142,6 +151,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting rename(Name name) {
         return new PgDbRoleSetting(name, null);
     }
@@ -150,6 +160,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting rename(Table<?> name) {
         return new PgDbRoleSetting(name.getQualifiedName(), null);
     }
@@ -158,6 +169,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting where(Condition condition) {
         return new PgDbRoleSetting(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
@@ -166,6 +178,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting where(Collection<? extends Condition> conditions) {
         return where(DSL.and(conditions));
     }
@@ -174,6 +187,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting where(Condition... conditions) {
         return where(DSL.and(conditions));
     }
@@ -182,6 +196,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting where(Field<Boolean> condition) {
         return where(DSL.condition(condition));
     }
@@ -190,6 +205,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDbRoleSetting where(SQL condition) {
         return where(DSL.condition(condition));
@@ -199,6 +215,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDbRoleSetting where(@Stringly.SQL String condition) {
         return where(DSL.condition(condition));
@@ -208,6 +225,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDbRoleSetting where(@Stringly.SQL String condition, Object... binds) {
         return where(DSL.condition(condition, binds));
@@ -217,6 +235,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDbRoleSetting where(@Stringly.SQL String condition, QueryPart... parts) {
         return where(DSL.condition(condition, parts));
@@ -226,6 +245,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
@@ -234,6 +254,7 @@ public class PgDbRoleSetting extends TableImpl<PgDbRoleSettingRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDbRoleSetting whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }
