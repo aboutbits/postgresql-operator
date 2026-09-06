@@ -1,0 +1,117 @@
+# Error Prone and NullAway configuration.
+#
+# build.gradle.kts reads this file through options.errorprone.argumentFiles.
+#
+# Rules for this file:
+#   1. Write one flag per line.
+#   2. Write a check as the Xep prefix, then the check name, then the severity.
+#      A severity is ERROR, WARN or OFF. Omit the severity to keep the default.
+#   3. Write a check option as the XepOpt prefix, then the key, then the value.
+#   4. Never write an "at" sign in a comment. Error Prone reads it as a file reference.
+#   5. Never start a comment word with a dash. Error Prone reads it as a flag.
+#   6. This file cannot reference a second argument file.
+
+# Nullness
+-Xep:NullAway:ERROR
+-XepOpt:NullAway:AnnotatedPackages=it.aboutbits.postgresql
+-XepOpt:NullAway:JSpecifyMode=true
+-Xep:AnnotationPosition:ERROR
+-Xep:EqualsMissingNullable:ERROR
+-Xep:MultipleNullnessAnnotations:ERROR
+-Xep:RequireExplicitNullMarking:ERROR
+
+# Javadoc
+-Xep:AlmostJavadoc:ERROR
+-Xep:DepAnn:ERROR
+-Xep:EmptyBlockTag:ERROR
+-Xep:EscapedEntity:ERROR
+-Xep:InvalidBlockTag:ERROR
+-Xep:InvalidInlineTag:ERROR
+-Xep:InvalidLink:ERROR
+-Xep:InvalidParam:ERROR
+-Xep:InvalidThrows:ERROR
+-Xep:MalformedInlineTag:ERROR
+-Xep:MissingSummary:ERROR
+-Xep:NotJavadoc:ERROR
+-Xep:PreferThrowsTag:ERROR
+-Xep:UnescapedEntity:ERROR
+-Xep:UnrecognisedJavadocTag:ERROR
+
+# Imports
+-Xep:BadImport:ERROR
+-Xep:RemoveUnusedImports:ERROR
+-Xep:UnnecessaryStaticImport:ERROR
+-Xep:WildcardImport:ERROR
+
+# Naming and source layout
+-Xep:ClassName:ERROR
+-Xep:ConstantField:ERROR
+-Xep:DefaultPackage:ERROR
+-Xep:MultipleTopLevelClasses:ERROR
+-Xep:PackageLocation:ERROR
+
+# Blocks, statements and switches
+-Xep:EmptyCatch:ERROR
+-Xep:EmptyIf:ERROR
+-Xep:EmptyTopLevelDeclaration:ERROR
+-Xep:MissingBraces:ERROR
+-Xep:MissingCasesInEnumSwitch:ERROR
+-Xep:MissingDefault:ERROR
+-Xep:MultiVariableDeclaration:ERROR
+-Xep:SwitchDefault:ERROR
+-Xep:UseEnumSwitch:ERROR
+
+# Class design
+-Xep:InterfaceWithOnlyStatics:ERROR
+-Xep:MutablePublicArray:ERROR
+-Xep:PrivateConstructorForUtilityClass:ERROR
+-Xep:ProtectedMembersInFinalClass:ERROR
+-Xep:TooManyParameters:ERROR
+
+# Correctness
+-Xep:AmbiguousMethodReference:ERROR
+-Xep:AssignmentExpression:ERROR
+-Xep:BadInstanceof:ERROR
+-Xep:CheckReturnValue:ERROR
+-Xep:EqualsIncompatibleType:ERROR
+-Xep:FallThrough:ERROR
+-Xep:Finally:ERROR
+-Xep:FunctionalInterfaceClash:ERROR
+-Xep:HidingField:ERROR
+# Important due to performance reasons, see
+# https://github.com/uber/NullAway/wiki/Configuration#perform-exhaustive-override-checks
+-Xep:MissingOverride:ERROR
+-Xep:MockNotUsedInProduction:ERROR
+-Xep:NarrowingCompoundAssignment:ERROR
+-Xep:Overrides:ERROR
+-Xep:PrimitiveArrayPassedToVarargsMethod:ERROR
+-Xep:ReferenceEquality:ERROR
+-Xep:SelfComparison:ERROR
+-Xep:StaticQualifiedUsingExpression:ERROR
+-Xep:SymbolToString:ERROR
+-Xep:TypeToString:ERROR
+-Xep:UnusedException:ERROR
+-Xep:UnusedMethod:ERROR
+-Xep:UnusedNestedClass:ERROR
+-Xep:UnusedVariable:ERROR
+
+# Redundant code and house style
+-Xep:BooleanLiteral:ERROR
+-Xep:ComplexBooleanConstant:ERROR
+-Xep:ExplicitArrayForVarargs:ERROR
+-Xep:LongLiteralLowerCaseSuffix:ERROR
+-Xep:MixedArrayDimensions:ERROR
+-Xep:StringConcatToTextBlock:ERROR
+-Xep:TryWithResourcesVariable:ERROR
+-Xep:UnnecessaryAnonymousClass:ERROR
+-Xep:UnnecessaryAssignment:ERROR
+-Xep:UnnecessaryBoxedAssignment:ERROR
+-Xep:UnnecessaryBoxedVariable:ERROR
+-Xep:UnnecessaryFinal:ERROR
+-Xep:UnnecessaryLambda:ERROR
+-Xep:UnnecessaryMethodReference:ERROR
+-Xep:UnnecessaryParentheses:ERROR
+-Xep:Varifier:ERROR
+
+# Turn off as this check is too noisy
+-Xep:StringSplitter:OFF

@@ -1,5 +1,4 @@
 ### PostgreSQL Operator ###
-config/
 # Written by the fabric8 Kubernetes client when the tests run against the Dev Service
 operator/.kube/
 
@@ -17,7 +16,6 @@ operator/.kube/
 .idea/*
 !.idea/codeStyles
 !.idea/.gitignore
-!.idea/checkstyle-idea.xml
 !.idea/encodings.xml
 !.idea/misc.xml
 !.idea/sqldialects.xml

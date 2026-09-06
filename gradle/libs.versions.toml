@@ -1,7 +1,4 @@
 [versions]
-## AboutBits Libraries ##
-checkstyleConfig = "2.0.0-RC2"
-
 # Axion Release Plugin #
 axionReleasePlugin = "1.21.1"
 
@@ -17,8 +14,8 @@ scram-client = "3.2"
 assertj = "3.27.7"
 checkstyle = "13.4.2"
 datafaker = "2.5.4"
-errorProne = "2.49.0"
-errorPronePlugin = "5.1.0"
+errorProne = "2.50.0"
+errorPronePlugin = "5.1.1"
 nullAway = "0.13.4"
 
 [plugins]
@@ -36,13 +33,6 @@ errorPronePlugin = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin
 jooqPlugin = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq" }
 
 [libraries]
-## AboutBits Libraries ##
-
-# https://github.com/aboutbits/java-checkstyle-config
-checkstyleConfig = { group = "it.aboutbits", name = "java-checkstyle-config", version.ref = "checkstyleConfig" }
-
-## Libraries ##
-
 # jOOQ #
 # https://www.jooq.org/
 # https://www.jooq.org/download/versions
@@ -86,11 +76,6 @@ scram-client = { group = "com.ongres.scram", name = "scram-client", version.ref 
 # https://github.com/assertj/assertj
 # https://mvnrepository.com/artifact/org.assertj/assertj-core
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
-
-# https://checkstyle.org/
-# https://github.com/checkstyle/checkstyle
-# https://mvnrepository.com/artifact/com.puppycrawl.tools/checkstyle
-checkstyle = { group = "com.puppycrawl.tools", name = "checkstyle", version.ref = "checkstyle" }
 
 # https://datafaker.net/
 # https://github.com/datafaker-net/datafaker
