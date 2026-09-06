@@ -52,8 +52,9 @@ class ClusterConnectionReconcilerErrorTest {
         resource.setSpec(spec);
         resource.setMetadata(metadata);
 
-        //noinspection unchecked
-        context = mock(Context.class);
+        @SuppressWarnings("unchecked")
+        Context<ClusterConnection> mockedContext = mock(Context.class);
+        context = mockedContext;
     }
 
     @Test
