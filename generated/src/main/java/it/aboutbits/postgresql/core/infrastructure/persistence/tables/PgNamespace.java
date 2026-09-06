@@ -31,6 +31,8 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -57,6 +59,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<PgNamespaceRecord> getRecordType() {
         return PgNamespaceRecord.class;
     }
@@ -111,31 +114,37 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public UniqueKey<PgNamespaceRecord> getPrimaryKey() {
         return Keys.PG_NAMESPACE_OID_INDEX;
     }
 
     @Override
+    @NonNull
     public List<UniqueKey<PgNamespaceRecord>> getUniqueKeys() {
         return Arrays.asList(Keys.PG_NAMESPACE_NSPNAME_INDEX);
     }
 
     @Override
+    @NonNull
     public PgNamespace as(String alias) {
         return new PgNamespace(DSL.name(alias), this);
     }
 
     @Override
+    @NonNull
     public PgNamespace as(Name alias) {
         return new PgNamespace(alias, this);
     }
 
     @Override
+    @NonNull
     public PgNamespace as(Table<?> alias) {
         return new PgNamespace(alias.getQualifiedName(), this);
     }
@@ -144,6 +153,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgNamespace rename(String name) {
         return new PgNamespace(DSL.name(name), null);
     }
@@ -152,6 +162,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgNamespace rename(Name name) {
         return new PgNamespace(name, null);
     }
@@ -160,6 +171,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgNamespace rename(Table<?> name) {
         return new PgNamespace(name.getQualifiedName(), null);
     }
@@ -168,6 +180,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgNamespace where(Condition condition) {
         return new PgNamespace(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
@@ -176,6 +189,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgNamespace where(Collection<? extends Condition> conditions) {
         return where(DSL.and(conditions));
     }
@@ -184,6 +198,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgNamespace where(Condition... conditions) {
         return where(DSL.and(conditions));
     }
@@ -192,6 +207,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgNamespace where(Field<Boolean> condition) {
         return where(DSL.condition(condition));
     }
@@ -200,6 +216,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgNamespace where(SQL condition) {
         return where(DSL.condition(condition));
@@ -209,6 +226,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgNamespace where(@Stringly.SQL String condition) {
         return where(DSL.condition(condition));
@@ -218,6 +236,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgNamespace where(@Stringly.SQL String condition, Object... binds) {
         return where(DSL.condition(condition, binds));
@@ -227,6 +246,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgNamespace where(@Stringly.SQL String condition, QueryPart... parts) {
         return where(DSL.condition(condition, parts));
@@ -236,6 +256,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgNamespace whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
@@ -244,6 +265,7 @@ public class PgNamespace extends TableImpl<PgNamespaceRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgNamespace whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }

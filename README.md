@@ -286,6 +286,21 @@ make generate-jooq
 ./gradlew :generated:jooqCodegen
 ```
 
+The generator writes JSpecify nullability annotations into the generated sources, so NullAway reads
+the real nullness of every generated method instead of guessing.
+Two consequences are worth knowing:
+
+- jOOQ does not officially support the `TYPE_USE` positioning that JSpecify requires yet
+  ([jOOQ#10759](https://github.com/jOOQ/jOOQ/issues/10759)). The positioning is correct here only
+  because the generated code uses no generics, collections, maps, arrays or forced types with inner
+  classes. Keep the `includes` list free of such objects, or review the annotation positions after a
+  regeneration.
+- Every generated class carries `@SuppressWarnings({"all", ...})`, which Error Prone honours. That
+  suppression, and nothing else, is why the generated sources are exempt from the checks in
+  `errorprone.args`, including `RequireExplicitNullMarking`. Do not add
+  `NullAway:TreatGeneratedAsUnannotated`: it would make NullAway discard the nullability annotations
+  that this generator now writes.
+
 ### Docker Environment
 
 See [Docker Environment](docs/docker-environment.md) for setting up a local development environment using Quarkus Dev Services.

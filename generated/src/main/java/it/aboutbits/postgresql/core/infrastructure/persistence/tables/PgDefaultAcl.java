@@ -31,6 +31,8 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -57,6 +59,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<PgDefaultAclRecord> getRecordType() {
         return PgDefaultAclRecord.class;
     }
@@ -116,31 +119,37 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public UniqueKey<PgDefaultAclRecord> getPrimaryKey() {
         return Keys.PG_DEFAULT_ACL_OID_INDEX;
     }
 
     @Override
+    @NonNull
     public List<UniqueKey<PgDefaultAclRecord>> getUniqueKeys() {
         return Arrays.asList(Keys.PG_DEFAULT_ACL_ROLE_NSP_OBJ_INDEX);
     }
 
     @Override
+    @NonNull
     public PgDefaultAcl as(String alias) {
         return new PgDefaultAcl(DSL.name(alias), this);
     }
 
     @Override
+    @NonNull
     public PgDefaultAcl as(Name alias) {
         return new PgDefaultAcl(alias, this);
     }
 
     @Override
+    @NonNull
     public PgDefaultAcl as(Table<?> alias) {
         return new PgDefaultAcl(alias.getQualifiedName(), this);
     }
@@ -149,6 +158,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl rename(String name) {
         return new PgDefaultAcl(DSL.name(name), null);
     }
@@ -157,6 +167,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl rename(Name name) {
         return new PgDefaultAcl(name, null);
     }
@@ -165,6 +176,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl rename(Table<?> name) {
         return new PgDefaultAcl(name.getQualifiedName(), null);
     }
@@ -173,6 +185,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl where(Condition condition) {
         return new PgDefaultAcl(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
@@ -181,6 +194,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl where(Collection<? extends Condition> conditions) {
         return where(DSL.and(conditions));
     }
@@ -189,6 +203,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl where(Condition... conditions) {
         return where(DSL.and(conditions));
     }
@@ -197,6 +212,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl where(Field<Boolean> condition) {
         return where(DSL.condition(condition));
     }
@@ -205,6 +221,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDefaultAcl where(SQL condition) {
         return where(DSL.condition(condition));
@@ -214,6 +231,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDefaultAcl where(@Stringly.SQL String condition) {
         return where(DSL.condition(condition));
@@ -223,6 +241,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDefaultAcl where(@Stringly.SQL String condition, Object... binds) {
         return where(DSL.condition(condition, binds));
@@ -232,6 +251,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDefaultAcl where(@Stringly.SQL String condition, QueryPart... parts) {
         return where(DSL.condition(condition, parts));
@@ -241,6 +261,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
@@ -249,6 +270,7 @@ public class PgDefaultAcl extends TableImpl<PgDefaultAclRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDefaultAcl whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }
