@@ -13,7 +13,12 @@
 
 # Nullness
 -Xep:NullAway:ERROR
+-XepOpt:NullAway:AcknowledgeRestrictiveAnnotations=true
 -XepOpt:NullAway:AnnotatedPackages=it.aboutbits.postgresql
+-XepOpt:NullAway:CheckOptionalEmptiness=true
+# ExhaustiveOverride is safe only while MissingOverride runs at ERROR, because it assumes that every overriding method carries the Override annotation.
+-XepOpt:NullAway:ExhaustiveOverride=true
+-XepOpt:NullAway:HandleTestAssertionLibraries=true
 -XepOpt:NullAway:JSpecifyMode=true
 -Xep:AnnotationPosition:ERROR
 -Xep:EqualsMissingNullable:ERROR
