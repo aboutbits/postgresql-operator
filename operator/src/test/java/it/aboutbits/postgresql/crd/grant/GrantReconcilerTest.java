@@ -1294,7 +1294,7 @@ class GrantReconcilerTest {
     ) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.createTable(quotedName(schemaName, tableName))
-                    .column("id", SQLDataType.BIGINT.identity(true))
+                    .column("id", SQLDataType.BIGINT.generatedByDefaultAsIdentity())
                     .execute();
         }
     }
