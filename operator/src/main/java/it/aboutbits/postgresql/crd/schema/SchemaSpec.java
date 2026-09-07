@@ -38,7 +38,7 @@ public class SchemaSpec {
     )
     private String name = "";
 
-    /// Whether the schema should be retained or deleted when the Schema CR instance is deleted.
+    /// Whether the schema should be retained or deleted when the [Schema] CR instance is deleted.
     @io.fabric8.generator.annotation.Nullable
     private ReclaimPolicy reclaimPolicy = ReclaimPolicy.RETAIN;
 

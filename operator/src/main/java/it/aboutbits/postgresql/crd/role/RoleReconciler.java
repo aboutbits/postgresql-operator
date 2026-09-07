@@ -207,9 +207,7 @@ public class RoleReconciler
         }
     }
 
-    /**
-     * Watches for {@code Secret} changes to trigger reconciliation for dependent {@code Role} resources.
-     */
+    /// Watches for [Secret] changes to trigger reconciliation for dependent [Role] resources.
     @Override
     public List<EventSource<?, Role>> prepareEventSources(EventSourceContext<Role> context) {
         // 1. Define the Mapper
@@ -348,9 +346,7 @@ public class RoleReconciler
         return UpdateControl.patchStatus(resource);
     }
 
-    /**
-     * Checks if the given Role's spec.passwordSecretRef points to the changed Secret.
-     */
+    /// Checks if the given [Role]'s [RoleSpec#getPasswordSecretRef()] points to the changed [Secret].
     private boolean isReferencedBy(
             Role role,
             Secret secret
