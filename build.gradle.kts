@@ -1,4 +1,3 @@
-import net.ltgt.gradle.errorprone.CheckSeverity
 import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
@@ -6,7 +5,6 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
     idea
     java
-    checkstyle
     id("io.quarkus").apply(false)
     alias(libs.plugins.axionReleasePlugin)
     alias(libs.plugins.errorPronePlugin)
@@ -31,20 +29,10 @@ version = scmVersion.version
 allprojects {
     group = "it.aboutbits.postgresql"
     version = rootProject.version
-
-    tasks.withType<Checkstyle>().configureEach {
-        dependsOn(":checkstyleExtractConfig")
-
-        reports {
-            html.required = false
-            xml.required = false
-        }
-    }
 }
 
 subprojects {
     apply(plugin = "java")
-    apply(plugin = "checkstyle")
     apply(plugin = rootProject.libs.plugins.errorPronePlugin.get().pluginId)
 
     java {
@@ -82,10 +70,8 @@ subprojects {
         options.compilerArgs.add("-parameters")
 
         options.errorprone {
-            check("NullAway", CheckSeverity.ERROR)
-            check("RequireExplicitNullMarking", CheckSeverity.ERROR)
-            option("NullAway:AnnotatedPackages", "it.aboutbits.postgresql")
-            option("NullAway:JSpecifyMode", "true")
+            // The checks live in errorprone.args, see https://github.com/tbroyer/gradle-errorprone-plugin#argument-files
+            argumentFiles.from(rootProject.layout.projectDirectory.file("errorprone.args"))
         }
     }
 
@@ -125,35 +111,4 @@ subprojects {
             }
         }
     }
-}
-
-val checkstyleConfig: Configuration by configurations.creating {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-
-dependencies {
-    /**
-     * AboutBits Libraries
-     */
-    checkstyleConfig(libs.checkstyleConfig)
-}
-
-tasks.register<Copy>("checkstyleExtractConfig") {
-    description = "Extracts the AboutBits Checkstyle configuration from the classpath."
-    group = JavaBasePlugin.CHECK_TASK_NAME
-
-    from(zipTree(checkstyleConfig.singleFile)) {
-        include("checkstyle.xml", "checkstyle-suppressions.xml")
-    }
-    into(layout.projectDirectory.dir("config/checkstyle/"))
-}
-
-checkstyle {
-    toolVersion = libs.versions.checkstyle.get()
-    isShowViolations = true
-    configFile = rootProject.file("config/checkstyle/checkstyle.xml")
-    configProperties = mapOf(
-        "suppressionFile" to rootProject.file("config/checkstyle/checkstyle-suppressions.xml")
-    )
 }

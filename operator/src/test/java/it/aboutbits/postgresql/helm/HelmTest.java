@@ -71,7 +71,6 @@ class HelmTest {
         this.rootValuesAlias = rootValuesAlias;
     }
 
-    @SuppressWarnings("checkstyle:MethodLength")
     @Test
     @DisplayName("When the Helm chart is installed, the operator deployment should be created")
     void helmInstall_createsDeployment() throws IOException {

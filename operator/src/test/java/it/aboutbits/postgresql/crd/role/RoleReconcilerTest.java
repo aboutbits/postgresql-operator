@@ -868,7 +868,7 @@ class RoleReconcilerTest {
                 .until(() -> !roleService.roleExists(dsl, role.getSpec()));
     }
 
-    private @Nullable <T> T getRoleFlagValue(
+    private <T> @Nullable T getRoleFlagValue(
             DSLContext dsl,
             String roleName,
             Field<T> field
