@@ -37,8 +37,9 @@ import java.util.stream.Collectors;
         @RBACRule(
                 apiGroups = {""},
                 resources = {"secrets"},
-                // "create" is needed once for the password fingerprint key Secret in the operator namespace
-                verbs = {"get", "list", "watch", "create"}
+                // `create` for the password fingerprint key Secret is granted by a namespaced Role in the operator namespace,
+                // see `quarkus.kubernetes.rbac` in application.yml. It does not belong in this ClusterRole.
+                verbs = {"get", "list", "watch"}
         )
 })
 @RequiredArgsConstructor

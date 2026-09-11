@@ -156,6 +156,8 @@ class HelmTest {
         assertThat(chartPath.resolve("templates/clusterrole.yaml")).exists();
         assertThat(chartPath.resolve("templates/clusterrolebinding.yaml")).exists();
         assertThat(chartPath.resolve("templates/deployment.yaml")).exists();
+        // The namespaced Role that grants `create` on the password fingerprint key Secret
+        assertThat(chartPath.resolve("templates/role.yaml")).exists();
         assertThat(chartPath.resolve("templates/rolebinding.yaml")).exists();
         assertThat(chartPath.resolve("templates/service.yaml")).exists();
         assertThat(chartPath.resolve("templates/serviceaccount.yaml")).exists();

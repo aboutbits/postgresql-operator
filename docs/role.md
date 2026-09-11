@@ -56,7 +56,8 @@ On each reconcile it compares the referenced Secret against that fingerprint. Wh
 
 The fingerprint is an `HMAC-SHA256`. Its key is random and private to the operator.  
 The operator generates the key once and stores it in a Secret named `postgresql-operator-password-fingerprint-key` in its own namespace. A reader of the `Role` status learns nothing about the password without that key.  
-The Secret name is set by the configuration property `postgresql-operator.password-fingerprint.secret-name`, for example through the environment variable `POSTGRESQL_OPERATOR_PASSWORD_FINGERPRINT_SECRET_NAME`.
+The Secret name is set by the configuration property `postgresql-operator.password-fingerprint.secret-name`, for example through the environment variable `POSTGRESQL_OPERATOR_PASSWORD_FINGERPRINT_SECRET_NAME`.  
+The Helm chart grants `create` on Secrets through a `Role` and `RoleBinding` in the operator namespace only. The `ClusterRole` of the operator keeps read access to Secrets.
 
 **Consequences:**
 

@@ -220,3 +220,22 @@ quarkus:
         QUARKUS_CONSOLE_COLOR: ${quarkus.console.color}
         QUARKUS_LOG_CONSOLE_JSON_ENABLED: ${quarkus.log.console.json.enabled}
         QUARKUS_LOG_CONSOLE_JSON_LOG_FORMAT: ${quarkus.log.console.json.log-format}
+    rbac:
+      # The operator creates the password fingerprint key Secret in its own namespace.
+      # `create` on Secrets is granted through this namespaced Role only, not through the ClusterRole of the Role controller,
+      # which would allow the operator to create Secrets in every namespace.
+      # `api-groups` is omitted, so the rule targets the core API group.
+      roles:
+        postgresql-operator-password-fingerprint-key:
+          policy-rules:
+            create-secrets:
+              resources: secrets
+              verbs: create
+      role-bindings:
+        postgresql-operator-password-fingerprint-key:
+          role-name: postgresql-operator-password-fingerprint-key
+        # The kubernetes-client extension stops generating its default binding to the `view` ClusterRole as soon as
+        # `role-bindings` are configured. This entry keeps that binding, so that the chart does not lose it.
+        postgresql-operator-view:
+          role-name: view
+          cluster-wide: true
