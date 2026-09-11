@@ -73,7 +73,7 @@ subprojects {
         options.compilerArgs.add("-Xlint:deprecation,removal,unchecked,cast,rawtypes,divzero,this-escape,identity,text-blocks,dangling-doc-comments,restricted")
         // The build itself: command-line options, path entries, output file collisions
         options.compilerArgs.add("-Xlint:options,path,output-file-clash")
-        // Javadoc comments: no group repeats an Error Prone check, and `missing` floods on generated code
+        // Javadoc comments: the groups add checks Error Prone lacks, and `missing` floods on generated code
         options.compilerArgs.add("-Xdoclint:all,-missing")
 
         options.errorprone {
