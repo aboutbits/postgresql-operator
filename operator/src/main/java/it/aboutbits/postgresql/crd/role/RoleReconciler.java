@@ -17,8 +17,8 @@ import io.quarkiverse.operatorsdk.annotations.AdditionalRBACRules;
 import io.quarkiverse.operatorsdk.annotations.RBACRule;
 import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
-import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.KubernetesService;
+import it.aboutbits.postgresql.core.PasswordFingerprintService;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import lombok.RequiredArgsConstructor;
@@ -37,17 +37,19 @@ import java.util.stream.Collectors;
         @RBACRule(
                 apiGroups = {""},
                 resources = {"secrets"},
-                verbs = {"get", "list", "watch"}
+                // "create" is needed once for the password fingerprint key Secret in the operator namespace
+                verbs = {"get", "list", "watch", "create"}
         )
 })
 @RequiredArgsConstructor
 @NullMarked
 public class RoleReconciler
-        extends BaseReconciler<Role, CRStatus>
+        extends BaseReconciler<Role, RoleStatus>
         implements Reconciler<Role>, Cleaner<Role> {
     private final RoleService roleService;
     private final KubernetesService kubernetesService;
     private final PostgreSQLAuthenticationService postgreSQLAuthenticationService;
+    private final PasswordFingerprintService passwordFingerprintService;
 
     private final KubernetesClient kubernetesClient;
     private final PostgreSQLContextFactory contextFactory;
@@ -239,14 +241,14 @@ public class RoleReconciler
     }
 
     @Override
-    protected CRStatus newStatus() {
-        return new CRStatus();
+    protected RoleStatus newStatus() {
+        return new RoleStatus();
     }
 
     private UpdateControl<Role> reconcileInTransaction(
             DSLContext tx,
             Role resource,
-            CRStatus status,
+            RoleStatus status,
             @Nullable String password
     ) {
         var namespace = resource.getMetadata().getNamespace();
@@ -254,6 +256,19 @@ public class RoleReconciler
 
         var spec = resource.getSpec();
         var expectedFlags = spec.getFlags();
+
+        var passwordEncryption = spec.getPasswordEncryption();
+        var loginExpected = password != null;
+
+        // The password hash in pg_authid is readable by superusers only.
+        // Managed PostgreSQL services of cloud providers do not grant that,
+        // so the operator tracks a keyed fingerprint of the applied password in the status.
+        var expectedFingerprint = password != null
+                ? passwordFingerprintService.fingerprint(password, passwordEncryption)
+                : null;
+        var serverPassword = password != null
+                ? postgreSQLAuthenticationService.toServerPassword(password, passwordEncryption)
+                : null;
 
         // Create and return the role if it doesn't exist yet
         if (!roleService.roleExists(tx, spec)) {
@@ -266,8 +281,10 @@ public class RoleReconciler
             roleService.createRole(
                     tx,
                     spec,
-                    password
+                    serverPassword
             );
+
+            status.setPasswordFingerprint(expectedFingerprint);
 
             status.setPhase(CRPhase.READY)
                     .setMessage(null);
@@ -275,23 +292,12 @@ public class RoleReconciler
             return UpdateControl.patchStatus(resource);
         }
 
-        // When there is NOLOGIN, we set no password
-        var passwordMatches = true;
-        var roleLoginMatches = roleService.roleLoginMatches(tx, spec);
+        var currentCanLogin = roleService.roleCanLogin(tx, spec);
+        var roleLoginMatches = loginExpected == currentCanLogin;
         var currentFlags = roleService.fetchCurrentFlags(tx, spec);
         var flagsMatch = expectedFlags.equals(currentFlags);
         var commentMatches = roleService.roleCommentMatches(tx, spec);
-
-        var passwordSecretRef = spec.getPasswordSecretRef();
-        var loginExpected = passwordSecretRef != null;
-
-        if (loginExpected && password != null) {
-            passwordMatches = postgreSQLAuthenticationService.passwordMatches(
-                    tx,
-                    spec,
-                    password
-            );
-        }
+        var passwordMatches = Objects.equals(expectedFingerprint, status.getPasswordFingerprint());
 
         if (roleLoginMatches && passwordMatches && flagsMatch && commentMatches) {
             log.info(
@@ -311,12 +317,14 @@ public class RoleReconciler
                 name
         );
 
-        if (!roleLoginMatches || !passwordMatches || !flagsMatch) {
+        if (!roleLoginMatches || changePassword || !flagsMatch) {
             roleService.alterRole(
                     tx,
                     spec,
+                    currentFlags,
+                    currentCanLogin,
                     changePassword,
-                    password
+                    serverPassword
             );
         }
 
@@ -341,6 +349,8 @@ public class RoleReconciler
                     spec
             );
         }
+
+        status.setPasswordFingerprint(expectedFingerprint);
 
         status.setPhase(CRPhase.READY)
                 .setMessage(null);

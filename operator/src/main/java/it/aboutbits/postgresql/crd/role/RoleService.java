@@ -13,10 +13,12 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
-import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTH_MEMBERS;
+import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.keyword;
 import static org.jooq.impl.DSL.multiset;
@@ -27,16 +29,25 @@ import static org.jooq.impl.DSL.selectOne;
 import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.val;
 
+/// Reads and writes PostgreSQL roles.
+///
+/// All reads use the public view `pg_roles` and the public catalog `pg_auth_members` instead of
+/// `pg_authid`. `pg_authid` is readable by superusers only, and managed PostgreSQL services of cloud
+/// providers revoke it from every role, including the master user.
 @Singleton
 @NullMarked
 public final class RoleService {
+    /// Shared object comments of roles are keyed by the `pg_authid` catalog in `pg_shdescription`.
+    /// This is only a name for `shobj_description`, no `SELECT` on `pg_authid` is issued.
+    private static final String ROLE_COMMENT_CATALOG = "pg_authid";
+
     public boolean roleExists(
             DSLContext tx,
             RoleSpec spec
     ) {
         return tx.fetchExists(selectOne()
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(spec.getName()))
+                .from(PG_ROLES)
+                .where(PG_ROLES.ROLNAME.eq(spec.getName()))
         );
     }
 
@@ -65,23 +76,32 @@ public final class RoleService {
         }
     }
 
+    /// Alter the role so that it matches the spec.
+    ///
+    /// The statement names only the options that differ from the current state.
+    /// PostgreSQL rejects `SUPERUSER`, `REPLICATION`, and `BYPASSRLS` (and their `NO` variants) from a non-superuser even
+    /// when the value does not change, so a full statement would fail on managed services.
+    ///
+    /// @param currentFlags    the flags as read with [#fetchCurrentFlags]
+    /// @param currentCanLogin whether the role currently has `LOGIN`
+    /// @param changePassword  whether to set the given password
+    /// @param password        the password literal to set, or `null` for a `NOLOGIN` role
     public void alterRole(
             DSLContext tx,
             RoleSpec spec,
+            RoleSpec.Flags currentFlags,
+            boolean currentCanLogin,
             boolean changePassword,
             @Nullable String password
     ) {
-        var roleName = spec.getName();
-        var flags = spec.getFlags();
-
-        tx.execute(
-                buildAlterRole(
-                        roleName,
-                        flags,
-                        changePassword,
-                        password
-                )
-        );
+        buildAlterRole(
+                spec.getName(),
+                spec.getFlags(),
+                currentFlags,
+                currentCanLogin,
+                changePassword,
+                password
+        ).ifPresent(tx::execute);
     }
 
     public void updateComment(
@@ -119,15 +139,25 @@ public final class RoleService {
             DSLContext tx,
             String roleName
     ) {
-
         return tx
                 .select(Routines.shobjDescription(
-                        PG_AUTHID.OID,
-                        val(PG_AUTHID.getUnqualifiedName().last())
+                        PG_ROLES.OID,
+                        val(ROLE_COMMENT_CATALOG)
                 ))
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(roleName))
+                .from(PG_ROLES)
+                .where(PG_ROLES.ROLNAME.eq(roleName))
                 .fetchOneInto(String.class);
+    }
+
+    public boolean roleCanLogin(
+            DSLContext tx,
+            RoleSpec spec
+    ) {
+        return tx.fetchExists(selectOne()
+                .from(PG_ROLES)
+                .where(PG_ROLES.ROLNAME.eq(spec.getName()))
+                .and(PG_ROLES.ROLCANLOGIN.isTrue())
+        );
     }
 
     public boolean roleLoginMatches(
@@ -136,38 +166,32 @@ public final class RoleService {
     ) {
         var loginExpected = spec.getPasswordSecretRef() != null;
 
-        var canLogin = tx.fetchExists(selectOne()
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(spec.getName()))
-                .and(PG_AUTHID.ROLCANLOGIN.isTrue())
-        );
-
-        return loginExpected == canLogin;
+        return loginExpected == roleCanLogin(tx, spec);
     }
 
     public RoleSpec.Flags fetchCurrentFlags(
             DSLContext tx,
             RoleSpec spec
     ) {
-        var member = PG_AUTHID.as("member");
-        var parent = PG_AUTHID.as("parent");
+        var member = PG_ROLES.as("member");
+        var parent = PG_ROLES.as("parent");
 
         return tx
                 .select(
-                        PG_AUTHID.ROLSUPER.as("superuser"),
-                        PG_AUTHID.ROLCREATEDB.as("createdb"),
-                        PG_AUTHID.ROLCREATEROLE.as("createrole"),
-                        PG_AUTHID.ROLINHERIT.as("inherit"),
-                        PG_AUTHID.ROLREPLICATION.as("replication"),
-                        PG_AUTHID.ROLBYPASSRLS.as("bypassrls"),
-                        PG_AUTHID.ROLCONNLIMIT.as("connectionLimit"),
-                        field("nullif({0}, 'infinity')", PG_AUTHID.ROLVALIDUNTIL.getDataType(), PG_AUTHID.ROLVALIDUNTIL).as("validUntil"),
+                        PG_ROLES.ROLSUPER.as("superuser"),
+                        PG_ROLES.ROLCREATEDB.as("createdb"),
+                        PG_ROLES.ROLCREATEROLE.as("createrole"),
+                        PG_ROLES.ROLINHERIT.as("inherit"),
+                        PG_ROLES.ROLREPLICATION.as("replication"),
+                        PG_ROLES.ROLBYPASSRLS.as("bypassrls"),
+                        PG_ROLES.ROLCONNLIMIT.as("connectionLimit"),
+                        field("nullif({0}, 'infinity')", PG_ROLES.ROLVALIDUNTIL.getDataType(), PG_ROLES.ROLVALIDUNTIL).as("validUntil"),
                         multiset(
                                 select(parent.ROLNAME)
                                         .from(PG_AUTH_MEMBERS)
                                         .join(member).on(member.OID.eq(PG_AUTH_MEMBERS.MEMBER))
                                         .join(parent).on(parent.OID.eq(PG_AUTH_MEMBERS.ROLEID))
-                                        .where(member.OID.eq(PG_AUTHID.OID))
+                                        .where(member.OID.eq(PG_ROLES.OID))
                                         .orderBy(parent.ROLNAME)
                         ).as("inRole").convertFrom(result -> result.map(Record1::value1)),
                         multiset(
@@ -175,12 +199,12 @@ public final class RoleService {
                                         .from(PG_AUTH_MEMBERS)
                                         .join(parent).on(parent.OID.eq(PG_AUTH_MEMBERS.ROLEID))
                                         .join(member).on(member.OID.eq(PG_AUTH_MEMBERS.MEMBER))
-                                        .where(parent.OID.eq(PG_AUTHID.OID))
+                                        .where(parent.OID.eq(PG_ROLES.OID))
                                         .orderBy(member.ROLNAME)
                         ).as("role").convertFrom(result -> result.map(Record1::value1))
                 )
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(spec.getName()))
+                .from(PG_ROLES)
+                .where(PG_ROLES.ROLNAME.eq(spec.getName()))
                 .fetchSingleInto(RoleSpec.Flags.class);
     }
 
@@ -325,9 +349,16 @@ public final class RoleService {
         );
     }
 
-    private static Query buildAlterRole(
+    /// Build: `ALTER ROLE <name> [ [ WITH ] option [ ... ] ]`
+    ///
+    /// See [PostgreSQL: Documentation: ALTER ROLE](https://www.postgresql.org/docs/current/sql-alterrole.html)
+    ///
+    /// Only options that differ from the current state are added. Returns empty when nothing differs.
+    private static Optional<Query> buildAlterRole(
             String roleName,
             RoleSpec.Flags flags,
+            RoleSpec.Flags currentFlags,
+            boolean currentCanLogin,
             boolean changePassword,
             @Nullable String password
     ) {
@@ -335,64 +366,71 @@ public final class RoleService {
         var loginExpected = password != null;
 
         // LOGIN / NOLOGIN
-        options.add(keyword(loginExpected
-                ? RoleFlag.LOGIN.flag()
-                : RoleFlag.NO_LOGIN.flag()
-        ));
+        if (loginExpected != currentCanLogin) {
+            options.add(keyword(loginExpected
+                    ? RoleFlag.LOGIN.flag()
+                    : RoleFlag.NO_LOGIN.flag()
+            ));
+        }
 
         // Password handling
-        // - if NOLOGIN, remove the password
-        // - if LOGIN and passwordChanged, set the new password
-        if (!loginExpected) {
+        // - if the role loses LOGIN, remove the password
+        // - if LOGIN and the password changed, set the new password
+        if (!loginExpected && currentCanLogin) {
             options.add(keyword(RoleFlag.PASSWORD.flag()));
             options.add(keyword("NULL"));
-        } else if (changePassword) {
+        } else if (loginExpected && changePassword) {
             options.add(keyword(RoleFlag.PASSWORD.flag()));
             options.add(val(password));
         }
 
-        // Explicitly set the expected state to make the statement idempotent
-        options.add(keyword(flags.isSuperuser()
-                ? RoleFlag.SUPERUSER.flag()
-                : RoleFlag.NO_SUPERUSER.flag()
-        ));
-        options.add(keyword(flags.isCreatedb()
-                ? RoleFlag.CREATEDB.flag()
-                : RoleFlag.NO_CREATEDB.flag()
-        ));
-        options.add(keyword(flags.isCreaterole()
-                ? RoleFlag.CREATEROLE.flag()
-                : RoleFlag.NO_CREATEROLE.flag()
-        ));
-        options.add(keyword(flags.isInherit()
-                ? RoleFlag.INHERIT.flag()
-                : RoleFlag.NO_INHERIT.flag()
-        ));
-        options.add(keyword(flags.isReplication()
-                ? RoleFlag.REPLICATION.flag()
-                : RoleFlag.NO_REPLICATION.flag()
-        ));
-        options.add(keyword(flags.isBypassrls()
-                ? RoleFlag.BYPASSRLS.flag()
-                : RoleFlag.NO_BYPASSRLS.flag()
-        ));
+        addFlagIfChanged(options, flags.isSuperuser(), currentFlags.isSuperuser(), RoleFlag.SUPERUSER, RoleFlag.NO_SUPERUSER);
+        addFlagIfChanged(options, flags.isCreatedb(), currentFlags.isCreatedb(), RoleFlag.CREATEDB, RoleFlag.NO_CREATEDB);
+        addFlagIfChanged(options, flags.isCreaterole(), currentFlags.isCreaterole(), RoleFlag.CREATEROLE, RoleFlag.NO_CREATEROLE);
+        addFlagIfChanged(options, flags.isInherit(), currentFlags.isInherit(), RoleFlag.INHERIT, RoleFlag.NO_INHERIT);
+        addFlagIfChanged(options, flags.isReplication(), currentFlags.isReplication(), RoleFlag.REPLICATION, RoleFlag.NO_REPLICATION);
+        addFlagIfChanged(options, flags.isBypassrls(), currentFlags.isBypassrls(), RoleFlag.BYPASSRLS, RoleFlag.NO_BYPASSRLS);
 
-        options.add(keyword(RoleFlag.CONNECTION_LIMIT.flag()));
-        options.add(val(flags.getConnectionLimit()));
-
-        var validUntil = flags.getValidUntil();
-        options.add(keyword(RoleFlag.VALID_UNTIL.flag()));
-        if (validUntil != null) {
-            options.add(val(validUntil.toString()));
-        } else {
-            options.add(val("infinity"));
+        if (flags.getConnectionLimit() != currentFlags.getConnectionLimit()) {
+            options.add(keyword(RoleFlag.CONNECTION_LIMIT.flag()));
+            options.add(val(flags.getConnectionLimit()));
         }
 
-        return query(
+        var validUntil = flags.getValidUntil();
+        if (!Objects.equals(validUntil, currentFlags.getValidUntil())) {
+            options.add(keyword(RoleFlag.VALID_UNTIL.flag()));
+            options.add(val(validUntil != null
+                    ? validUntil.toString()
+                    : "infinity"
+            ));
+        }
+
+        if (options.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(query(
                 "alter role {0} with {1}",
                 role(roleName),
                 SQLUtil.concatenateQueryPartsWithSpaces(options)
-        );
+        ));
+    }
+
+    private static void addFlagIfChanged(
+            List<QueryPart> options,
+            boolean expected,
+            boolean current,
+            RoleFlag enabled,
+            RoleFlag disabled
+    ) {
+        if (expected == current) {
+            return;
+        }
+
+        options.add(keyword(expected
+                ? enabled.flag()
+                : disabled.flag()
+        ));
     }
 
     private static Query buildGrantRoleToMember(

@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.ResourceRef;
+import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
 import lombok.AccessLevel;
@@ -39,6 +40,8 @@ public class RoleCreate extends TestDataCreator<Role> {
     private @Nullable ResourceRef withPasswordSecretRef;
 
     private RoleSpec.@Nullable Flags withFlags;
+
+    private @Nullable PasswordEncryption withPasswordEncryption;
 
     public RoleCreate(
             int numberOfItems,
@@ -100,6 +103,10 @@ public class RoleCreate extends TestDataCreator<Role> {
 
         if (withFlags != null) {
             spec.setFlags(withFlags);
+        }
+
+        if (withPasswordEncryption != null) {
+            spec.setPasswordEncryption(withPasswordEncryption);
         }
 
         item.setSpec(spec);

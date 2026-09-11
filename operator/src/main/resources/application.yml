@@ -1,3 +1,9 @@
+postgresql-operator:
+  password-fingerprint:
+    # Name of the Secret in the operator namespace that holds the HMAC key for the Role password fingerprints.
+    # The operator creates the Secret on first use.
+    secret-name: postgresql-operator-password-fingerprint-key
+
 quarkus:
   console:
     color: true
