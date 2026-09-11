@@ -35,6 +35,7 @@ import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_A
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.role;
 
 @QuarkusTest
@@ -363,6 +364,84 @@ class RoleReconcilerTest {
                         updatedRole.getSpec().getName(),
                         newPassword
                 ));
+    }
+
+    @Test
+    @DisplayName("When an existing Role has no password fingerprint in its status, the Secret password should be applied once")
+    void missingPasswordFingerprint_appliesSecretPasswordOnce() {
+        // given: a Role created by the operator
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-fingerprint-upgrade")
+                .returnFirst();
+
+        var roleName = "test-role-fingerprint-upgrade";
+        var password = "secret-password";
+
+        var secretRef = given.one()
+                .secretRef()
+                .withPassword(password)
+                .returnFirst();
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(secretRef)
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var initialFingerprint = role.getStatus().getPasswordFingerprint();
+        assertThat(initialFingerprint).isNotBlank();
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isTrue();
+
+        // given: the password in PostgreSQL differs from the Secret, and the status has no fingerprint,
+        // like a Role that was reconciled by a version of the operator without fingerprints
+        dsl.execute("alter role {0} with password {1}", role(roleName), inline("out-of-band-password"));
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isFalse();
+
+        kubernetesClient.resources(Role.class)
+                .inNamespace(role.getMetadata().getNamespace())
+                .withName(role.getMetadata().getName())
+                .editStatus(current -> {
+                    current.getStatus().setPasswordFingerprint(null);
+                    return current;
+                });
+
+        // when: a spec change triggers the next reconcile
+        role.getSpec().setComment("triggers a reconcile");
+
+        var updatedRole = applyRole(role);
+
+        // then: the Secret password is applied once and the fingerprint is set again
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getPasswordFingerprint()).isEqualTo(initialFingerprint);
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isTrue();
+
+        // when: the next reconcile finds a matching fingerprint and leaves the password alone
+        var verifierAfterUpgrade = PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName);
+
+        updatedRole.getSpec().setComment("triggers another reconcile");
+
+        updatedRole = applyRole(updatedRole);
+
+        // then
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getPasswordFingerprint()).isEqualTo(initialFingerprint);
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isEqualTo(verifierAfterUpgrade);
     }
 
     @Test

@@ -114,15 +114,32 @@ public class RoleReconciler
         UpdateControl<Role> updateControl;
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+            var passwordEncryption = spec.getPasswordEncryption();
+
+            // The password hash in pg_authid is readable by superusers only.
+            // Managed PostgreSQL services of cloud providers do not grant that,
+            // so the operator tracks a keyed fingerprint of the applied password in the status.
+            var expectedFingerprint = password != null
+                    ? passwordFingerprintService.fingerprint(password, passwordEncryption)
+                    : null;
+            var serverPassword = password != null
+                    ? postgreSQLAuthenticationService.toServerPassword(password, passwordEncryption)
+                    : null;
+
             // Run everything in a single transaction
             updateControl = dsl.transactionResult(
                     cfg -> reconcileInTransaction(
                             cfg.dsl(),
                             resource,
                             status,
-                            password
+                            expectedFingerprint,
+                            serverPassword
                     )
             );
+
+            // Record the fingerprint only after the commit. A failed commit must not leave
+            // the fingerprint of a password that PostgreSQL never stored.
+            status.setPasswordFingerprint(expectedFingerprint);
         } catch (Exception e) {
             return handleError(
                     resource,
@@ -245,11 +262,15 @@ public class RoleReconciler
         return new RoleStatus();
     }
 
+    /// @param expectedFingerprint the fingerprint of the Secret password, or `null` for a `NOLOGIN` role;
+    ///                            compared against the fingerprint in the status, and never written here
+    /// @param serverPassword      the password literal to send to PostgreSQL, or `null` for a `NOLOGIN` role
     private UpdateControl<Role> reconcileInTransaction(
             DSLContext tx,
             Role resource,
             RoleStatus status,
-            @Nullable String password
+            @Nullable String expectedFingerprint,
+            @Nullable String serverPassword
     ) {
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
@@ -257,18 +278,7 @@ public class RoleReconciler
         var spec = resource.getSpec();
         var expectedFlags = spec.getFlags();
 
-        var passwordEncryption = spec.getPasswordEncryption();
-        var loginExpected = password != null;
-
-        // The password hash in pg_authid is readable by superusers only.
-        // Managed PostgreSQL services of cloud providers do not grant that,
-        // so the operator tracks a keyed fingerprint of the applied password in the status.
-        var expectedFingerprint = password != null
-                ? passwordFingerprintService.fingerprint(password, passwordEncryption)
-                : null;
-        var serverPassword = password != null
-                ? postgreSQLAuthenticationService.toServerPassword(password, passwordEncryption)
-                : null;
+        var loginExpected = serverPassword != null;
 
         // Create and return the role if it doesn't exist yet
         if (!roleService.roleExists(tx, spec)) {
@@ -283,8 +293,6 @@ public class RoleReconciler
                     spec,
                     serverPassword
             );
-
-            status.setPasswordFingerprint(expectedFingerprint);
 
             status.setPhase(CRPhase.READY)
                     .setMessage(null);
@@ -349,8 +357,6 @@ public class RoleReconciler
                     spec
             );
         }
-
-        status.setPasswordFingerprint(expectedFingerprint);
 
         status.setPhase(CRPhase.READY)
                 .setMessage(null);
