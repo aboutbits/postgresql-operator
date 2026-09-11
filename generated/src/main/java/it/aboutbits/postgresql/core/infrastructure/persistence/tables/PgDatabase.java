@@ -31,6 +31,8 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -57,6 +59,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<PgDatabaseRecord> getRecordType() {
         return PgDatabaseRecord.class;
     }
@@ -181,31 +184,37 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public UniqueKey<PgDatabaseRecord> getPrimaryKey() {
         return Keys.PG_DATABASE_OID_INDEX;
     }
 
     @Override
+    @NonNull
     public List<UniqueKey<PgDatabaseRecord>> getUniqueKeys() {
         return Arrays.asList(Keys.PG_DATABASE_DATNAME_INDEX);
     }
 
     @Override
+    @NonNull
     public PgDatabase as(String alias) {
         return new PgDatabase(DSL.name(alias), this);
     }
 
     @Override
+    @NonNull
     public PgDatabase as(Name alias) {
         return new PgDatabase(alias, this);
     }
 
     @Override
+    @NonNull
     public PgDatabase as(Table<?> alias) {
         return new PgDatabase(alias.getQualifiedName(), this);
     }
@@ -214,6 +223,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDatabase rename(String name) {
         return new PgDatabase(DSL.name(name), null);
     }
@@ -222,6 +232,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDatabase rename(Name name) {
         return new PgDatabase(name, null);
     }
@@ -230,6 +241,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgDatabase rename(Table<?> name) {
         return new PgDatabase(name.getQualifiedName(), null);
     }
@@ -238,6 +250,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDatabase where(Condition condition) {
         return new PgDatabase(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
@@ -246,6 +259,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDatabase where(Collection<? extends Condition> conditions) {
         return where(DSL.and(conditions));
     }
@@ -254,6 +268,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDatabase where(Condition... conditions) {
         return where(DSL.and(conditions));
     }
@@ -262,6 +277,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDatabase where(Field<Boolean> condition) {
         return where(DSL.condition(condition));
     }
@@ -270,6 +286,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDatabase where(SQL condition) {
         return where(DSL.condition(condition));
@@ -279,6 +296,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDatabase where(@Stringly.SQL String condition) {
         return where(DSL.condition(condition));
@@ -288,6 +306,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDatabase where(@Stringly.SQL String condition, Object... binds) {
         return where(DSL.condition(condition, binds));
@@ -297,6 +316,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgDatabase where(@Stringly.SQL String condition, QueryPart... parts) {
         return where(DSL.condition(condition, parts));
@@ -306,6 +326,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDatabase whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
@@ -314,6 +335,7 @@ public class PgDatabase extends TableImpl<PgDatabaseRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgDatabase whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }

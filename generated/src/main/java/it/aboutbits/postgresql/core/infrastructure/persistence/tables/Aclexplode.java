@@ -19,6 +19,8 @@ import org.jooq.TableOptions;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -45,6 +47,7 @@ public class Aclexplode extends TableImpl<AclexplodeRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<AclexplodeRecord> getRecordType() {
         return AclexplodeRecord.class;
     }
@@ -105,21 +108,25 @@ public class Aclexplode extends TableImpl<AclexplodeRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public Aclexplode as(String alias) {
         return new Aclexplode(DSL.name(alias), this, parameters);
     }
 
     @Override
+    @NonNull
     public Aclexplode as(Name alias) {
         return new Aclexplode(alias, this, parameters);
     }
 
     @Override
+    @NonNull
     public Aclexplode as(Table<?> alias) {
         return new Aclexplode(alias.getQualifiedName(), this, parameters);
     }
@@ -128,6 +135,7 @@ public class Aclexplode extends TableImpl<AclexplodeRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public Aclexplode rename(String name) {
         return new Aclexplode(DSL.name(name), null, parameters);
     }
@@ -136,6 +144,7 @@ public class Aclexplode extends TableImpl<AclexplodeRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public Aclexplode rename(Name name) {
         return new Aclexplode(name, null, parameters);
     }
@@ -144,6 +153,7 @@ public class Aclexplode extends TableImpl<AclexplodeRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public Aclexplode rename(Table<?> name) {
         return new Aclexplode(name.getQualifiedName(), null, parameters);
     }

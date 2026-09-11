@@ -32,6 +32,8 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -58,6 +60,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<PgAuthidRecord> getRecordType() {
         return PgAuthidRecord.class;
     }
@@ -152,31 +155,37 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public UniqueKey<PgAuthidRecord> getPrimaryKey() {
         return Keys.PG_AUTHID_OID_INDEX;
     }
 
     @Override
+    @NonNull
     public List<UniqueKey<PgAuthidRecord>> getUniqueKeys() {
         return Arrays.asList(Keys.PG_AUTHID_ROLNAME_INDEX);
     }
 
     @Override
+    @NonNull
     public PgAuthid as(String alias) {
         return new PgAuthid(DSL.name(alias), this);
     }
 
     @Override
+    @NonNull
     public PgAuthid as(Name alias) {
         return new PgAuthid(alias, this);
     }
 
     @Override
+    @NonNull
     public PgAuthid as(Table<?> alias) {
         return new PgAuthid(alias.getQualifiedName(), this);
     }
@@ -185,6 +194,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgAuthid rename(String name) {
         return new PgAuthid(DSL.name(name), null);
     }
@@ -193,6 +203,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgAuthid rename(Name name) {
         return new PgAuthid(name, null);
     }
@@ -201,6 +212,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgAuthid rename(Table<?> name) {
         return new PgAuthid(name.getQualifiedName(), null);
     }
@@ -209,6 +221,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgAuthid where(Condition condition) {
         return new PgAuthid(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
@@ -217,6 +230,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgAuthid where(Collection<? extends Condition> conditions) {
         return where(DSL.and(conditions));
     }
@@ -225,6 +239,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgAuthid where(Condition... conditions) {
         return where(DSL.and(conditions));
     }
@@ -233,6 +248,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgAuthid where(Field<Boolean> condition) {
         return where(DSL.condition(condition));
     }
@@ -241,6 +257,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgAuthid where(SQL condition) {
         return where(DSL.condition(condition));
@@ -250,6 +267,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgAuthid where(@Stringly.SQL String condition) {
         return where(DSL.condition(condition));
@@ -259,6 +277,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgAuthid where(@Stringly.SQL String condition, Object... binds) {
         return where(DSL.condition(condition, binds));
@@ -268,6 +287,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgAuthid where(@Stringly.SQL String condition, QueryPart... parts) {
         return where(DSL.condition(condition, parts));
@@ -277,6 +297,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgAuthid whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
@@ -285,6 +306,7 @@ public class PgAuthid extends TableImpl<PgAuthidRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgAuthid whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }

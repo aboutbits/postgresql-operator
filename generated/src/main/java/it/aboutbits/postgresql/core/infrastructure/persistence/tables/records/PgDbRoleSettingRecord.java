@@ -10,6 +10,8 @@ import javax.annotation.processing.Generated;
 
 import org.jooq.Record2;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -30,7 +32,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Setter for <code>pg_catalog.pg_db_role_setting.setdatabase</code>.
      */
-    public PgDbRoleSettingRecord setSetdatabase(Long value) {
+    public PgDbRoleSettingRecord setSetdatabase(@NonNull Long value) {
         set(0, value);
         return this;
     }
@@ -38,6 +40,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Getter for <code>pg_catalog.pg_db_role_setting.setdatabase</code>.
      */
+    @NonNull
     public Long getSetdatabase() {
         return (Long) get(0);
     }
@@ -45,7 +48,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Setter for <code>pg_catalog.pg_db_role_setting.setrole</code>.
      */
-    public PgDbRoleSettingRecord setSetrole(Long value) {
+    public PgDbRoleSettingRecord setSetrole(@NonNull Long value) {
         set(1, value);
         return this;
     }
@@ -53,6 +56,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Getter for <code>pg_catalog.pg_db_role_setting.setrole</code>.
      */
+    @NonNull
     public Long getSetrole() {
         return (Long) get(1);
     }
@@ -60,7 +64,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Setter for <code>pg_catalog.pg_db_role_setting.setconfig</code>.
      */
-    public PgDbRoleSettingRecord setSetconfig(String[] value) {
+    public PgDbRoleSettingRecord setSetconfig(@Nullable String[] value) {
         set(2, value);
         return this;
     }
@@ -68,6 +72,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Getter for <code>pg_catalog.pg_db_role_setting.setconfig</code>.
      */
+    @Nullable
     public String[] getSetconfig() {
         return (String[]) get(2);
     }
@@ -77,6 +82,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     // -------------------------------------------------------------------------
 
     @Override
+    @NonNull
     public Record2<Long, Long> key() {
         return (Record2) super.key();
     }
@@ -95,7 +101,7 @@ public class PgDbRoleSettingRecord extends UpdatableRecordImpl<PgDbRoleSettingRe
     /**
      * Create a detached, initialised PgDbRoleSettingRecord
      */
-    public PgDbRoleSettingRecord(Long setdatabase, Long setrole, String[] setconfig) {
+    public PgDbRoleSettingRecord(@NonNull Long setdatabase, @NonNull Long setrole, @Nullable String[] setconfig) {
         super(PgDbRoleSetting.PG_DB_ROLE_SETTING);
 
         setSetdatabase(setdatabase);
