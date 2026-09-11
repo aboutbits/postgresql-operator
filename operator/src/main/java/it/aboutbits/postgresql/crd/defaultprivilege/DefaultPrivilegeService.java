@@ -34,9 +34,9 @@ public class DefaultPrivilegeService {
 
     /// Determines all existing default privileges for the specified `role`, `schema`, and the given `objectType`.
     ///
-    /// @param tx   The DSLContext for database operations.
-    /// @param spec The DefaultPrivilegeSpec containing the specification details.
-    /// @return A set of Privilege as values.
+    /// @param tx   The [DSLContext] for database operations.
+    /// @param spec The [DefaultPrivilegeSpec] containing the specification details.
+    /// @return A set of [Privilege] as values.
     public Set<Privilege> determineCurrentDefaultPrivileges(
             DSLContext tx,
             DefaultPrivilegeSpec spec

@@ -17,9 +17,7 @@ public final class SQLUtil {
         return concatenateQueryParts(parts, ", ");
     }
 
-    /**
-     * Concatenate QueryParts with the requested separator
-     */
+    /// Concatenate [QueryPart]s with the requested separator
     private static QueryPart concatenateQueryParts(
             List<? extends QueryPart> items,
             String separator
