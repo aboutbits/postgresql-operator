@@ -222,6 +222,8 @@ To build the project, the following prerequisites must be met:
 
 ### Setup
 
+Build the project with:
+
 ```bash
 make init
 
