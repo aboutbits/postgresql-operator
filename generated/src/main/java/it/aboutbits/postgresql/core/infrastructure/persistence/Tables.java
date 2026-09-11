@@ -12,6 +12,7 @@ import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDefaultAcl;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgRoles;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
 
 import javax.annotation.processing.Generated;
@@ -107,4 +108,9 @@ public class Tables {
      * The table <code>pg_catalog.pg_namespace</code>.
      */
     public static final PgNamespace PG_NAMESPACE = PgNamespace.PG_NAMESPACE;
+
+    /**
+     * The table <code>pg_catalog.pg_roles</code>.
+     */
+    public static final PgRoles PG_ROLES = PgRoles.PG_ROLES;
 }

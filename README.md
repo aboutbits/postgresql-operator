@@ -11,6 +11,10 @@ AboutBits PostgreSQL Operator is a Kubernetes operator that helps you manage Pos
 
 > **Note:** Kubernetes 1.29+ is required due to the use of CRD CEL validations (GA in 1.29, Beta in 1.25).
 
+The admin role used by the operator does not need to be a superuser.  
+Managed services such as AWS RDS, Amazon Aurora, Google Cloud SQL, and Azure Database for PostgreSQL are supported.  
+See [Admin privileges](docs/cluster-connection.md#admin-privileges).
+
 ## Architecture
 
 ```

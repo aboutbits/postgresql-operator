@@ -4,13 +4,14 @@ The `Role` Custom Resource Definition (CRD) manages PostgreSQL roles (users).
 
 ## Spec
 
-| Field               | Type          | Description                                                                         | Required | Mutable |
-|---------------------|---------------|-------------------------------------------------------------------------------------|----------|---------|
-| `clusterRef`        | `ResourceRef` | Reference to the `ClusterConnection` to use.                                        | Yes      | Yes     |
-| `name`              | `string`      | The name of the role to create in the database.                                     | Yes      | No      |
-| `comment`           | `string`      | A comment to add to the role.                                                       | No       | Yes     |
-| `passwordSecretRef` | `ResourceRef` | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | Yes     |
-| `flags`             | `RoleFlags`   | Flags and attributes for the role.                                                  | No       | Yes     |
+| Field                | Type          | Description                                                                         | Required | Mutable |
+|----------------------|---------------|-------------------------------------------------------------------------------------|----------|---------|
+| `clusterRef`         | `ResourceRef` | Reference to the `ClusterConnection` to use.                                        | Yes      | Yes     |
+| `name`               | `string`      | The name of the role to create in the database.                                     | Yes      | No      |
+| `comment`            | `string`      | A comment to add to the role.                                                       | No       | Yes     |
+| `passwordSecretRef`  | `ResourceRef` | Reference to a secret containing the password for the role to make it a LOGIN role. | No       | Yes     |
+| `passwordEncryption` | `string`      | How the password is sent to PostgreSQL: `scram-sha-256` (default) or `server`.      | No       | Yes     |
+| `flags`              | `RoleFlags`   | Flags and attributes for the role.                                                  | No       | Yes     |
 
 ### ResourceRef (`clusterRef` and `passwordSecretRef`)
 
@@ -44,6 +45,55 @@ The operator uses the presence of the `passwordSecretRef` field to determine if 
 
 - **Login Role (User)**: If `passwordSecretRef` is specified, the role is created with the `LOGIN` attribute. It uses the password from the referenced secret.
 - **No-Login Role (Group)**: If `passwordSecretRef` is omitted, the role is created with the `NOLOGIN` attribute. This is useful for creating roles that serve as groups for permissions.
+
+### Password handling
+
+The operator does not read the password hash from `pg_authid`.  
+That catalog is readable by superusers only, and managed PostgreSQL services of cloud providers, such as AWS RDS, Google Cloud SQL, or Azure Database for PostgreSQL, revoke it from every role, including the master user.
+
+Instead, the operator stores a keyed fingerprint of the password it applied last in `status.passwordFingerprint`.  
+On each reconcile it compares the referenced Secret against that fingerprint. When they differ, the operator runs `ALTER ROLE ... PASSWORD`.
+
+The fingerprint is an `HMAC-SHA256`. Its key is random and private to the operator.  
+The operator generates the key once and stores it in a Secret named `postgresql-operator-password-fingerprint-key` in its own namespace. A reader of the `Role` status learns nothing about the password without that key.  
+The Secret name is set by the configuration property `postgresql-operator.password-fingerprint.secret-name`, for example through the environment variable `POSTGRESQL_OPERATOR_PASSWORD_FINGERPRINT_SECRET_NAME`.  
+The Helm chart grants `create` on Secrets through a `Role` and `RoleBinding` in the operator namespace only. The `ClusterRole` of the operator keeps read access to Secrets.
+
+**Consequences:**
+
+- The Secret is the source of truth. A password change made directly in PostgreSQL is not detected.
+- If the key Secret is lost, the operator generates a new key and re-applies every `Role` password once.
+- After the upgrade to the version that introduced the fingerprint, every existing `Role` gets one password update, because its status has no fingerprint yet.
+
+**Threat model:**
+
+The fingerprint is a keyed hash. It is not a password hash with a work factor, such as `bcrypt` or `PBKDF2`.
+
+- Without the key, the fingerprint reveals nothing about the password. A reader of the `Role` status alone cannot attack it. This includes a backup of etcd and a user with `get` on `Role` resources.
+- With the key, an attacker can test password guesses offline at `HMAC-SHA256` speed. Treat the key Secret as a credential. Keep the number of principals with `get` on Secrets in the operator namespace small.
+- An attacker who reads the key Secret can usually also read the password Secrets that the `Role` resources reference. In that case the fingerprint adds no exposure that the attacker does not already have.
+- The operator never writes the password, its `SCRAM-SHA-256` verifier, or the key into the `Role` status.
+- To retire a key, delete the key Secret. The operator generates a new key and re-applies every `Role` password once. Every old fingerprint then becomes meaningless.
+
+#### `passwordEncryption`
+
+| Value           | Behavior                                                                                                                                                                                                 |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `scram-sha-256` | **Default**. The operator computes the `SCRAM-SHA-256` verifier itself and sends only the verifier. The cleartext password never reaches the server, its statement log, or extensions such as `pgaudit`. |
+| `server`        | The operator sends the cleartext password. The server hashes it according to its `password_encryption` setting. Use this for clients that only support MD5 authentication.                               |
+
+If the Secret already contains an `MD5` or `SCRAM-SHA-256` verifier, the operator forwards it unchanged in both modes.
+
+**Note:**
+A pre-hashed password bypasses server-side password policies. The `credcheck` extension rejects it unless `credcheck.encrypted_password_allowed` is on. For example a Cloud SQL password policy does not apply to hashed passwords. Set `passwordEncryption: server` when such a policy must apply.
+
+### Non-superuser admins
+
+The admin role of the `ClusterConnection` does not need to be a superuser. `CREATEROLE` is sufficient for `Role` resources.  
+See [ClusterConnection](cluster-connection.md#admin-privileges) for the full list of privileges. The following limits apply when the admin is not a superuser:
+
+- The flags `superuser`, `replication`, and `bypassrls` cannot be set. PostgreSQL rejects them, and the `Role` status shows the error.
+- On PostgreSQL 16 and later, the admin can only alter roles on which it holds `ADMIN OPTION`. Roles created by the operator qualify. Roles created by another user do not, unless that user grants the admin `ADMIN OPTION`.
 
 ### Example
 

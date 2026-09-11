@@ -3,11 +3,11 @@ package it.aboutbits.postgresql.crd.role;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
+import it.aboutbits.postgresql._support.PostgreSQLPasswordVerifier;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
-import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.ResourceRef;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +32,13 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
-import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
+import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.query;
 import static org.jooq.impl.DSL.role;
+import static org.jooq.impl.DSL.val;
 
 @QuarkusTest
 @RequiredArgsConstructor
@@ -45,7 +48,6 @@ class RoleReconcilerTest {
 
     private final RoleService roleService;
     private final PostgreSQLContextFactory postgreSQLContextFactory;
-    private final PostgreSQLAuthenticationService postgreSQLAuthenticationService;
 
     private final KubernetesClient kubernetesClient;
 
@@ -55,7 +57,7 @@ class RoleReconcilerTest {
     }
 
     @Test
-    @DisplayName("When a Role (LOGIN) is created, it should be reconciled to READY and present in pg_authid")
+    @DisplayName("When a Role (LOGIN) is created, it should be reconciled to READY and present in pg_roles")
     void createRole_withLogin_andStatusReady() {
         // given
         var clusterConnection = given.one()
@@ -75,7 +77,7 @@ class RoleReconcilerTest {
                 .returnFirst();
 
         // then: assert READY
-        var expectedStatus = new CRStatus()
+        var expectedStatus = new RoleStatus()
                 .setName(roleName)
                 .setPhase(CRPhase.READY)
                 .setObservedGeneration(1L);
@@ -90,6 +92,7 @@ class RoleReconcilerTest {
 
         assertThat(roleService.roleExists(dsl, role.getSpec())).isTrue();
         assertThat(roleService.roleLoginMatches(dsl, role.getSpec())).isTrue();
+        assertThat(role.getStatus().getPasswordFingerprint()).isNotBlank();
     }
 
     @Test
@@ -111,7 +114,7 @@ class RoleReconcilerTest {
                 .withClusterConnectionName(clusterConnection.getMetadata().getName())
                 .returnFirst();
 
-        var expectedStatus = new CRStatus()
+        var expectedStatus = new RoleStatus()
                 .setName(roleName)
                 .setPhase(CRPhase.READY)
                 .setObservedGeneration(1L);
@@ -126,10 +129,11 @@ class RoleReconcilerTest {
 
         assertThat(roleService.roleExists(dsl, role.getSpec())).isTrue();
         assertThat(roleService.roleLoginMatches(dsl, role.getSpec())).isTrue();
+        assertThat(role.getStatus().getPasswordFingerprint()).isNull();
     }
 
     @Test
-    @DisplayName("When a Role login state is changed, it should be updated correctly in pg_authid")
+    @DisplayName("When a Role login state is changed, it should be updated correctly in pg_roles")
     void toggleRoleLogin_updatesCorrectly() {
         // given
         var clusterConnection = given.one()
@@ -152,7 +156,7 @@ class RoleReconcilerTest {
         // then
         assertThatRoleHasExpectedStatus(
                 role,
-                new CRStatus()
+                new RoleStatus()
                         .setName(roleName)
                         .setPhase(CRPhase.READY)
                         .setObservedGeneration(1L),
@@ -166,7 +170,7 @@ class RoleReconcilerTest {
         ).isTrue();
 
         assertThat(
-                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)
+                getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCANLOGIN)
         ).isFalse();
 
         // 2. Add a passwordSecretRef to make it a login role
@@ -179,7 +183,7 @@ class RoleReconcilerTest {
         );
 
         // then
-        assertThat(getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)).isTrue();
+        assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCANLOGIN)).isTrue();
 
         // 3. Remove passwordSecretRef again
         spec.setPasswordSecretRef(null);
@@ -191,7 +195,49 @@ class RoleReconcilerTest {
         );
 
         // then
-        assertThat(getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCANLOGIN)).isFalse();
+        assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCANLOGIN)).isFalse();
+    }
+
+    @Test
+    @DisplayName("When a NOLOGIN Role still holds a password, the next update should clear it")
+    void noLoginRole_withLeftoverPassword_clearsPassword() {
+        // given: a reconciled NOLOGIN role
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-leftover-password")
+                .returnFirst();
+
+        var roleName = "test-role-leftover-password";
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCANLOGIN)).isFalse();
+
+        // and: somebody sets a password directly in PostgreSQL.
+        // The role keeps NOLOGIN, so the login state still matches the spec.
+        // `pg_roles` masks `rolpassword`, so the operator cannot see that password.
+        dsl.execute(query(
+                "alter role {0} with password {1}",
+                role(roleName),
+                val("leftover-password")
+        ));
+
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isNotNull();
+
+        // when: an unrelated flag changes, so the operator alters the role
+        role.getSpec().getFlags().setCreatedb(true);
+
+        applyRole(role);
+
+        // then: the operator cleared the leftover password
+        assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCREATEDB)).isTrue();
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isNull();
     }
 
     @Test
@@ -275,9 +321,9 @@ class RoleReconcilerTest {
         // Wait for password to match because reconciliation might take a bit
         await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() -> postgreSQLAuthenticationService.passwordMatches(
+                .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
-                        role.getSpec(),
+                        role.getSpec().getName(),
                         initialPassword
                 ));
 
@@ -295,9 +341,9 @@ class RoleReconcilerTest {
         // then: password should eventually match the new one
         await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() -> postgreSQLAuthenticationService.passwordMatches(
+                .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
-                        role.getSpec(),
+                        role.getSpec().getName(),
                         newPassword
                 ));
     }
@@ -343,9 +389,9 @@ class RoleReconcilerTest {
         // then: password should match the initial one
         await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() -> postgreSQLAuthenticationService.passwordMatches(
+                .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
-                        role.getSpec(),
+                        role.getSpec().getName(),
                         initialPassword
                 ));
 
@@ -357,11 +403,183 @@ class RoleReconcilerTest {
         // then: password should eventually match the new one
         await().atMost(5, TimeUnit.SECONDS)
                 .pollInterval(100, TimeUnit.MILLISECONDS)
-                .until(() -> postgreSQLAuthenticationService.passwordMatches(
+                .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
-                        updatedRole.getSpec(),
+                        updatedRole.getSpec().getName(),
                         newPassword
                 ));
+    }
+
+    @Test
+    @DisplayName("When an existing Role has no password fingerprint in its status, the Secret password should be applied once")
+    void missingPasswordFingerprint_appliesSecretPasswordOnce() {
+        // given: a Role created by the operator
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-fingerprint-upgrade")
+                .returnFirst();
+
+        var roleName = "test-role-fingerprint-upgrade";
+        var password = "secret-password";
+
+        var secretRef = given.one()
+                .secretRef()
+                .withPassword(password)
+                .returnFirst();
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(secretRef)
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var initialFingerprint = role.getStatus().getPasswordFingerprint();
+        assertThat(initialFingerprint).isNotBlank();
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isTrue();
+
+        // given: the password in PostgreSQL differs from the Secret, and the status has no fingerprint,
+        // like a Role that was reconciled by a version of the operator without fingerprints
+        dsl.execute("alter role {0} with password {1}", role(roleName), inline("out-of-band-password"));
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isFalse();
+
+        kubernetesClient.resources(Role.class)
+                .inNamespace(role.getMetadata().getNamespace())
+                .withName(role.getMetadata().getName())
+                .editStatus(current -> {
+                    current.getStatus().setPasswordFingerprint(null);
+                    return current;
+                });
+
+        // when: a spec change triggers the next reconcile
+        role.getSpec().setComment("triggers a reconcile");
+
+        var updatedRole = applyRole(role);
+
+        // then: the Secret password is applied once and the fingerprint is set again
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getPasswordFingerprint()).isEqualTo(initialFingerprint);
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isTrue();
+
+        // when: the next reconcile finds a matching fingerprint and leaves the password alone
+        var verifierAfterUpgrade = PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName);
+
+        updatedRole.getSpec().setComment("triggers another reconcile");
+
+        updatedRole = applyRole(updatedRole);
+
+        // then
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getPasswordFingerprint()).isEqualTo(initialFingerprint);
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isEqualTo(verifierAfterUpgrade);
+    }
+
+    @Test
+    @DisplayName("When the Secret already contains a SCRAM-SHA-256 verifier, it should be stored verbatim")
+    void preHashedPassword_isStoredVerbatim() {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-prehashed")
+                .returnFirst();
+
+        var roleName = "test-role-prehashed";
+
+        // Verifier for the password "abc", generated by PostgreSQL
+        var verifier = "SCRAM-SHA-256$4096:gxUQWxfrRYegSTNiHXFT+g==$lxMC2yO9Lx9gm2dgNPo/1Qar+pjAvxCP2VN4yPWYnzE=:0QzcS9VJHJszBq4vSce3n4M6NZmyWa1GWdkJDi8hRNc=";
+
+        var secretRef = given.one()
+                .secretRef()
+                .withPassword(verifier)
+                .returnFirst();
+
+        // when
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(secretRef)
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        // then
+        assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isEqualTo(verifier);
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                "abc"
+        )).isTrue();
+    }
+
+    @Test
+    @DisplayName("When passwordEncryption is 'server', the server should hash the password")
+    void serverPasswordEncryption_letsTheServerHash() {
+        // given
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-server-encryption")
+                .returnFirst();
+
+        var roleName = "test-role-server-encryption";
+        var password = "server-side-password";
+
+        var secretRef = given.one()
+                .secretRef()
+                .withPassword(password)
+                .returnFirst();
+
+        // when
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(secretRef)
+                .withPasswordEncryption(PasswordEncryption.SERVER)
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        // then
+        assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isTrue();
+
+        // when: switch to operator-side SCRAM, the password is re-applied with a fresh verifier
+        var previousVerifier = PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName);
+        var previousFingerprint = role.getStatus().getPasswordFingerprint();
+
+        role.getSpec().setPasswordEncryption(PasswordEncryption.SCRAM_SHA_256);
+
+        var updatedRole = applyRole(role);
+
+        // then
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getPasswordFingerprint()).isNotEqualTo(previousFingerprint);
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isNotEqualTo(previousVerifier);
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
+                dsl,
+                roleName,
+                password
+        )).isTrue();
     }
 
     @Test
@@ -524,7 +742,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCONNLIMIT)
+                getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCONNLIMIT)
         ).isEqualTo(10);
 
         // 2. Change connection limit
@@ -538,7 +756,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCONNLIMIT)
+                getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCONNLIMIT)
         ).isEqualTo(20);
 
         // 3. Reset connection limit to -1
@@ -552,7 +770,7 @@ class RoleReconcilerTest {
 
         // then
         assertThat(
-                getRoleFlagValue(dsl, roleName, PG_AUTHID.ROLCONNLIMIT)
+                getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCONNLIMIT)
         ).isEqualTo(-1);
     }
 
@@ -874,19 +1092,19 @@ class RoleReconcilerTest {
             Field<T> field
     ) {
         return dsl.select(field)
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(roleName))
+                .from(PG_ROLES)
+                .where(PG_ROLES.ROLNAME.eq(roleName))
                 .fetchSingle(field);
     }
 
     private static Stream<Arguments> provideBooleanFlags() {
         return Stream.of(
-                Arguments.of(PG_AUTHID.ROLSUPER, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setSuperuser),
-                Arguments.of(PG_AUTHID.ROLCREATEDB, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreatedb),
-                Arguments.of(PG_AUTHID.ROLCREATEROLE, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreaterole),
-                Arguments.of(PG_AUTHID.ROLINHERIT, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setInherit),
-                Arguments.of(PG_AUTHID.ROLREPLICATION, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
-                Arguments.of(PG_AUTHID.ROLBYPASSRLS, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setBypassrls)
+                Arguments.of(PG_ROLES.ROLSUPER, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setSuperuser),
+                Arguments.of(PG_ROLES.ROLCREATEDB, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreatedb),
+                Arguments.of(PG_ROLES.ROLCREATEROLE, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreaterole),
+                Arguments.of(PG_ROLES.ROLINHERIT, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setInherit),
+                Arguments.of(PG_ROLES.ROLREPLICATION, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
+                Arguments.of(PG_ROLES.ROLBYPASSRLS, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setBypassrls)
         );
     }
 
@@ -955,7 +1173,7 @@ class RoleReconcilerTest {
                     );
                 })
                 .usingRecursiveComparison()
-                .ignoringFields("lastProbeTime", "lastPhaseTransitionTime")
+                .ignoringFields("lastProbeTime", "lastPhaseTransitionTime", "passwordFingerprint")
                 .isEqualTo(expectedStatus);
     }
 }

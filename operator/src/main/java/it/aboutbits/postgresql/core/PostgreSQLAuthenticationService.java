@@ -1,10 +1,8 @@
 package it.aboutbits.postgresql.core;
 
 import com.ongres.scram.common.StringPreparation;
-import it.aboutbits.postgresql.crd.role.RoleSpec;
+import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import jakarta.inject.Singleton;
-import lombok.extern.slf4j.Slf4j;
-import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
 import javax.crypto.Mac;
@@ -13,175 +11,126 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
 
-import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
-
-@Slf4j
+/// Builds the password literal that the operator sends to PostgreSQL in `CREATE ROLE` and `ALTER ROLE`.
+///
+/// By default, the operator computes the SCRAM-SHA-256 verifier itself,
+/// exactly like `psql \password` or libpq's `PQencryptPasswordConn`.
+/// PostgreSQL stores a verifier as is, regardless of its `password_encryption` setting.
+/// This keeps the cleartext password out of the server's statement log and out of extensions such as `pg_stat_statements` or `pgaudit`.
 @Singleton
 @NullMarked
 public final class PostgreSQLAuthenticationService {
+    public static final String SCRAM_SHA_256_PREFIX = "SCRAM-SHA-256$";
+
+    /// PostgreSQL's default for `scram_iterations`.
+    public static final int SCRAM_SHA_256_ITERATIONS = 4096;
+
     private static final String MD5 = "MD5";
+    private static final int MD5_VERIFIER_LENGTH = 3 + 32;
     private static final String SHA_256 = "SHA-256";
     private static final String HMAC_SHA_256 = "HmacSHA256";
     private static final String PBKDF2_WITH_HMAC_SHA256 = "PBKDF2WithHmacSHA256";
+    private static final int SCRAM_SALT_LENGTH_BYTES = 16;
+    private static final int SCRAM_KEY_LENGTH_BYTES = 32;
 
-    public boolean passwordMatches(
-            DSLContext dsl,
-            RoleSpec spec,
-            String expectedPassword
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    /// Convert the password from the Secret into the literal to send to PostgreSQL.
+    ///
+    /// A value that already is an MD5 or SCRAM-SHA-256 verifier is forwarded unchanged, so users keep
+    /// full control over the stored hash.
+    public String toServerPassword(
+            String password,
+            PasswordEncryption passwordEncryption
     ) {
-        var currentPasswordVerifier = dsl
-                .select(PG_AUTHID.ROLPASSWORD)
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(spec.getName()))
-                .fetchSingle(PG_AUTHID.ROLPASSWORD);
-
-        if (currentPasswordVerifier == null || currentPasswordVerifier.isBlank()) {
-            return false;
+        if (passwordEncryption == PasswordEncryption.SERVER || isEncrypted(password)) {
+            return password;
         }
 
-        // PostgreSQL stores either:
-        // - SCRAM verifier: SCRAM-SHA-256$<iterations>:<saltB64>$<storedKeyB64>:<serverKeyB64>
-        // - or legacy md5: md5<md5(password + username)>
-        if (currentPasswordVerifier.startsWith("SCRAM-SHA-256$")) {
-            return verifyPostgresScramSha256(
-                    currentPasswordVerifier,
-                    expectedPassword
-            );
-        }
-
-        if (currentPasswordVerifier.startsWith(MD5.toLowerCase(Locale.ROOT))) {
-            return verifyPostgresMd5(
-                    currentPasswordVerifier,
-                    expectedPassword,
-                    spec.getName()
-            );
-        }
-
-        // Unknown format (or plain text, which PG should not store in rolpassword)
-        return false;
+        return scramSha256Verifier(password);
     }
 
-    private static boolean verifyPostgresScramSha256(String postgresVerifier, String cleartextPassword) {
-        // Prepare the cleartext password with SASLprep
+    /// Whether the given password is already an MD5 or SCRAM-SHA-256 verifier.
+    public static boolean isEncrypted(String password) {
+        return password.startsWith(SCRAM_SHA_256_PREFIX) || isMd5Verifier(password);
+    }
+
+    /// Compute a PostgreSQL SCRAM-SHA-256 verifier for the given cleartext password.
+    ///
+    /// Format: `SCRAM-SHA-256$<iterations>:<saltB64>$<storedKeyB64>:<serverKeyB64>`
+    /// as described in RFC 5802 and RFC 7677 and used by PostgreSQL since version 10.
+    public String scramSha256Verifier(String cleartextPassword) {
+        // Prepare the cleartext password with SASLprep, as PostgreSQL does
         var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(
                 cleartextPassword.toCharArray()
         );
 
-        // Format: SCRAM-SHA-256$<iterations>:<saltB64>$<storedKeyB64>:<serverKeyB64>
-        var afterPrefix = postgresVerifier.substring("SCRAM-SHA-256$".length());
-        var dollar = afterPrefix.indexOf('$');
-        if (dollar < 0) {
-            return false;
-        }
-
-        // <iterations>:<saltB64>
-        var iterationsAndSalt = afterPrefix.substring(0, dollar);
-        // <storedKeyB64>:<serverKeyB64>
-        var keys = afterPrefix.substring(dollar + 1);
-
-        var colonIterationsAndSalt = iterationsAndSalt.indexOf(':');
-        if (colonIterationsAndSalt < 0) {
-            return false;
-        }
-
-        int iterations;
-        try {
-            iterations = Integer.parseInt(iterationsAndSalt.substring(0, colonIterationsAndSalt));
-        } catch (NumberFormatException e) {
-            log.error("Invalid iterations format in PostgreSQL verifier: %s".formatted(postgresVerifier), e);
-            return false;
-        }
-        if (iterations <= 0) {
-            return false;
-        }
-
-        var saltB64 = iterationsAndSalt.substring(colonIterationsAndSalt + 1);
-
-        var colonKeys = keys.indexOf(':');
-        if (colonKeys < 0) {
-            return false;
-        }
-
-        var storedKeyB64 = keys.substring(0, colonKeys);
-
-        byte[] salt;
-        byte[] currentStoredKey;
-        try {
-            salt = Base64.getDecoder().decode(saltB64);
-            currentStoredKey = Base64.getDecoder().decode(storedKeyB64);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid salt or stored key format in PostgreSQL verifier: %s".formatted(postgresVerifier), e);
-            return false;
-        }
+        var salt = new byte[SCRAM_SALT_LENGTH_BYTES];
+        secureRandom.nextBytes(salt);
 
         byte[] saltedPassword = null;
         byte[] clientKey = null;
-        byte[] expectedStoredKey = null;
+        byte[] storedKey = null;
+        byte[] serverKey = null;
         try {
             // RFC 5802/7677:
             // saltedPassword := Hi(password, salt, iterations) (PBKDF2-HMAC-SHA-256, 32 bytes)
             // clientKey      := HMAC(saltedPassword, "Client Key")
             // storedKey      := H(clientKey)  (SHA-256)
-            saltedPassword = pbkdf2HmacSha256(preparedPassword, salt, iterations, 32);
+            // serverKey      := HMAC(saltedPassword, "Server Key")
+            saltedPassword = pbkdf2HmacSha256(preparedPassword, salt, SCRAM_SHA_256_ITERATIONS, SCRAM_KEY_LENGTH_BYTES);
             clientKey = hmacSha256(saltedPassword, "Client Key".getBytes(StandardCharsets.UTF_8));
-            expectedStoredKey = sha256(clientKey);
+            storedKey = sha256(clientKey);
+            serverKey = hmacSha256(saltedPassword, "Server Key".getBytes(StandardCharsets.UTF_8));
 
-            return MessageDigest.isEqual(
-                    currentStoredKey,
-                    expectedStoredKey
+            var encoder = Base64.getEncoder();
+
+            return "%s%d:%s$%s:%s".formatted(
+                    SCRAM_SHA_256_PREFIX,
+                    SCRAM_SHA_256_ITERATIONS,
+                    encoder.encodeToString(salt),
+                    encoder.encodeToString(storedKey),
+                    encoder.encodeToString(serverKey)
             );
         } finally {
+            Arrays.fill(preparedPassword, '\0');
             if (saltedPassword != null) {
                 Arrays.fill(saltedPassword, (byte) 0);
             }
             if (clientKey != null) {
                 Arrays.fill(clientKey, (byte) 0);
             }
-            if (expectedStoredKey != null) {
-                Arrays.fill(expectedStoredKey, (byte) 0);
+            if (storedKey != null) {
+                Arrays.fill(storedKey, (byte) 0);
+            }
+            if (serverKey != null) {
+                Arrays.fill(serverKey, (byte) 0);
             }
         }
     }
 
-    private static boolean verifyPostgresMd5(
-            String postgresMd5,
-            String expectedPassword,
-            String username
-    ) {
-        // PostgreSQL md5 is: "md5" + md5(password + username)
-        if (postgresMd5.length() != 3 + 32 || !postgresMd5.regionMatches(true, 0, MD5, 0, 3)) {
+    private static boolean isMd5Verifier(String password) {
+        // PostgreSQL md5 is: "md5" + md5(password + username) as 32 hex characters
+        if (password.length() != MD5_VERIFIER_LENGTH || !password.regionMatches(true, 0, MD5, 0, 3)) {
             return false;
         }
 
-        byte[] currentDigest;
         try {
-            currentDigest = HexFormat.of().parseHex(
-                    postgresMd5,
+            HexFormat.of().parseHex(
+                    password.toLowerCase(Locale.ROOT),
                     3,
-                    postgresMd5.length()
+                    password.length()
             );
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid MD5 format in PostgreSQL verifier: %s".formatted(postgresMd5), e);
-            return false; // not valid hex
+            return true;
+        } catch (IllegalArgumentException _) {
+            return false;
         }
-
-        MessageDigest md5;
-        try {
-            md5 = MessageDigest.getInstance(MD5);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("%s not available".formatted(MD5), e);
-        }
-
-        md5.update((expectedPassword + username).getBytes(StandardCharsets.UTF_8));
-        var expectedDigest = md5.digest();
-
-        return MessageDigest.isEqual(currentDigest, expectedDigest);
     }
 
     private static byte[] pbkdf2HmacSha256(

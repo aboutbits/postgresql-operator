@@ -37,6 +37,10 @@ public class RoleSpec {
     @io.fabric8.generator.annotation.Nullable
     private @Nullable ResourceRef passwordSecretRef;
 
+    /// How the operator sends the password to PostgreSQL. Defaults to an operator-side SCRAM-SHA-256 verifier.
+    @io.fabric8.generator.annotation.Nullable
+    private PasswordEncryption passwordEncryption = PasswordEncryption.SCRAM_SHA_256;
+
     @io.fabric8.generator.annotation.Nullable
     private Flags flags = new Flags();
 

@@ -35,7 +35,6 @@ Use this option when the credentials should be mounted as a file inside the oper
 |--------|----------|-----------------------------------------------------------------------------------------|----------|
 | `path` | `string` | The absolute path inside the operator Pod to the file containing the admin credentials. | Yes      |
 
-
 #### File format
 
 The file must contain JSON with the following fields:
@@ -65,6 +64,21 @@ The value of `adminSecretFileRef.path` is the `mountPath` plus the name of the f
 | `csi` (Secrets Store CSI driver) | the `objectAlias` of the object |
 
 See [Using a file reference](#using-a-file-reference-adminsecretfileref) in the examples for a complete setup with each volume source.
+
+## Admin privileges
+
+The admin role does not need to be a superuser. This makes the operator usable with managed services such as AWS RDS, Amazon Aurora, Google Cloud SQL, or Azure Database for PostgreSQL, where no superuser is available.
+
+| Custom Resource                       | Required privilege of the admin role                            |
+|---------------------------------------|-----------------------------------------------------------------|
+| `ClusterConnection`                   | `LOGIN`                                                         |
+| `Role`                                | `CREATEROLE`                                                    |
+| `Database`                            | `CREATEDB`                                                      |
+| `Schema`, `Grant`, `DefaultPrivilege` | Ownership of, or the matching privileges on, the target objects |
+
+The master user of the managed services above has `LOGIN`, `CREATEDB`, and `CREATEROLE`. See [Role](role.md#non-superuser-admins) for the limits that apply to a non-superuser admin.
+
+The operator reads role state from the public view `pg_roles`. It does not read `pg_authid` or `pg_shadow`, which these services deny.
 
 ## Examples
 
