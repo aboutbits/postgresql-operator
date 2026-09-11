@@ -36,7 +36,9 @@ import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.query;
 import static org.jooq.impl.DSL.role;
+import static org.jooq.impl.DSL.val;
 
 @QuarkusTest
 @RequiredArgsConstructor
@@ -194,6 +196,48 @@ class RoleReconcilerTest {
 
         // then
         assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCANLOGIN)).isFalse();
+    }
+
+    @Test
+    @DisplayName("When a NOLOGIN Role still holds a password, the next update should clear it")
+    void noLoginRole_withLeftoverPassword_clearsPassword() {
+        // given: a reconciled NOLOGIN role
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-leftover-password")
+                .returnFirst();
+
+        var roleName = "test-role-leftover-password";
+
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCANLOGIN)).isFalse();
+
+        // and: somebody sets a password directly in PostgreSQL.
+        // The role keeps NOLOGIN, so the login state still matches the spec.
+        // `pg_roles` masks `rolpassword`, so the operator cannot see that password.
+        dsl.execute(query(
+                "alter role {0} with password {1}",
+                role(roleName),
+                val("leftover-password")
+        ));
+
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isNotNull();
+
+        // when: an unrelated flag changes, so the operator alters the role
+        role.getSpec().getFlags().setCreatedb(true);
+
+        applyRole(role);
+
+        // then: the operator cleared the leftover password
+        assertThat(getRoleFlagValue(dsl, roleName, PG_ROLES.ROLCREATEDB)).isTrue();
+        assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isNull();
     }
 
     @Test

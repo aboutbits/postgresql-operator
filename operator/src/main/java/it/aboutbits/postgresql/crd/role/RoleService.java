@@ -374,12 +374,17 @@ public final class RoleService {
         }
 
         // Password handling
-        // - if the role loses LOGIN, remove the password
+        // - if no login is expected, remove the password
         // - if LOGIN and the password changed, set the new password
-        if (!loginExpected && currentCanLogin) {
+        //
+        // `PASSWORD NULL` is not conditional on the current state. `pg_roles` masks `rolpassword`
+        // with a constant, so the operator cannot tell whether a `NOLOGIN` role still holds a
+        // password. The reconciler calls this method only when the role differs from the spec,
+        // so the statement does not run on every reconcile.
+        if (!loginExpected) {
             options.add(keyword(RoleFlag.PASSWORD.flag()));
             options.add(keyword("NULL"));
-        } else if (loginExpected && changePassword) {
+        } else if (changePassword) {
             options.add(keyword(RoleFlag.PASSWORD.flag()));
             options.add(val(password));
         }
