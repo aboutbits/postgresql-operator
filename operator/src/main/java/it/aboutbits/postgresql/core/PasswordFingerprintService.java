@@ -15,6 +15,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -58,15 +60,18 @@ public class PasswordFingerprintService {
         var encryption = passwordEncryption.toValue().getBytes(StandardCharsets.UTF_8);
         var secret = password.getBytes(StandardCharsets.UTF_8);
 
+        // Load the key outside the try block, so that a Kubernetes error keeps its own message
+        var key = getKey();
+
         try {
             var mac = Mac.getInstance(HMAC_SHA_256);
-            mac.init(new SecretKeySpec(getKey(), HMAC_SHA_256));
+            mac.init(new SecretKeySpec(key, HMAC_SHA_256));
             mac.update(encryption);
             mac.update(SEPARATOR);
             mac.update(secret);
 
             return Base64.getEncoder().encodeToString(mac.doFinal());
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new IllegalStateException("%s not available".formatted(HMAC_SHA_256), e);
         }
     }
