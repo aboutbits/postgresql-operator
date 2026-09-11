@@ -65,6 +65,16 @@ The Helm chart grants `create` on Secrets through a `Role` and `RoleBinding` in 
 - If the key Secret is lost, the operator generates a new key and re-applies every `Role` password once.
 - After the upgrade to the version that introduced the fingerprint, every existing `Role` gets one password update, because its status has no fingerprint yet.
 
+**Threat model:**
+
+The fingerprint is a keyed hash. It is not a password hash with a work factor, such as `bcrypt` or `PBKDF2`.
+
+- Without the key, the fingerprint reveals nothing about the password. A reader of the `Role` status alone cannot attack it. This includes a backup of etcd and a user with `get` on `Role` resources.
+- With the key, an attacker can test password guesses offline at `HMAC-SHA256` speed. Treat the key Secret as a credential. Keep the number of principals with `get` on Secrets in the operator namespace small.
+- An attacker who reads the key Secret can usually also read the password Secrets that the `Role` resources reference. In that case the fingerprint adds no exposure that the attacker does not already have.
+- The operator never writes the password, its `SCRAM-SHA-256` verifier, or the key into the `Role` status.
+- To retire a key, delete the key Secret. The operator generates a new key and re-applies every `Role` password once. Every old fingerprint then becomes meaningless.
+
 #### `passwordEncryption`
 
 | Value           | Behavior                                                                                                                                                                                                 |
