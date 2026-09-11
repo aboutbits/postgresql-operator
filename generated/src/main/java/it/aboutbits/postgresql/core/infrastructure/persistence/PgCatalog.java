@@ -12,6 +12,7 @@ import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDatabase
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDbRoleSetting;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgDefaultAcl;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgNamespace;
+import it.aboutbits.postgresql.core.infrastructure.persistence.tables.PgRoles;
 import it.aboutbits.postgresql.core.infrastructure.persistence.tables.records.AclexplodeRecord;
 
 import java.util.Arrays;
@@ -123,6 +124,11 @@ public class PgCatalog extends SchemaImpl {
     public final PgNamespace PG_NAMESPACE = PgNamespace.PG_NAMESPACE;
 
     /**
+     * The table <code>pg_catalog.pg_roles</code>.
+     */
+    public final PgRoles PG_ROLES = PgRoles.PG_ROLES;
+
+    /**
      * No further instances allowed
      */
     private PgCatalog() {
@@ -145,7 +151,8 @@ public class PgCatalog extends SchemaImpl {
             PgDatabase.PG_DATABASE,
             PgDbRoleSetting.PG_DB_ROLE_SETTING,
             PgDefaultAcl.PG_DEFAULT_ACL,
-            PgNamespace.PG_NAMESPACE
+            PgNamespace.PG_NAMESPACE,
+            PgRoles.PG_ROLES
         );
     }
 }

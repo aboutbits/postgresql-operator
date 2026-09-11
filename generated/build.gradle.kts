@@ -39,6 +39,7 @@ jooq {
                 | pg_default_acl
                 | pg_get_userbyid
                 | pg_namespace
+                | pg_roles
                 | shobj_description
                 """.trimIndent()
                 excludes = """
