@@ -286,13 +286,20 @@ make generate-jooq
 ./gradlew :generated:jooqCodegen
 ```
 
-The generator writes JSpecify nullability annotations into the generated sources, so NullAway reads the real nullness of every generated method instead of guessing.  
-Two consequences are worth knowing:
+The generator writes JSpecify nullability annotations into the generated sources, so NullAway reads the real nullness of every generated column accessor instead of guessing.  
+Routine return values stay unannotated, so `Routines.shobjDescription` still counts as non-null even though PostgreSQL returns `NULL` for an object without a comment.  
+Three consequences are worth knowing:
 
 - jOOQ does not officially support the `TYPE_USE` positioning that JSpecify requires yet ([jOOQ/jOOQ#10759](https://github.com/jOOQ/jOOQ/issues/10759)).  
-  The positioning is correct here only because the generated code uses no generics, collections, maps, arrays or forced types with inner
+  The positioning is correct for every scalar column, because the generated code uses no generics, collections, maps or forced types with inner
   classes.  
   Keep the `includes` list free of such objects, or review the annotation positions after a regeneration.
+- The positioning is wrong for the six array columns.  
+  Java applies a `TYPE_USE` annotation written before an array type to the element type, and NullAway drops array-dimension annotations in `JSpecifyMode`.  
+  So `@Nullable String[] getNspacl()` reads as a non-null array of nullable strings, while the column is a nullable array of non-null strings.  
+  The six accessors are `getNspacl`, `getDatacl`, `getRelacl`, `getReloptions`, `getSetconfig` and `getDefaclacl`.  
+  No operator code calls them today, because the operator uses the table field constants and `Routines.aclexplode` instead.  
+  A declaration annotation for `nullableAnnotationType` would fix the positioning, because such an annotation always applies to the method. That is a design change.
 - Every generated class carries `@SuppressWarnings({"all", ...})`, which Error Prone honours.  
   That suppression, and nothing else, is why the generated sources are exempt from the checks in  `errorprone.args`, including `RequireExplicitNullMarking`.  
   Do not add `NullAway:TreatGeneratedAsUnannotated`: it would make NullAway discard the nullability annotations that this generator now writes.
