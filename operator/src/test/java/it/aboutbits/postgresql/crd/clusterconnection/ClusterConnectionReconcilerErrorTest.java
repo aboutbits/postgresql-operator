@@ -52,9 +52,7 @@ class ClusterConnectionReconcilerErrorTest {
         resource.setSpec(spec);
         resource.setMetadata(metadata);
 
-        @SuppressWarnings("unchecked")
-        Context<ClusterConnection> mockedContext = mock(Context.class);
-        context = mockedContext;
+        context = mock();
     }
 
     @Test
