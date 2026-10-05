@@ -235,10 +235,13 @@ class RoleReconcilerNonSuperuserTest {
         // so the next reconcile is a no-op
         assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(roleService.fetchCurrentFlags(adminDsl, spec)).isEqualTo(spec.getFlags());
+        assertThat(adminHasUsage(rootDsl, roleName)).isFalse();
 
-        // given: the admin grants itself SET on the role, like `createrole_self_grant = 'set, inherit'` does
+        // given: the admin grants itself membership in the role.
+        // On PostgreSQL 16+ the defaults are SET TRUE and INHERIT TRUE, like `createrole_self_grant = 'set, inherit'`.
+        // `WITH SET TRUE, INHERIT TRUE` is not used, because PostgreSQL 15 does not support this syntax.
         adminDsl.execute(
-                "grant {0} to {1} with set true, inherit true",
+                "grant {0} to {1}",
                 role(roleName),
                 role(ADMIN_ROLE)
         );
@@ -248,14 +251,11 @@ class RoleReconcilerNonSuperuserTest {
 
         var updated = applyRole(role);
 
-        // then: the self-granted membership is not revoked
+        // then: the self-granted membership is not revoked.
+        // USAGE ignores the implicit membership of PostgreSQL 16+, because that membership has INHERIT FALSE.
         assertThat(updated.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(roleService.fetchCurrentFlags(adminDsl, spec)).isEqualTo(spec.getFlags());
-        assertThat(rootDsl.fetchValue(
-                "select pg_has_role({0}, {1}, 'SET')",
-                ADMIN_ROLE,
-                roleName
-        )).isEqualTo(true);
+        assertThat(adminHasUsage(rootDsl, roleName)).isTrue();
     }
 
     @ParameterizedTest(name = "flag {0}")
@@ -420,6 +420,18 @@ class RoleReconcilerNonSuperuserTest {
                         5,
                         TimeUnit.SECONDS
                 );
+    }
+
+    /// Whether the admin can use the privileges of the role without `SET ROLE`.
+    private static boolean adminHasUsage(
+            DSLContext rootDsl,
+            String roleName
+    ) {
+        return Boolean.TRUE.equals(rootDsl.fetchValue(
+                "select pg_has_role({0}, {1}, 'USAGE')",
+                ADMIN_ROLE,
+                roleName
+        ));
     }
 
     private Role applyRole(Role role) {
