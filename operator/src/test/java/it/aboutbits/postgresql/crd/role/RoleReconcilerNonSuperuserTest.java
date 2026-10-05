@@ -211,6 +211,53 @@ class RoleReconcilerNonSuperuserTest {
         adminDsl.execute("drop role if exists {0}", role(parentRole));
     }
 
+    @Test
+    @DisplayName("When the admin is not a superuser, its implicit membership in a created Role should be ignored and kept")
+    void nonSuperuserAdmin_implicitAdminMembership_isIgnoredAndKept() {
+        // given
+        var rootConnection = givenRootClusterConnection("test-connection-root-self-grant");
+        var rootDsl = postgreSQLContextFactory.getDSLContext(rootConnection);
+        var adminConnection = givenNonSuperuserClusterConnection(rootDsl, "test-connection-non-superuser-self-grant");
+        var adminDsl = postgreSQLContextFactory.getDSLContext(adminConnection);
+
+        var roleName = "test-non-superuser-role-self-grant";
+
+        // when: create a NOLOGIN role
+        var role = given.one()
+                .role()
+                .withName(roleName)
+                .withClusterConnectionName(adminConnection.getMetadata().getName())
+                .returnFirst();
+
+        var spec = role.getSpec();
+
+        // then: the implicit membership of the admin (PostgreSQL 16+) does not make the flags differ,
+        // so the next reconcile is a no-op
+        assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(roleService.fetchCurrentFlags(adminDsl, spec)).isEqualTo(spec.getFlags());
+
+        // given: the admin grants itself SET on the role, like `createrole_self_grant = 'set, inherit'` does
+        adminDsl.execute(
+                "grant {0} to {1} with set true, inherit true",
+                role(roleName),
+                role(ADMIN_ROLE)
+        );
+
+        // when: change a flag, so that the reconciler runs the membership reconciliation
+        spec.getFlags().setConnectionLimit(3);
+
+        var updated = applyRole(role);
+
+        // then: the self-granted membership is not revoked
+        assertThat(updated.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(roleService.fetchCurrentFlags(adminDsl, spec)).isEqualTo(spec.getFlags());
+        assertThat(rootDsl.fetchValue(
+                "select pg_has_role({0}, {1}, 'SET')",
+                ADMIN_ROLE,
+                roleName
+        )).isEqualTo(true);
+    }
+
     @ParameterizedTest(name = "flag {0}")
     @MethodSource("provideSuperuserOnlyFlags")
     @DisplayName("When the admin is not a superuser and the Role asks for a superuser-only flag, the status should be ERROR")

@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTH_MEMBERS;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
+import static org.jooq.impl.DSL.currentUser;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.keyword;
 import static org.jooq.impl.DSL.multiset;
@@ -200,6 +201,13 @@ public final class RoleService {
                                         .join(parent).on(parent.OID.eq(PG_AUTH_MEMBERS.ROLEID))
                                         .join(member).on(member.OID.eq(PG_AUTH_MEMBERS.MEMBER))
                                         .where(parent.OID.eq(PG_ROLES.OID))
+                                        // Since PostgreSQL 16, a non-superuser with CREATEROLE is implicitly granted
+                                        // membership in each role it creates (see `createrole_self_grant`).
+                                        // The operator did not request this membership and cannot revoke it, so the
+                                        // connecting admin is ignored unless the spec names it explicitly.
+                                        .and(member.ROLNAME.ne(currentUser())
+                                                .or(member.ROLNAME.in(spec.getFlags().getRole()))
+                                        )
                                         .orderBy(member.ROLNAME)
                         ).as("role").convertFrom(result -> result.map(Record1::value1))
                 )
