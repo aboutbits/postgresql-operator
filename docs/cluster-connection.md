@@ -69,12 +69,18 @@ See [Using a file reference](#using-a-file-reference-adminsecretfileref) in the 
 
 The admin role does not need to be a superuser. This makes the operator usable with managed services such as AWS RDS, Amazon Aurora, Google Cloud SQL, or Azure Database for PostgreSQL, where no superuser is available.
 
-| Custom Resource                       | Required privilege of the admin role                            |
-|---------------------------------------|-----------------------------------------------------------------|
-| `ClusterConnection`                   | `LOGIN`                                                         |
-| `Role`                                | `CREATEROLE`                                                    |
-| `Database`                            | `CREATEDB`                                                      |
-| `Schema`, `Grant`, `DefaultPrivilege` | Ownership of, or the matching privileges on, the target objects |
+| Custom Resource                       | Required privilege of the admin role                                       |
+|---------------------------------------|----------------------------------------------------------------------------|
+| `ClusterConnection`                   | `LOGIN`                                                                    |
+| `Role`                                | `CREATEROLE`                                                               |
+| `Database`                            | `CREATEDB`, and `SET` on the `owner` role if the `Database` has an `owner` |
+| `Schema`, `Grant`, `DefaultPrivilege` | Ownership of, or the matching privileges on, the target objects            |
+
+The `owner` of a `Database` is set with `ALTER DATABASE ... OWNER TO`. PostgreSQL requires that the admin can `SET ROLE` to the new owner.  
+On PostgreSQL 16 and later, the implicit membership that a `CREATEROLE` admin gets in the roles it creates does not include `SET`. Give the admin `SET` on the owner role in one of these ways:
+
+- `ALTER ROLE <admin> SET createrole_self_grant = 'set, inherit'` before the operator creates the owner role. This applies to new sessions of the admin only.
+- `GRANT <owner> TO <admin> WITH SET TRUE` for an owner role that already exists.
 
 The master user of the managed services above has `LOGIN`, `CREATEDB`, and `CREATEROLE`. See [Role](role.md#non-superuser-admins) for the limits that apply to a non-superuser admin.
 

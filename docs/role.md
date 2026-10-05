@@ -62,7 +62,7 @@ The Helm chart grants `create` on Secrets through a `Role` and `RoleBinding` in 
 **Consequences:**
 
 - The Secret is the source of truth. A password change made directly in PostgreSQL is not detected.
-- If the key Secret is lost, the operator generates a new key and re-applies every `Role` password once.
+- The operator reads the key Secret once and keeps the key in memory. If the key Secret is lost, restart the operator. It then generates a new key and re-applies every `Role` password once. Until the restart, the running operator keeps the old key.
 - After the upgrade to the version that introduced the fingerprint, every existing `Role` gets one password update, because its status has no fingerprint yet.
 
 **Threat model:**
@@ -73,7 +73,7 @@ The fingerprint is a keyed hash. It is not a password hash with a work factor, s
 - With the key, an attacker can test password guesses offline at `HMAC-SHA256` speed. Treat the key Secret as a credential. Keep the number of principals with `get` on Secrets in the operator namespace small.
 - An attacker who reads the key Secret can usually also read the password Secrets that the `Role` resources reference. In that case the fingerprint adds no exposure that the attacker does not already have.
 - The operator never writes the password, its `SCRAM-SHA-256` verifier, or the key into the `Role` status.
-- To retire a key, delete the key Secret. The operator generates a new key and re-applies every `Role` password once. Every old fingerprint then becomes meaningless.
+- To retire a key, delete the key Secret and restart the operator. The operator generates a new key and re-applies every `Role` password once. Every old fingerprint then becomes meaningless.
 
 #### `passwordEncryption`
 
@@ -94,6 +94,7 @@ See [ClusterConnection](cluster-connection.md#admin-privileges) for the full lis
 
 - The flags `superuser`, `replication`, and `bypassrls` cannot be set. PostgreSQL rejects them, and the `Role` status shows the error.
 - On PostgreSQL 16 and later, the admin can only alter roles on which it holds `ADMIN OPTION`. Roles created by the operator qualify. Roles created by another user do not, unless that user grants the admin `ADMIN OPTION`.
+- On PostgreSQL 16 and later, the admin becomes a member of each role it creates. The operator did not request this membership and cannot revoke it, so `flags.role` ignores the admin unless the spec names it.
 
 ### Example
 

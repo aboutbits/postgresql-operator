@@ -79,7 +79,7 @@ class PasswordFingerprintServiceTest {
         }
 
         @Test
-        @DisplayName("When the key Secret is lost, should create a new key and the fingerprints change")
+        @DisplayName("When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change")
         void whenSecretLost_shouldCreateNewKey() {
             // given
             var fingerprint = newService().fingerprint("password", PasswordEncryption.SCRAM_SHA_256);
@@ -89,7 +89,7 @@ class PasswordFingerprintServiceTest {
                     .withName(SECRET_NAME)
                     .delete();
 
-            // when
+            // when: the operator restarts
             var fingerprintWithNewKey = newService().fingerprint("password", PasswordEncryption.SCRAM_SHA_256);
 
             // then

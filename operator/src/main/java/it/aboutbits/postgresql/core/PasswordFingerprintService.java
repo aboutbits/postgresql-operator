@@ -30,7 +30,9 @@ import java.util.Base64;
 ///
 /// The HMAC key is random, generated once, and kept in a Secret in the operator namespace.
 /// Without the key, the fingerprint in the status is useless for an attack on the password.
-/// If the key Secret is lost, the operator generates a new key and re-applies every `Role` password once.
+/// The key is read once and kept in memory for the lifetime of the process.
+/// If the key Secret is lost, the operator generates a new key after its next restart and then re-applies every
+/// `Role` password once.
 @Slf4j
 @Singleton
 @RequiredArgsConstructor
