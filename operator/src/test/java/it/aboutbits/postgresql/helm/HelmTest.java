@@ -83,9 +83,11 @@ class HelmTest {
                 .withFailMessage("Helm chart not found at %s. Ensure that the chart is generated before running this test.", chartPath)
                 .exists();
 
+        var serialization = kubernetesClient.getKubernetesSerialization();
+
         // 1. Verify files exist and contain expected data
         // ./Chart.yaml
-        Map<String, Object> chartMetadata = Serialization.unmarshal(
+        Map<String, Object> chartMetadata = serialization.unmarshal(
                 Files.newInputStream(chartPath.resolve("Chart.yaml")),
                 new TypeReference<Map<String, Object>>() {
                 }
@@ -94,7 +96,7 @@ class HelmTest {
         assertThat(chartMetadata.get("name")).isEqualTo(chartName);
 
         // ./values.yaml
-        Map<String, Object> values = Serialization.unmarshal(
+        Map<String, Object> values = serialization.unmarshal(
                 Files.newInputStream(chartPath.resolve("values.yaml")),
                 new TypeReference<Map<String, Object>>() {
                 }
@@ -123,7 +125,7 @@ class HelmTest {
         // ./values.schema.json
         // The type must be declared for every list value, otherwise the generated schema
         // falls back to `string` and `helm install` rejects a list.
-        var valuesSchema = Serialization.unmarshal(
+        var valuesSchema = serialization.unmarshal(
                 Files.newInputStream(chartPath.resolve("values.schema.json")),
                 JsonNode.class
         );
