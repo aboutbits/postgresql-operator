@@ -22,17 +22,14 @@ import java.net.URI;
 public class Given {
     private final KubernetesClient kubernetesClient;
 
-    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.devservices.username")
-    String username;
+    private final String username;
 
-    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.devservices.password")
-    String password;
+    private final String password;
 
-    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.jdbc.url")
-    String jdbcUrl;
+    private final String jdbcUrl;
 
     DBConnectionDetails dbConnectionDetails() {
         return new DBConnectionDetails(

@@ -47,9 +47,8 @@ public class PasswordFingerprintService {
 
     private final KubernetesClient kubernetesClient;
 
-    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "postgresql-operator.password-fingerprint.secret-name")
-    String secretName;
+    private final String secretName;
 
     private byte @Nullable [] key;
 
