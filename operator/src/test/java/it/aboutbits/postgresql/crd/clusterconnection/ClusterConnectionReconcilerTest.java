@@ -44,13 +44,11 @@ class ClusterConnectionReconcilerTest {
 
     private final KubernetesClient kubernetesClient;
 
-    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.devservices.username")
-    String dbUsername;
+    private final String dbUsername;
 
-    @SuppressWarnings("NullAway.Init")
     @ConfigProperty(name = "quarkus.datasource.devservices.password")
-    String dbPassword;
+    private final String dbPassword;
 
     @BeforeEach
     void resetEnvironment() {

@@ -4,7 +4,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-import jakarta.inject.Inject;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
 import org.jspecify.annotations.NullMarked;
@@ -17,17 +17,15 @@ import java.util.Objects;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
+@RequiredArgsConstructor
 @NullMarked
 class PostgreSQLInstanceReadinessCheckTest {
-    @Inject
-    Given given;
+    private final Given given;
 
-    @Inject
     @Readiness
-    PostgreSQLInstanceReadinessCheck readinessCheck;
+    private final PostgreSQLInstanceReadinessCheck readinessCheck;
 
-    @Inject
-    KubernetesClient kubernetesClient;
+    private final KubernetesClient kubernetesClient;
 
     @BeforeEach
     void resetEnvironment() {
