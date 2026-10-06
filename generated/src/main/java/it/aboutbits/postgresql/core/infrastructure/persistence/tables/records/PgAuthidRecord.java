@@ -12,6 +12,8 @@ import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -32,7 +34,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.oid</code>.
      */
-    public PgAuthidRecord setOid(Long value) {
+    public PgAuthidRecord setOid(@NonNull Long value) {
         set(0, value);
         return this;
     }
@@ -40,6 +42,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.oid</code>.
      */
+    @NonNull
     public Long getOid() {
         return (Long) get(0);
     }
@@ -47,7 +50,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolname</code>.
      */
-    public PgAuthidRecord setRolname(String value) {
+    public PgAuthidRecord setRolname(@NonNull String value) {
         set(1, value);
         return this;
     }
@@ -55,6 +58,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolname</code>.
      */
+    @NonNull
     public String getRolname() {
         return (String) get(1);
     }
@@ -62,7 +66,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolsuper</code>.
      */
-    public PgAuthidRecord setRolsuper(Boolean value) {
+    public PgAuthidRecord setRolsuper(@NonNull Boolean value) {
         set(2, value);
         return this;
     }
@@ -70,6 +74,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolsuper</code>.
      */
+    @NonNull
     public Boolean getRolsuper() {
         return (Boolean) get(2);
     }
@@ -77,7 +82,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolinherit</code>.
      */
-    public PgAuthidRecord setRolinherit(Boolean value) {
+    public PgAuthidRecord setRolinherit(@NonNull Boolean value) {
         set(3, value);
         return this;
     }
@@ -85,6 +90,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolinherit</code>.
      */
+    @NonNull
     public Boolean getRolinherit() {
         return (Boolean) get(3);
     }
@@ -92,7 +98,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolcreaterole</code>.
      */
-    public PgAuthidRecord setRolcreaterole(Boolean value) {
+    public PgAuthidRecord setRolcreaterole(@NonNull Boolean value) {
         set(4, value);
         return this;
     }
@@ -100,6 +106,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolcreaterole</code>.
      */
+    @NonNull
     public Boolean getRolcreaterole() {
         return (Boolean) get(4);
     }
@@ -107,7 +114,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolcreatedb</code>.
      */
-    public PgAuthidRecord setRolcreatedb(Boolean value) {
+    public PgAuthidRecord setRolcreatedb(@NonNull Boolean value) {
         set(5, value);
         return this;
     }
@@ -115,6 +122,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolcreatedb</code>.
      */
+    @NonNull
     public Boolean getRolcreatedb() {
         return (Boolean) get(5);
     }
@@ -122,7 +130,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolcanlogin</code>.
      */
-    public PgAuthidRecord setRolcanlogin(Boolean value) {
+    public PgAuthidRecord setRolcanlogin(@NonNull Boolean value) {
         set(6, value);
         return this;
     }
@@ -130,6 +138,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolcanlogin</code>.
      */
+    @NonNull
     public Boolean getRolcanlogin() {
         return (Boolean) get(6);
     }
@@ -137,7 +146,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolreplication</code>.
      */
-    public PgAuthidRecord setRolreplication(Boolean value) {
+    public PgAuthidRecord setRolreplication(@NonNull Boolean value) {
         set(7, value);
         return this;
     }
@@ -145,6 +154,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolreplication</code>.
      */
+    @NonNull
     public Boolean getRolreplication() {
         return (Boolean) get(7);
     }
@@ -152,7 +162,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolbypassrls</code>.
      */
-    public PgAuthidRecord setRolbypassrls(Boolean value) {
+    public PgAuthidRecord setRolbypassrls(@NonNull Boolean value) {
         set(8, value);
         return this;
     }
@@ -160,6 +170,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolbypassrls</code>.
      */
+    @NonNull
     public Boolean getRolbypassrls() {
         return (Boolean) get(8);
     }
@@ -167,7 +178,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolconnlimit</code>.
      */
-    public PgAuthidRecord setRolconnlimit(Integer value) {
+    public PgAuthidRecord setRolconnlimit(@NonNull Integer value) {
         set(9, value);
         return this;
     }
@@ -175,6 +186,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolconnlimit</code>.
      */
+    @NonNull
     public Integer getRolconnlimit() {
         return (Integer) get(9);
     }
@@ -182,7 +194,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolpassword</code>.
      */
-    public PgAuthidRecord setRolpassword(String value) {
+    public PgAuthidRecord setRolpassword(@Nullable String value) {
         set(10, value);
         return this;
     }
@@ -190,6 +202,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolpassword</code>.
      */
+    @Nullable
     public String getRolpassword() {
         return (String) get(10);
     }
@@ -197,7 +210,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Setter for <code>pg_catalog.pg_authid.rolvaliduntil</code>.
      */
-    public PgAuthidRecord setRolvaliduntil(OffsetDateTime value) {
+    public PgAuthidRecord setRolvaliduntil(@Nullable OffsetDateTime value) {
         set(11, value);
         return this;
     }
@@ -205,6 +218,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Getter for <code>pg_catalog.pg_authid.rolvaliduntil</code>.
      */
+    @Nullable
     public OffsetDateTime getRolvaliduntil() {
         return (OffsetDateTime) get(11);
     }
@@ -214,6 +228,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     // -------------------------------------------------------------------------
 
     @Override
+    @NonNull
     public Record1<Long> key() {
         return (Record1) super.key();
     }
@@ -232,7 +247,7 @@ public class PgAuthidRecord extends UpdatableRecordImpl<PgAuthidRecord> {
     /**
      * Create a detached, initialised PgAuthidRecord
      */
-    public PgAuthidRecord(Long oid, String rolname, Boolean rolsuper, Boolean rolinherit, Boolean rolcreaterole, Boolean rolcreatedb, Boolean rolcanlogin, Boolean rolreplication, Boolean rolbypassrls, Integer rolconnlimit, String rolpassword, OffsetDateTime rolvaliduntil) {
+    public PgAuthidRecord(@NonNull Long oid, @NonNull String rolname, @NonNull Boolean rolsuper, @NonNull Boolean rolinherit, @NonNull Boolean rolcreaterole, @NonNull Boolean rolcreatedb, @NonNull Boolean rolcanlogin, @NonNull Boolean rolreplication, @NonNull Boolean rolbypassrls, @NonNull Integer rolconnlimit, @Nullable String rolpassword, @Nullable OffsetDateTime rolvaliduntil) {
         super(PgAuthid.PG_AUTHID);
 
         setOid(oid);

@@ -12,6 +12,7 @@ import javax.annotation.processing.Generated;
 import org.jooq.Constants;
 import org.jooq.Schema;
 import org.jooq.impl.CatalogImpl;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -47,6 +48,7 @@ public class DefaultCatalog extends CatalogImpl {
     }
 
     @Override
+    @NonNull
     public final List<Schema> getSchemas() {
         return Arrays.asList(
             PgCatalog.PG_CATALOG

@@ -34,6 +34,8 @@ import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.Internal;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -60,6 +62,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * The class holding records for this type
      */
     @Override
+    @NonNull
     public Class<PgClassRecord> getRecordType() {
         return PgClassRecord.class;
     }
@@ -270,36 +273,43 @@ public class PgClass extends TableImpl<PgClassRecord> {
     }
 
     @Override
+    @Nullable
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
     }
 
     @Override
+    @NonNull
     public List<Index> getIndexes() {
         return Arrays.asList(Indexes.PG_CLASS_TBLSPC_RELFILENODE_INDEX);
     }
 
     @Override
+    @NonNull
     public UniqueKey<PgClassRecord> getPrimaryKey() {
         return Keys.PG_CLASS_OID_INDEX;
     }
 
     @Override
+    @NonNull
     public List<UniqueKey<PgClassRecord>> getUniqueKeys() {
         return Arrays.asList(Keys.PG_CLASS_RELNAME_NSP_INDEX);
     }
 
     @Override
+    @NonNull
     public PgClass as(String alias) {
         return new PgClass(DSL.name(alias), this);
     }
 
     @Override
+    @NonNull
     public PgClass as(Name alias) {
         return new PgClass(alias, this);
     }
 
     @Override
+    @NonNull
     public PgClass as(Table<?> alias) {
         return new PgClass(alias.getQualifiedName(), this);
     }
@@ -308,6 +318,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgClass rename(String name) {
         return new PgClass(DSL.name(name), null);
     }
@@ -316,6 +327,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgClass rename(Name name) {
         return new PgClass(name, null);
     }
@@ -324,6 +336,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Rename this table
      */
     @Override
+    @NonNull
     public PgClass rename(Table<?> name) {
         return new PgClass(name.getQualifiedName(), null);
     }
@@ -332,6 +345,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgClass where(Condition condition) {
         return new PgClass(getQualifiedName(), aliased() ? this : null, null, Internal.condition(this, condition));
     }
@@ -340,6 +354,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgClass where(Collection<? extends Condition> conditions) {
         return where(DSL.and(conditions));
     }
@@ -348,6 +363,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgClass where(Condition... conditions) {
         return where(DSL.and(conditions));
     }
@@ -356,6 +372,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgClass where(Field<Boolean> condition) {
         return where(DSL.condition(condition));
     }
@@ -364,6 +381,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgClass where(SQL condition) {
         return where(DSL.condition(condition));
@@ -373,6 +391,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgClass where(@Stringly.SQL String condition) {
         return where(DSL.condition(condition));
@@ -382,6 +401,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgClass where(@Stringly.SQL String condition, Object... binds) {
         return where(DSL.condition(condition, binds));
@@ -391,6 +411,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     @PlainSQL
     public PgClass where(@Stringly.SQL String condition, QueryPart... parts) {
         return where(DSL.condition(condition, parts));
@@ -400,6 +421,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgClass whereExists(TableLike<?> select) {
         return where(DSL.exists(select));
     }
@@ -408,6 +430,7 @@ public class PgClass extends TableImpl<PgClassRecord> {
      * Create an inline derived table from this table
      */
     @Override
+    @NonNull
     public PgClass whereNotExists(TableLike<?> select) {
         return where(DSL.notExists(select));
     }

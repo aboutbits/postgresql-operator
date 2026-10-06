@@ -27,6 +27,7 @@ import org.jooq.Result;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SchemaImpl;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -137,11 +138,13 @@ public class PgCatalog extends SchemaImpl {
 
 
     @Override
+    @NonNull
     public Catalog getCatalog() {
         return DefaultCatalog.DEFAULT_CATALOG;
     }
 
     @Override
+    @NonNull
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Aclexplode.ACLEXPLODE,
