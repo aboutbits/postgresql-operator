@@ -27,7 +27,7 @@ public class DatabaseSpec {
     )
     private String name = "";
 
-    /// Whether the database should be retained or deleted when the Database CR instance is deleted.
+    /// Whether the database should be retained or deleted when the [Database] CR instance is deleted.
     @io.fabric8.generator.annotation.Nullable
     private ReclaimPolicy reclaimPolicy = ReclaimPolicy.RETAIN;
 

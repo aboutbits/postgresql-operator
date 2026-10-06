@@ -25,11 +25,7 @@ import static it.aboutbits.postgresql.core.Privilege.UPDATE;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
 import static org.jooq.impl.DSL.keyword;
 
-/**
- * <a href="https://www.postgresql.org/docs/current/sql-grant.html">
- * https://www.postgresql.org/docs/current/sql-grant.html
- * </a>
- */
+/// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
 @Getter
 @Accessors(fluent = true)
 @NullMarked

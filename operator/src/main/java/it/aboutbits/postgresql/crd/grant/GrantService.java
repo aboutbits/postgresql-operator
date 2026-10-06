@@ -42,9 +42,9 @@ public class GrantService {
 
     /// Determines all existing privileges for the specified `role`, when applicable `schema`, and the given `objectType`.
     ///
-    /// @param tx   The DSLContext for database operations.
-    /// @param spec The GrantSpec containing the specification details.
-    /// @return A map with object names as keys and lists of Privilege as values.
+    /// @param tx   The [DSLContext] for database operations.
+    /// @param spec The [GrantSpec] containing the specification details.
+    /// @return A map with object names as keys and lists of [Privilege] as values.
     public Map<String, Set<Privilege>> determineCurrentObjectPrivileges(
             DSLContext tx,
             GrantSpec spec
@@ -211,8 +211,8 @@ public class GrantService {
     /// If the `objects` List is empty, no condition is applied for object filtering,
     /// and thus all objects from this `namespace`/`schema` are returned.
     ///
-    /// @param tx   the DSLContext used to execute database operations
-    /// @param spec the GrantSpec object containing specifications about the target database objects and privileges
+    /// @param tx   the [DSLContext] used to execute database operations
+    /// @param spec the [GrantSpec] object containing specifications about the target database objects and privileges
     /// @return a map where the keys represent object names and the values indicate ownership status,
     /// or `null` if the object does not exist
     @SuppressWarnings("java:S3776")
