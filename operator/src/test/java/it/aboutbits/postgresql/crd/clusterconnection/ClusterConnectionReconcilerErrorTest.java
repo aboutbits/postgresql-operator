@@ -5,7 +5,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-import jakarta.inject.Inject;
+import lombok.RequiredArgsConstructor;
 import org.jooq.CloseableDSLContext;
 import org.jooq.exception.DataAccessException;
 import org.jspecify.annotations.NullMarked;
@@ -21,14 +21,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
+@RequiredArgsConstructor
 @NullMarked
 class ClusterConnectionReconcilerErrorTest {
     @SuppressWarnings("NullAway.Init")
     @InjectMock
     PostgreSQLContextFactory contextFactory;
 
-    @Inject
-    ClusterConnectionReconciler reconciler;
+    private final ClusterConnectionReconciler reconciler;
 
     private ClusterConnection resource;
     private Context<ClusterConnection> context;
@@ -52,9 +52,7 @@ class ClusterConnectionReconcilerErrorTest {
         resource.setSpec(spec);
         resource.setMetadata(metadata);
 
-        @SuppressWarnings("unchecked")
-        Context<ClusterConnection> mockedContext = mock(Context.class);
-        context = mockedContext;
+        context = mock();
     }
 
     @Test
