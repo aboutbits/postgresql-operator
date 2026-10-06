@@ -24,10 +24,10 @@ jobs:
 
   build-and-release:
     needs: test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - uses: aboutbits/github-actions-base/git-setup@v2
