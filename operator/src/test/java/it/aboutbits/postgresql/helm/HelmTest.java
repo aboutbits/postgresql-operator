@@ -190,9 +190,14 @@ class HelmTest {
             };
             var installOutput = new StringBuilder();
 
+            // The test-mode operator already applied the CRDs with the field manager `fabric8-kubernetes-client`.
+            // Helm 4 installs CRDs with server-side apply, which conflicts with that field manager on `.spec.versions`.
+            // Helm 3 skipped a CRD that already existed, so `--skip-crds` keeps that behavior on both versions.
             ProcessBuilder.newBuilder(
                             "helm",
-                            "install", releaseName, chartPath.toAbsolutePath().toString(), "--set", rootValuesAlias + ".image=postgresql-operator:test"
+                            "install", releaseName, chartPath.toAbsolutePath().toString(),
+                            "--skip-crds",
+                            "--set", rootValuesAlias + ".image=postgresql-operator:test"
                     ).environment(Map.of(
                             ENV_VAR_KUBECONFIG,
                             kubeConfigPath.toAbsolutePath().toString()
