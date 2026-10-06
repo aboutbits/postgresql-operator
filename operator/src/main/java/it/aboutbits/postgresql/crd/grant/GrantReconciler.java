@@ -214,7 +214,7 @@ public class GrantReconciler
         return new CRStatus();
     }
 
-    @SuppressWarnings({"checkstyle:MethodLength", "java:S3776"})
+    @SuppressWarnings("java:S3776")
     private UpdateControl<Grant> reconcileInTransaction(
             DSLContext tx,
             Grant resource,
