@@ -34,10 +34,7 @@ class PasswordFingerprintServiceTest {
 
     /// Each instance has its own key cache, like a fresh operator process.
     private static PasswordFingerprintService newService() {
-        var service = new PasswordFingerprintService(client);
-        service.secretName = SECRET_NAME;
-
-        return service;
+        return new PasswordFingerprintService(client, SECRET_NAME);
     }
 
     @Nested
