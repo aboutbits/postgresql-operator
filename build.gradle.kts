@@ -69,6 +69,11 @@ subprojects {
         options.encoding = "UTF-8"
         options.compilerArgs.add("-parameters")
 
+        // Source code: A category that an Error Prone check already owns is deliberately absent
+        options.compilerArgs.add("-Xlint:deprecation,removal,unchecked,cast,rawtypes,divzero,this-escape,identity,text-blocks,dangling-doc-comments,restricted")
+        // The build itself: command-line options, path entries, output file collisions
+        options.compilerArgs.add("-Xlint:options,path,output-file-clash")
+
         options.errorprone {
             // The checks live in errorprone.args, see https://github.com/tbroyer/gradle-errorprone-plugin#argument-files
             argumentFiles.from(rootProject.layout.projectDirectory.file("errorprone.args"))
