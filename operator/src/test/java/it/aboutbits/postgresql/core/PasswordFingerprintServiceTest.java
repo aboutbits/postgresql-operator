@@ -25,7 +25,7 @@ class PasswordFingerprintServiceTest {
     private static final String SECRET_NAME = "test-password-fingerprint-key";
 
     @SuppressWarnings("NullAway.Init")
-    static KubernetesClient client;
+    KubernetesClient client;
 
     @BeforeEach
     void clearSecrets() {
@@ -33,7 +33,7 @@ class PasswordFingerprintServiceTest {
     }
 
     /// Each instance has its own key cache, like a fresh operator process.
-    private static PasswordFingerprintService newService() {
+    private PasswordFingerprintService newService() {
         return new PasswordFingerprintService(client, SECRET_NAME);
     }
 

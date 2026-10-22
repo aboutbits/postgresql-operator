@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @EnableKubernetesMockClient(crud = true)
 class KubernetesServiceTest {
     @SuppressWarnings("NullAway.Init")
-    static KubernetesClient client;
+    KubernetesClient client;
 
     @TempDir
     Path tempDir;
