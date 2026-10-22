@@ -23,11 +23,7 @@ import static it.aboutbits.postgresql.core.Privilege.UPDATE;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
 import static org.jooq.impl.DSL.keyword;
 
-/**
- * <a href="https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html">
- * https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html
- * </a>
- */
+/// [PostgreSQL: Documentation: ALTER DEFAULT PRIVILEGES](https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html)
 @Getter
 @Accessors(fluent = true)
 @NullMarked

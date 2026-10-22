@@ -278,12 +278,9 @@ public final class RoleService {
         );
     }
 
-    /**
-     * Build: CREATE ROLE <name> [ [ WITH ] option [ ... ] ]
-     * See <a href="https://www.postgresql.org/docs/current/sql-createrole.html">
-     * PostgreSQL: Documentation: CREATE ROLE
-     * </a>
-     */
+    /// Build: `CREATE ROLE <name> [ [ WITH ] option [ ... ] ]`
+    ///
+    /// See [PostgreSQL: Documentation: CREATE ROLE](https://www.postgresql.org/docs/current/sql-createrole.html)
     private static Query buildCreateRole(
             String roleName,
             RoleSpec.Flags flags,
@@ -460,9 +457,7 @@ public final class RoleService {
         return query("revoke {0} from {1}", role(role), role(member));
     }
 
-    /**
-     * Build: COMMENT ON ROLE <name> IS <comment>
-     */
+    /// Build: `COMMENT ON ROLE <name> IS <comment>`
     private static Query buildCommentOnRole(
             String roleName,
             @Nullable String comment
