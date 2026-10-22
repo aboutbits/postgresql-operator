@@ -75,7 +75,7 @@ subprojects {
         options.compilerArgs.add("-Xlint:options,path,output-file-clash")
         // Javadoc comments: the groups add checks Error Prone lacks, and `missing` floods on generated code
         options.compilerArgs.add("-Xdoclint:all,-missing")
-        // Every warning fails the build: javac lint and Error Prone checks at WARN alike
+        // Every warning fails the build: javac lint, doclint and Error Prone checks at WARN alike
         options.compilerArgs.add("-Werror")
 
         options.errorprone {
