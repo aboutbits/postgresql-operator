@@ -51,7 +51,7 @@ public class PostgreSQLInstanceReadinessCheck implements HealthCheck {
             );
 
             return true;
-        } catch (Exception _) {
+        } catch (RuntimeException _) {
             builder.withData(
                     name,
                     "DOWN"

@@ -81,7 +81,7 @@ public class SchemaReconciler
                             status
                     )
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -157,7 +157,7 @@ public class SchemaReconciler
             schemaService.dropSchema(dsl, spec);
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Schema [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
                             namespace,

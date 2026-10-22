@@ -141,7 +141,7 @@ public class RoleReconciler
             // Record the fingerprint only after the commit. A failed commit must not leave
             // the fingerprint of a password that PostgreSQL never stored.
             status.setPasswordFingerprint(expectedFingerprint);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -207,7 +207,7 @@ public class RoleReconciler
             roleService.dropRole(dsl, spec);
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Role [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
                             namespace,

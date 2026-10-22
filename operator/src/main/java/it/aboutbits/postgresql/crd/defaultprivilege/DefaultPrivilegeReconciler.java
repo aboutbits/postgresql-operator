@@ -105,7 +105,7 @@ public class DefaultPrivilegeReconciler
                             status
                     )
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -183,7 +183,7 @@ public class DefaultPrivilegeReconciler
             });
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete DefaultPrivilege [resource={}/{}, status.phase={}]",
                     namespace,

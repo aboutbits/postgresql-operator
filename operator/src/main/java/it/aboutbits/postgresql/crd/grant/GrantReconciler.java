@@ -110,7 +110,7 @@ public class GrantReconciler
                             status
                     )
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -192,7 +192,7 @@ public class GrantReconciler
             });
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Grant [resource={}/{}, status.phase={}]",
                     namespace,

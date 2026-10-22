@@ -78,7 +78,7 @@ public class DatabaseReconciler
                     resource,
                     status
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -153,7 +153,7 @@ public class DatabaseReconciler
             databaseService.dropDatabase(dsl, spec);
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Database [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
                             namespace,
