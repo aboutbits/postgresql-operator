@@ -10,6 +10,8 @@ import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -30,7 +32,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Setter for <code>pg_catalog.pg_namespace.oid</code>.
      */
-    public PgNamespaceRecord setOid(Long value) {
+    public PgNamespaceRecord setOid(@NonNull Long value) {
         set(0, value);
         return this;
     }
@@ -38,6 +40,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Getter for <code>pg_catalog.pg_namespace.oid</code>.
      */
+    @NonNull
     public Long getOid() {
         return (Long) get(0);
     }
@@ -45,7 +48,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Setter for <code>pg_catalog.pg_namespace.nspname</code>.
      */
-    public PgNamespaceRecord setNspname(String value) {
+    public PgNamespaceRecord setNspname(@NonNull String value) {
         set(1, value);
         return this;
     }
@@ -53,6 +56,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Getter for <code>pg_catalog.pg_namespace.nspname</code>.
      */
+    @NonNull
     public String getNspname() {
         return (String) get(1);
     }
@@ -60,7 +64,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Setter for <code>pg_catalog.pg_namespace.nspowner</code>.
      */
-    public PgNamespaceRecord setNspowner(Long value) {
+    public PgNamespaceRecord setNspowner(@NonNull Long value) {
         set(2, value);
         return this;
     }
@@ -68,6 +72,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Getter for <code>pg_catalog.pg_namespace.nspowner</code>.
      */
+    @NonNull
     public Long getNspowner() {
         return (Long) get(2);
     }
@@ -75,7 +80,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Setter for <code>pg_catalog.pg_namespace.nspacl</code>.
      */
-    public PgNamespaceRecord setNspacl(String[] value) {
+    public PgNamespaceRecord setNspacl(@Nullable String[] value) {
         set(3, value);
         return this;
     }
@@ -83,6 +88,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Getter for <code>pg_catalog.pg_namespace.nspacl</code>.
      */
+    @Nullable
     public String[] getNspacl() {
         return (String[]) get(3);
     }
@@ -92,6 +98,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     // -------------------------------------------------------------------------
 
     @Override
+    @NonNull
     public Record1<Long> key() {
         return (Record1) super.key();
     }
@@ -110,7 +117,7 @@ public class PgNamespaceRecord extends UpdatableRecordImpl<PgNamespaceRecord> {
     /**
      * Create a detached, initialised PgNamespaceRecord
      */
-    public PgNamespaceRecord(Long oid, String nspname, Long nspowner, String[] nspacl) {
+    public PgNamespaceRecord(@NonNull Long oid, @NonNull String nspname, @NonNull Long nspowner, @Nullable String[] nspacl) {
         super(PgNamespace.PG_NAMESPACE);
 
         setOid(oid);

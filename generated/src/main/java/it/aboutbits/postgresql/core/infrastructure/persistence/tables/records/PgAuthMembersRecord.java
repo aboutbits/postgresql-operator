@@ -10,6 +10,7 @@ import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -30,7 +31,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.oid</code>.
      */
-    public PgAuthMembersRecord setOid(Long value) {
+    public PgAuthMembersRecord setOid(@NonNull Long value) {
         set(0, value);
         return this;
     }
@@ -38,6 +39,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.oid</code>.
      */
+    @NonNull
     public Long getOid() {
         return (Long) get(0);
     }
@@ -45,7 +47,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.roleid</code>.
      */
-    public PgAuthMembersRecord setRoleid(Long value) {
+    public PgAuthMembersRecord setRoleid(@NonNull Long value) {
         set(1, value);
         return this;
     }
@@ -53,6 +55,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.roleid</code>.
      */
+    @NonNull
     public Long getRoleid() {
         return (Long) get(1);
     }
@@ -60,7 +63,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.member</code>.
      */
-    public PgAuthMembersRecord setMember(Long value) {
+    public PgAuthMembersRecord setMember(@NonNull Long value) {
         set(2, value);
         return this;
     }
@@ -68,6 +71,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.member</code>.
      */
+    @NonNull
     public Long getMember() {
         return (Long) get(2);
     }
@@ -75,7 +79,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.grantor</code>.
      */
-    public PgAuthMembersRecord setGrantor(Long value) {
+    public PgAuthMembersRecord setGrantor(@NonNull Long value) {
         set(3, value);
         return this;
     }
@@ -83,6 +87,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.grantor</code>.
      */
+    @NonNull
     public Long getGrantor() {
         return (Long) get(3);
     }
@@ -90,7 +95,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.admin_option</code>.
      */
-    public PgAuthMembersRecord setAdminOption(Boolean value) {
+    public PgAuthMembersRecord setAdminOption(@NonNull Boolean value) {
         set(4, value);
         return this;
     }
@@ -98,6 +103,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.admin_option</code>.
      */
+    @NonNull
     public Boolean getAdminOption() {
         return (Boolean) get(4);
     }
@@ -105,7 +111,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.inherit_option</code>.
      */
-    public PgAuthMembersRecord setInheritOption(Boolean value) {
+    public PgAuthMembersRecord setInheritOption(@NonNull Boolean value) {
         set(5, value);
         return this;
     }
@@ -113,6 +119,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.inherit_option</code>.
      */
+    @NonNull
     public Boolean getInheritOption() {
         return (Boolean) get(5);
     }
@@ -120,7 +127,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Setter for <code>pg_catalog.pg_auth_members.set_option</code>.
      */
-    public PgAuthMembersRecord setSetOption(Boolean value) {
+    public PgAuthMembersRecord setSetOption(@NonNull Boolean value) {
         set(6, value);
         return this;
     }
@@ -128,6 +135,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Getter for <code>pg_catalog.pg_auth_members.set_option</code>.
      */
+    @NonNull
     public Boolean getSetOption() {
         return (Boolean) get(6);
     }
@@ -137,6 +145,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     // -------------------------------------------------------------------------
 
     @Override
+    @NonNull
     public Record1<Long> key() {
         return (Record1) super.key();
     }
@@ -155,7 +164,7 @@ public class PgAuthMembersRecord extends UpdatableRecordImpl<PgAuthMembersRecord
     /**
      * Create a detached, initialised PgAuthMembersRecord
      */
-    public PgAuthMembersRecord(Long oid, Long roleid, Long member, Long grantor, Boolean adminOption, Boolean inheritOption, Boolean setOption) {
+    public PgAuthMembersRecord(@NonNull Long oid, @NonNull Long roleid, @NonNull Long member, @NonNull Long grantor, @NonNull Boolean adminOption, @NonNull Boolean inheritOption, @NonNull Boolean setOption) {
         super(PgAuthMembers.PG_AUTH_MEMBERS);
 
         setOid(oid);

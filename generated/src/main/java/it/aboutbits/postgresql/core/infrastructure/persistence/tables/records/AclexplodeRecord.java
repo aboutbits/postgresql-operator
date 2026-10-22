@@ -9,6 +9,7 @@ import it.aboutbits.postgresql.core.infrastructure.persistence.tables.Aclexplode
 import javax.annotation.processing.Generated;
 
 import org.jooq.impl.TableRecordImpl;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -29,7 +30,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Setter for <code>pg_catalog.aclexplode.grantor</code>.
      */
-    public AclexplodeRecord setGrantor(Long value) {
+    public AclexplodeRecord setGrantor(@Nullable Long value) {
         set(0, value);
         return this;
     }
@@ -37,6 +38,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Getter for <code>pg_catalog.aclexplode.grantor</code>.
      */
+    @Nullable
     public Long getGrantor() {
         return (Long) get(0);
     }
@@ -44,7 +46,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Setter for <code>pg_catalog.aclexplode.grantee</code>.
      */
-    public AclexplodeRecord setGrantee(Long value) {
+    public AclexplodeRecord setGrantee(@Nullable Long value) {
         set(1, value);
         return this;
     }
@@ -52,6 +54,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Getter for <code>pg_catalog.aclexplode.grantee</code>.
      */
+    @Nullable
     public Long getGrantee() {
         return (Long) get(1);
     }
@@ -59,7 +62,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Setter for <code>pg_catalog.aclexplode.privilege_type</code>.
      */
-    public AclexplodeRecord setPrivilegeType(String value) {
+    public AclexplodeRecord setPrivilegeType(@Nullable String value) {
         set(2, value);
         return this;
     }
@@ -67,6 +70,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Getter for <code>pg_catalog.aclexplode.privilege_type</code>.
      */
+    @Nullable
     public String getPrivilegeType() {
         return (String) get(2);
     }
@@ -74,7 +78,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Setter for <code>pg_catalog.aclexplode.is_grantable</code>.
      */
-    public AclexplodeRecord setIsGrantable(Boolean value) {
+    public AclexplodeRecord setIsGrantable(@Nullable Boolean value) {
         set(3, value);
         return this;
     }
@@ -82,6 +86,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Getter for <code>pg_catalog.aclexplode.is_grantable</code>.
      */
+    @Nullable
     public Boolean getIsGrantable() {
         return (Boolean) get(3);
     }
@@ -100,7 +105,7 @@ public class AclexplodeRecord extends TableRecordImpl<AclexplodeRecord> {
     /**
      * Create a detached, initialised AclexplodeRecord
      */
-    public AclexplodeRecord(Long grantor, Long grantee, String privilegeType, Boolean isGrantable) {
+    public AclexplodeRecord(@Nullable Long grantor, @Nullable Long grantee, @Nullable String privilegeType, @Nullable Boolean isGrantable) {
         super(Aclexplode.ACLEXPLODE);
 
         setGrantor(grantor);

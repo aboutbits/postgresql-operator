@@ -10,6 +10,7 @@ import javax.annotation.processing.Generated;
 
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -30,7 +31,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Setter for <code>pg_catalog.pg_default_acl.oid</code>.
      */
-    public PgDefaultAclRecord setOid(Long value) {
+    public PgDefaultAclRecord setOid(@NonNull Long value) {
         set(0, value);
         return this;
     }
@@ -38,6 +39,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Getter for <code>pg_catalog.pg_default_acl.oid</code>.
      */
+    @NonNull
     public Long getOid() {
         return (Long) get(0);
     }
@@ -45,7 +47,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Setter for <code>pg_catalog.pg_default_acl.defaclrole</code>.
      */
-    public PgDefaultAclRecord setDefaclrole(Long value) {
+    public PgDefaultAclRecord setDefaclrole(@NonNull Long value) {
         set(1, value);
         return this;
     }
@@ -53,6 +55,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Getter for <code>pg_catalog.pg_default_acl.defaclrole</code>.
      */
+    @NonNull
     public Long getDefaclrole() {
         return (Long) get(1);
     }
@@ -60,7 +63,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Setter for <code>pg_catalog.pg_default_acl.defaclnamespace</code>.
      */
-    public PgDefaultAclRecord setDefaclnamespace(Long value) {
+    public PgDefaultAclRecord setDefaclnamespace(@NonNull Long value) {
         set(2, value);
         return this;
     }
@@ -68,6 +71,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Getter for <code>pg_catalog.pg_default_acl.defaclnamespace</code>.
      */
+    @NonNull
     public Long getDefaclnamespace() {
         return (Long) get(2);
     }
@@ -75,7 +79,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Setter for <code>pg_catalog.pg_default_acl.defaclobjtype</code>.
      */
-    public PgDefaultAclRecord setDefaclobjtype(String value) {
+    public PgDefaultAclRecord setDefaclobjtype(@NonNull String value) {
         set(3, value);
         return this;
     }
@@ -83,6 +87,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Getter for <code>pg_catalog.pg_default_acl.defaclobjtype</code>.
      */
+    @NonNull
     public String getDefaclobjtype() {
         return (String) get(3);
     }
@@ -90,7 +95,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Setter for <code>pg_catalog.pg_default_acl.defaclacl</code>.
      */
-    public PgDefaultAclRecord setDefaclacl(String[] value) {
+    public PgDefaultAclRecord setDefaclacl(@NonNull String[] value) {
         set(4, value);
         return this;
     }
@@ -98,6 +103,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Getter for <code>pg_catalog.pg_default_acl.defaclacl</code>.
      */
+    @NonNull
     public String[] getDefaclacl() {
         return (String[]) get(4);
     }
@@ -107,6 +113,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     // -------------------------------------------------------------------------
 
     @Override
+    @NonNull
     public Record1<Long> key() {
         return (Record1) super.key();
     }
@@ -125,7 +132,7 @@ public class PgDefaultAclRecord extends UpdatableRecordImpl<PgDefaultAclRecord> 
     /**
      * Create a detached, initialised PgDefaultAclRecord
      */
-    public PgDefaultAclRecord(Long oid, Long defaclrole, Long defaclnamespace, String defaclobjtype, String[] defaclacl) {
+    public PgDefaultAclRecord(@NonNull Long oid, @NonNull Long defaclrole, @NonNull Long defaclnamespace, @NonNull String defaclobjtype, @NonNull String[] defaclacl) {
         super(PgDefaultAcl.PG_DEFAULT_ACL);
 
         setOid(oid);
