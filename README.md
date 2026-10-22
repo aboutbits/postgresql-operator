@@ -49,7 +49,7 @@ See [Admin privileges](docs/cluster-connection.md#admin-privileges).
 ### Helm Chart
 
 ```bash
-helm install postgresql-operator https://github.com/aboutbits/postgresql-operator/releases/download/v0.6.0/postgresql-operator-0.6.0.tgz
+helm install postgresql-operator https://github.com/aboutbits/postgresql-operator/releases/download/v0.7.0/postgresql-operator-0.7.0.tgz
 ```
 
 With the Helm chart, the Custom Resource Definitions (CRDs) are installed automatically.  

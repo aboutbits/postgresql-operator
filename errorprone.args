@@ -54,6 +54,7 @@
 -Xep:EmptyCatch:ERROR
 -Xep:EmptyIf:ERROR
 -Xep:EmptyTopLevelDeclaration:ERROR
+-Xep:IfChainToSwitch:ERROR
 -Xep:MissingBraces:ERROR
 -Xep:MissingCasesInEnumSwitch:ERROR
 -Xep:MissingDefault:ERROR
@@ -73,10 +74,12 @@
 -Xep:AssignmentExpression:ERROR
 -Xep:BadInstanceof:ERROR
 -Xep:CheckReturnValue:ERROR
+-Xep:DistinctVarargsChecker:ERROR
 -Xep:EqualsIncompatibleType:ERROR
 -Xep:FallThrough:ERROR
 -Xep:Finally:ERROR
 -Xep:FunctionalInterfaceClash:ERROR
+-Xep:HashCodeInObjectsHash:ERROR
 -Xep:HidingField:ERROR
 # Important due to performance reasons, see
 # https://github.com/uber/NullAway/wiki/Configuration#perform-exhaustive-override-checks
@@ -84,16 +87,19 @@
 -Xep:MockNotUsedInProduction:ERROR
 -Xep:NarrowingCompoundAssignment:ERROR
 -Xep:Overrides:ERROR
+-Xep:PreferCharsetOverload:ERROR
 -Xep:PrimitiveArrayPassedToVarargsMethod:ERROR
 -Xep:ReferenceEquality:ERROR
 -Xep:SelfComparison:ERROR
 -Xep:StaticQualifiedUsingExpression:ERROR
 -Xep:SymbolToString:ERROR
 -Xep:TypeToString:ERROR
+-Xep:UndefinedEquals:ERROR
 -Xep:UnusedException:ERROR
 -Xep:UnusedMethod:ERROR
 -Xep:UnusedNestedClass:ERROR
 -Xep:UnusedVariable:ERROR
+-Xep:ValueClassIdentity:ERROR
 
 # Redundant code and house style
 -Xep:BooleanLiteral:ERROR
@@ -101,6 +107,8 @@
 -Xep:ExplicitArrayForVarargs:ERROR
 -Xep:LongLiteralLowerCaseSuffix:ERROR
 -Xep:MixedArrayDimensions:ERROR
+-Xep:PatternMatchingInstanceof:ERROR
+-Xep:RequireNonNullRefactoring:ERROR
 -Xep:StringConcatToTextBlock:ERROR
 -Xep:TryWithResourcesVariable:ERROR
 -Xep:UnnecessaryAnonymousClass:ERROR
