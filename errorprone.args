@@ -111,6 +111,9 @@
 -Xep:RequireNonNullRefactoring:ERROR
 -Xep:StringConcatToTextBlock:ERROR
 -Xep:TryWithResourcesVariable:ERROR
+-Xep:UnnamedVariable:ERROR
+# Report every unused catch, lambda and resource variable, not only the ones named unused
+-XepOpt:UnnamedVariable:OnlyRenameVariablesNamedUnused=false
 -Xep:UnnecessaryAnonymousClass:ERROR
 -Xep:UnnecessaryAssignment:ERROR
 -Xep:UnnecessaryBoxedAssignment:ERROR
