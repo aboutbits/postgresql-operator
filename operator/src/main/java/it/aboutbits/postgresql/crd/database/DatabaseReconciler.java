@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,7 +64,7 @@ public class DatabaseReconciler
                     ));
 
             return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -119,7 +119,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(Duration.ofMillis(100));
         }
 
         // We do not actually delete the database if the reclaimPolicy is set to RETAIN, we only delete the CR instance
@@ -144,7 +144,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -169,7 +169,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 

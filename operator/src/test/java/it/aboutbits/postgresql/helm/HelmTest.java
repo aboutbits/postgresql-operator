@@ -23,10 +23,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -222,7 +222,7 @@ class HelmTest {
 
             try {
                 // 4. Verify that the deployment is created in Kubernetes
-                await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+                await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
                     var deployment = kubernetesClient.apps().deployments().withName(chartName).get();
 
                     assertThat(deployment).isNotNull();

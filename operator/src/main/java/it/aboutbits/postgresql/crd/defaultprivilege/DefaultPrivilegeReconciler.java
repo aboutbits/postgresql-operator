@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -88,7 +88,7 @@ public class DefaultPrivilegeReconciler
                     ));
 
             return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var database = spec.getDatabase();
@@ -141,7 +141,7 @@ public class DefaultPrivilegeReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(Duration.ofMillis(100));
         }
 
         var clusterRef = spec.getClusterRef();
@@ -161,7 +161,7 @@ public class DefaultPrivilegeReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var database = spec.getDatabase();
@@ -196,7 +196,7 @@ public class DefaultPrivilegeReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 

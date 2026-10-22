@@ -19,6 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -124,8 +125,8 @@ class RoleReconcilerNonSuperuserTest {
                 .serverSideApply();
 
         // then
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         rootDsl,
                         roleName,
@@ -140,8 +141,8 @@ class RoleReconcilerNonSuperuserTest {
                 .delete();
 
         // then
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> !roleService.roleExists(rootDsl, role.getSpec()));
     }
 
