@@ -350,7 +350,7 @@ class HelmTest {
 
             // A Secrets Store CSI volume is the case that `adminSecretFileRef` was added for.
             assertThat(podSpec.getVolumes())
-                    .filteredOn(volume -> "aws-secrets".equals(volume.getName()))
+                    .filteredOn(volume -> Objects.equals(volume.getName(), "aws-secrets"))
                     .singleElement()
                     .satisfies(volume -> assertThat(volume.getCsi())
                             .isNotNull()

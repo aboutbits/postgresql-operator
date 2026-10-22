@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
@@ -428,11 +429,14 @@ class RoleReconcilerNonSuperuserTest {
             DSLContext rootDsl,
             String roleName
     ) {
-        return Boolean.TRUE.equals(rootDsl.fetchValue(
-                "select pg_has_role({0}, {1}, 'USAGE')",
-                ADMIN_ROLE,
-                roleName
-        ));
+        return Objects.equals(
+                rootDsl.fetchValue(
+                        "select pg_has_role({0}, {1}, 'USAGE')",
+                        ADMIN_ROLE,
+                        roleName
+                ),
+                true
+        );
     }
 
     private Role applyRole(Role role) {

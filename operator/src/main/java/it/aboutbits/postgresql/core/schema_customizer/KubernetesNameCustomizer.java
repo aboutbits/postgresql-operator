@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -78,7 +79,7 @@ public class KubernetesNameCustomizer implements SchemaCustomizer.Customizer {
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();
-            if ("string".equals(prop.getType())
+            if (Objects.equals(prop.getType(), "string")
                     && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))
             ) {
                 prop.setPattern(KUBERNETES_NAME_PATTERN);
