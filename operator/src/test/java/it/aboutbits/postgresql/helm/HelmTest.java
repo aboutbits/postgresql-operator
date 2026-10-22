@@ -104,6 +104,7 @@ class HelmTest {
 
         assertThat(values).containsKey(rootValuesAlias);
 
+        // Safe: Jackson reads the nested YAML mapping of the chart values as a Map<String, Object>
         @SuppressWarnings("unchecked")
         var appValues = (Map<String, Object>) values.get(rootValuesAlias);
 
