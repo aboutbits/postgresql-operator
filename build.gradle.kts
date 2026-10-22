@@ -73,6 +73,8 @@ subprojects {
         options.compilerArgs.add("-Xlint:deprecation,removal,unchecked,cast,rawtypes,divzero,this-escape,identity,text-blocks,dangling-doc-comments,restricted")
         // The build itself: command-line options, path entries, output file collisions
         options.compilerArgs.add("-Xlint:options,path,output-file-clash")
+        // Every warning fails the build: javac lint and Error Prone checks at WARN alike
+        options.compilerArgs.add("-Werror")
 
         options.errorprone {
             // The checks live in errorprone.args, see https://github.com/tbroyer/gradle-errorprone-plugin#argument-files
