@@ -73,7 +73,7 @@ public class DatabaseReconciler
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
             // PostgreSQL doesn't allow running `create database` in a transaction
-            updateControl = reconcile(
+            updateControl = reconcileWithoutTransaction(
                     dsl,
                     resource,
                     status
@@ -178,7 +178,7 @@ public class DatabaseReconciler
         return new CRStatus();
     }
 
-    private UpdateControl<Database> reconcile(
+    private UpdateControl<Database> reconcileWithoutTransaction(
             DSLContext dsl,
             Database resource,
             CRStatus status
