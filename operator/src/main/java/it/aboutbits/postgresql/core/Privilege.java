@@ -10,11 +10,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 
-/**
- * <a href="https://www.postgresql.org/docs/current/sql-grant.html">
- * https://www.postgresql.org/docs/current/sql-grant.html
- * </a>
- */
+/// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
