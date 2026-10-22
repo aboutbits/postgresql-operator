@@ -72,7 +72,7 @@ class DatabaseReconcilerTest {
         assertThat(databaseService.databaseExists(dsl, database.getSpec())).isTrue();
     }
 
-    private void assertThatDatabaseHasExpectedStatus(
+    private static void assertThatDatabaseHasExpectedStatus(
             Database database,
             CRStatus expectedStatus,
             OffsetDateTime now

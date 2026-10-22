@@ -85,7 +85,7 @@ class SchemaReconcilerTest {
         assertThat(schemaService.schemaExists(dsl, schema.getSpec())).isTrue();
     }
 
-    private void assertThatSchemaHasExpectedStatus(
+    private static void assertThatSchemaHasExpectedStatus(
             Schema schema,
             CRStatus expectedStatus,
             OffsetDateTime now
