@@ -45,9 +45,9 @@ subprojects {
         }
     }
 
-    val quarkusPlatformGroupId: String by rootProject
-    val quarkusPlatformArtifactId: String by rootProject
-    val quarkusPlatformVersion: String by rootProject
+    val quarkusPlatformGroupId = providers.gradleProperty("quarkusPlatformGroupId").get()
+    val quarkusPlatformArtifactId = providers.gradleProperty("quarkusPlatformArtifactId").get()
+    val quarkusPlatformVersion = providers.gradleProperty("quarkusPlatformVersion").get()
 
     dependencies {
         /**
