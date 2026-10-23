@@ -6,3 +6,8 @@ quarkus:
     category:
       "org.jooq":
         level: DEBUG
+
+test:
+  # The major version of the Dev Services PostgreSQL, read by @EnabledIfConfig and the version-specific tests
+  # Keep it in line with quarkus.datasource.devservices.image-name in application.yml
+  postgresql-major-version: 18

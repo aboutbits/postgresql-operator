@@ -3,6 +3,7 @@ package it.aboutbits.postgresql.crd.grant;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.condition.EnabledIfConfig;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql._support.valuesource.BlankSource;
@@ -12,13 +13,13 @@ import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -29,7 +30,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.Privilege.CONNECT;
@@ -295,9 +295,9 @@ class GrantReconcilerTest {
             }
 
             @Test
-            @EnabledIfSystemProperty(
-                    named = "quarkus.test.profile",
-                    matches = "test-pg(15|16)",
+            @EnabledIfConfig(
+                    named = "test.postgresql-major-version",
+                    matches = "15|16",
                     disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
             )
             @DisplayName(
@@ -909,9 +909,7 @@ class GrantReconcilerTest {
         }
 
         static Stream<List<Privilege>> provideAllSupportedPrivileges() {
-            var profile = System.getProperty("quarkus.test.profile", "");
-            var matcher = Pattern.compile("test-pg(\\d+)").matcher(profile);
-            int version = matcher.find() ? Integer.parseInt(matcher.group(1)) : 0;
+            int version = ConfigProvider.getConfig().getValue("test.postgresql-major-version", Integer.class);
 
             return Stream.of(TABLE.privilegesSet().stream()
                     .filter(privilege -> privilege.minimumPostgresVersion() == null
