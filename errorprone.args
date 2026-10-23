@@ -20,6 +20,7 @@
 -XepOpt:NullAway:ExhaustiveOverride=true
 -XepOpt:NullAway:HandleTestAssertionLibraries=true
 -XepOpt:NullAway:JSpecifyMode=true
+-Xep:JSpecifyUnrecognizedAnnotationLocation:ERROR
 -Xep:AnnotationPosition:ERROR
 -Xep:EqualsMissingNullable:ERROR
 -Xep:MultipleNullnessAnnotations:ERROR
