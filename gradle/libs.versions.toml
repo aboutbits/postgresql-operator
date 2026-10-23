@@ -4,7 +4,7 @@ axionReleasePlugin = "1.21.1"
 
 ## Libraries ##
 jooq = "3.21.9"
-jSpecify = "1.0.0"
+jSpecify = "1.0.1"
 lombok = "1.18.48"
 postgresql = "42.7.11"
 quarkiverse-helm = "1.4.0"
@@ -15,7 +15,7 @@ assertj = "3.27.7"
 datafaker = "2.7.0"
 errorProne = "2.51.0"
 errorPronePlugin = "5.1.1"
-nullAway = "0.13.4"
+nullAway = "0.14.3"
 
 [plugins]
 # https://github.com/allegro/axion-release-plugin
