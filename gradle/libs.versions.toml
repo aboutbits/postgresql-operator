@@ -12,7 +12,7 @@ scram-client = "3.2"
 
 ## Testing ##
 assertj = "3.27.7"
-datafaker = "2.5.4"
+datafaker = "2.7.0"
 errorProne = "2.51.0"
 errorPronePlugin = "5.1.1"
 nullAway = "0.13.4"
