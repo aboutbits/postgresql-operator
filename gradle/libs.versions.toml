@@ -3,7 +3,7 @@
 axionReleasePlugin = "1.21.1"
 
 ## Libraries ##
-jooq = "3.21.4"
+jooq = "3.21.9"
 jSpecify = "1.0.0"
 lombok = "1.18.48"
 postgresql = "42.7.11"
