@@ -14,6 +14,8 @@ on:
           - "Patch"
           - "Prerelease"
 
+permissions: {}
+
 env:
   DOCKER_IMAGE: ghcr.io/${{ github.repository }}
   HELM_CHART_NAME: postgresql-operator
@@ -22,12 +24,18 @@ env:
 jobs:
   test:
     uses: ./.github/workflows/test.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   build-and-release:
     needs: test
     runs-on: ubuntu-26.04
     timeout-minutes: 5
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -38,7 +46,9 @@ jobs:
           java-version: 25
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - name: Increment version
-        run: ./gradlew --console=colored createRelease -Prelease.versionIncrementer=increment${{ github.event.inputs.increment }}
+        env:
+          INCREMENT: ${{ inputs.increment }}
+        run: ./gradlew --console=colored createRelease -Prelease.versionIncrementer="increment$INCREMENT"
         shell: bash
       - name: Get next package version
         id: nextVersion
