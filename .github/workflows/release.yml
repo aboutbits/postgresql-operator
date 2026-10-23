@@ -36,6 +36,9 @@ jobs:
     permissions:
       contents: write
       packages: write
+    env:
+      # With parallel execution, the configuration cache fails to store the snapshotDependencies of the Axion verifyRelease task
+      GRADLE_OPTS: -Dorg.gradle.parallel=false
     steps:
       - uses: actions/checkout@v7
         with:
