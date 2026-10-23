@@ -16,6 +16,8 @@ on:
 
 env:
   DOCKER_IMAGE: ghcr.io/${{ github.repository }}
+  HELM_CHART_NAME: postgresql-operator
+  HELM_CHART_REPOSITORY: ghcr.io/${{ github.repository_owner }}/charts
 
 jobs:
   test:
@@ -53,6 +55,15 @@ jobs:
           platforms: linux/amd64,linux/arm64
           working-directory: './operator'
           dockerfile: './operator/src/main/docker/Dockerfile.jvm'
+      - uses: azure/setup-helm@v5
+      - name: Push Helm chart
+        working-directory: operator/build/helm/kubernetes
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          helm push ${{ env.HELM_CHART_NAME }}-${{ steps.nextVersion.outputs.version }}.tgz oci://${{ env.HELM_CHART_REPOSITORY }}
+        shell: bash
       - name: Push tag to remote
         run: ./gradlew --console=colored pushRelease
         shell: bash
@@ -64,7 +75,12 @@ jobs:
 
             ### Helm Chart
             ```bash
-            helm install postgresql-operator https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz
+            helm install postgresql-operator oci://${{ env.HELM_CHART_REPOSITORY }}/${{ env.HELM_CHART_NAME }} --version ${{ steps.nextVersion.outputs.version }}
+            ```
+
+            Alternatively, install the Helm chart from the release asset:
+            ```bash
+            helm install postgresql-operator https://github.com/${{ github.repository }}/releases/download/v${{ steps.nextVersion.outputs.version }}/${{ env.HELM_CHART_NAME }}-${{ steps.nextVersion.outputs.version }}.tgz
             ```
             
             With the Helm chart, the Custom Resource Definitions (CRDs) are installed automatically.
@@ -84,11 +100,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         run: |
-          gh release upload v${{ steps.nextVersion.outputs.version }} operator/build/helm/kubernetes/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz operator/build/kubernetes/*.postgresql.aboutbits.it-v1.yml
+          gh release upload v${{ steps.nextVersion.outputs.version }} operator/build/helm/kubernetes/${{ env.HELM_CHART_NAME }}-${{ steps.nextVersion.outputs.version }}.tgz operator/build/kubernetes/*.postgresql.aboutbits.it-v1.yml
         shell: bash
       - name: Update README.md
         run: |
-          sed -i "s|releases/download/v[0-9.]*/postgresql-operator-[0-9.]*.tgz|releases/download/v${{ steps.nextVersion.outputs.version }}/postgresql-operator-${{ steps.nextVersion.outputs.version }}.tgz|g" README.md
+          sed -i "s|releases/download/v[0-9.]*/${{ env.HELM_CHART_NAME }}-[0-9.]*.tgz|releases/download/v${{ steps.nextVersion.outputs.version }}/${{ env.HELM_CHART_NAME }}-${{ steps.nextVersion.outputs.version }}.tgz|g" README.md
+          sed -i "s|charts/${{ env.HELM_CHART_NAME }} --version [0-9.]*|charts/${{ env.HELM_CHART_NAME }} --version ${{ steps.nextVersion.outputs.version }}|g" README.md
           git add README.md
           git diff-index --quiet HEAD || git commit -m "update README.md with version ${{ steps.nextVersion.outputs.version }}"
           git push
