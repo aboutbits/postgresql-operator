@@ -368,13 +368,12 @@ public class RoleReconciler
             Role role,
             Secret secret
     ) {
-        var spec = role.getSpec();
+        var ref = role.getSpec().getPasswordSecretRef();
 
-        if (spec.getPasswordSecretRef() == null) {
+        if (ref == null) {
             return false;
         }
 
-        var ref = Objects.requireNonNull(spec.getPasswordSecretRef());
         var refName = ref.getName();
         var refNamespace = getResourceNamespaceOrOwn(role, ref.getNamespace());
 
