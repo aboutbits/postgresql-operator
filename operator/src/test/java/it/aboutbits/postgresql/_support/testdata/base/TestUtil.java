@@ -10,7 +10,7 @@ import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.schema.Schema;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import static org.awaitility.Awaitility.await;
 
@@ -34,8 +34,8 @@ public final class TestUtil {
         kubernetesClient.resources(resourceClass).delete();
 
         // Wait for the Operator Controller to finish the CR cleanup
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> kubernetesClient.resources(resourceClass).list().getItems().isEmpty());
     }
 

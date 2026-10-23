@@ -385,12 +385,6 @@ public class GrantService {
                     }
                 }
             }
-
-            default -> throw new UnsupportedOperationException(
-                    "The GrantObjectType is not implemented yet [objectType=%s]".formatted(
-                            objectType
-                    )
-            );
         }
 
         return objectExistenceAndOwnershipMap;

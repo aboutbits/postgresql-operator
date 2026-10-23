@@ -42,7 +42,7 @@ public class ClusterConnectionReconciler
             status.setPhase(CRPhase.READY).setMessage(version);
 
             return UpdateControl.patchStatus(resource);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Failed to check database connectivity", e);
 
             return handleError(

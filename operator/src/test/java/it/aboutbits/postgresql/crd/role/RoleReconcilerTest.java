@@ -22,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -319,8 +320,8 @@ class RoleReconcilerTest {
 
         // then: password should match the initial one
         // Wait for password to match because reconciliation might take a bit
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
                         role.getSpec().getName(),
@@ -339,8 +340,8 @@ class RoleReconcilerTest {
                 .serverSideApply();
 
         // then: password should eventually match the new one
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
                         role.getSpec().getName(),
@@ -387,8 +388,8 @@ class RoleReconcilerTest {
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         // then: password should match the initial one
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
                         role.getSpec().getName(),
@@ -401,8 +402,8 @@ class RoleReconcilerTest {
         var updatedRole = applyRole(role);
 
         // then: password should eventually match the new one
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         dsl,
                         updatedRole.getSpec().getName(),
@@ -1081,12 +1082,12 @@ class RoleReconcilerTest {
                 .delete();
 
         // then
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> !roleService.roleExists(dsl, role.getSpec()));
     }
 
-    private <T> @Nullable T getRoleFlagValue(
+    private static <T> @Nullable T getRoleFlagValue(
             DSLContext dsl,
             String roleName,
             Field<T> field

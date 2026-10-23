@@ -737,7 +737,7 @@ class DefaultPrivilegeReconcilerTest {
                 );
     }
 
-    private void assertThatDefaultPrivilegeHasStatus(
+    private static void assertThatDefaultPrivilegeHasStatus(
             DefaultPrivilege defaultPrivilege,
             CRStatus expectedStatus,
             OffsetDateTime now

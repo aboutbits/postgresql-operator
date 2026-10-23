@@ -133,7 +133,7 @@ public class Given {
     ) {
     }
 
-    private int parsePortFromJdbcUrl(String url) {
+    private static int parsePortFromJdbcUrl(String url) {
         // Typical format: jdbc:postgresql://localhost:5432/db
         // We strip "jdbc:" so URI.create can handle the "postgresql://..." part
         return URI.create(

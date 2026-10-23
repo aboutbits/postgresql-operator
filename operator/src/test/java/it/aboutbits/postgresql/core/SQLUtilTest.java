@@ -93,7 +93,7 @@ class SQLUtilTest {
         }
     }
 
-    private String render(QueryPart queryPart) {
+    private static String render(QueryPart queryPart) {
         return DSL.using(SQLDialect.POSTGRES).render(queryPart);
     }
 }

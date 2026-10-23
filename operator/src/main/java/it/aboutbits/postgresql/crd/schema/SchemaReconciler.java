@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,7 +64,7 @@ public class SchemaReconciler
                     ));
 
             return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var database = spec.getDatabase();
@@ -81,7 +81,7 @@ public class SchemaReconciler
                             status
                     )
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -122,7 +122,7 @@ public class SchemaReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(Duration.ofMillis(100));
         }
 
         // We do not actually delete the schema if the reclaimPolicy is set to RETAIN, we only delete the CR instance
@@ -147,7 +147,7 @@ public class SchemaReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var database = spec.getDatabase();
@@ -157,7 +157,7 @@ public class SchemaReconciler
             schemaService.dropSchema(dsl, spec);
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Schema [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
                             namespace,
@@ -173,7 +173,7 @@ public class SchemaReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 

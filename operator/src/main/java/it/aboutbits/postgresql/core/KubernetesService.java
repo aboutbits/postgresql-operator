@@ -135,7 +135,7 @@ public final class KubernetesService {
         );
     }
 
-    private String getSecretNamespace(
+    private static String getSecretNamespace(
             ResourceRef secretRef,
             String defaultNamespace
     ) {

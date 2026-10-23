@@ -1252,7 +1252,7 @@ class GrantReconcilerTest {
                 );
     }
 
-    private void assertThatGrantHasStatus(
+    private static void assertThatGrantHasStatus(
             Grant grant,
             CRStatus expectedStatus,
             OffsetDateTime now

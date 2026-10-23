@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,7 +64,7 @@ public class DatabaseReconciler
                     ));
 
             return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -73,12 +73,12 @@ public class DatabaseReconciler
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
             // PostgreSQL doesn't allow running `create database` in a transaction
-            updateControl = reconcile(
+            updateControl = reconcileWithoutTransaction(
                     dsl,
                     resource,
                     status
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -119,7 +119,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(Duration.ofMillis(100));
         }
 
         // We do not actually delete the database if the reclaimPolicy is set to RETAIN, we only delete the CR instance
@@ -144,7 +144,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -153,7 +153,7 @@ public class DatabaseReconciler
             databaseService.dropDatabase(dsl, spec);
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Database [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
                             namespace,
@@ -169,7 +169,7 @@ public class DatabaseReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 
@@ -178,7 +178,7 @@ public class DatabaseReconciler
         return new CRStatus();
     }
 
-    private UpdateControl<Database> reconcile(
+    private UpdateControl<Database> reconcileWithoutTransaction(
             DSLContext dsl,
             Database resource,
             CRStatus status

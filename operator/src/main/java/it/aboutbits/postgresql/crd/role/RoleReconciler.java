@@ -27,9 +27,9 @@ import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -90,7 +90,7 @@ public class RoleReconciler
                     ));
 
             return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -141,7 +141,7 @@ public class RoleReconciler
             // Record the fingerprint only after the commit. A failed commit must not leave
             // the fingerprint of a password that PostgreSQL never stored.
             status.setPasswordFingerprint(expectedFingerprint);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return handleError(
                     resource,
                     status,
@@ -178,7 +178,7 @@ public class RoleReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(100, TimeUnit.MILLISECONDS);
+                    .rescheduleAfter(Duration.ofMillis(100));
         }
 
         var clusterRef = spec.getClusterRef();
@@ -198,7 +198,7 @@ public class RoleReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -207,7 +207,7 @@ public class RoleReconciler
             roleService.dropRole(dsl, spec);
 
             return DeleteControl.defaultDelete();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error(
                     "Failed to delete Role [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
                             namespace,
@@ -223,7 +223,7 @@ public class RoleReconciler
             context.getClient().resource(resource).patchStatus();
 
             return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(60, TimeUnit.SECONDS);
+                    .rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 

@@ -7,6 +7,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public class HostCustomizer implements SchemaCustomizer.Customizer {
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();
-            if ("string".equals(prop.getType())
+            if (Objects.equals(prop.getType(), "string")
                     && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))
             ) {
                 prop.setFormat(null);

@@ -19,7 +19,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
@@ -124,8 +126,8 @@ class RoleReconcilerNonSuperuserTest {
                 .serverSideApply();
 
         // then
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
                         rootDsl,
                         roleName,
@@ -140,8 +142,8 @@ class RoleReconcilerNonSuperuserTest {
                 .delete();
 
         // then
-        await().atMost(5, TimeUnit.SECONDS)
-                .pollInterval(100, TimeUnit.MILLISECONDS)
+        await().atMost(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(100))
                 .until(() -> !roleService.roleExists(rootDsl, role.getSpec()));
     }
 
@@ -427,11 +429,14 @@ class RoleReconcilerNonSuperuserTest {
             DSLContext rootDsl,
             String roleName
     ) {
-        return Boolean.TRUE.equals(rootDsl.fetchValue(
-                "select pg_has_role({0}, {1}, 'USAGE')",
-                ADMIN_ROLE,
-                roleName
-        ));
+        return Objects.equals(
+                rootDsl.fetchValue(
+                        "select pg_has_role({0}, {1}, 'USAGE')",
+                        ADMIN_ROLE,
+                        roleName
+                ),
+                true
+        );
     }
 
     private Role applyRole(Role role) {
