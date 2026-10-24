@@ -17,9 +17,9 @@ on:
 permissions: {}
 
 env:
-  DOCKER_IMAGE: ghcr.io/${{ github.repository }}
+  OCI_IMAGE: ghcr.io/${{ github.repository }}
   HELM_CHART_NAME: postgresql-operator
-  HELM_CHART_REPOSITORY: ghcr.io/${{ github.repository_owner }}/charts
+  HELM_CHART_REPOSITORY: ghcr.io/${{ github.repository_owner }}/helm-charts
 
 jobs:
   test:
@@ -63,7 +63,7 @@ jobs:
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          docker-image: ${{ env.DOCKER_IMAGE }}
+          docker-image: ${{ env.OCI_IMAGE }}
           docker-tag: ${{ steps.nextVersion.outputs.version }}
           platforms: linux/amd64,linux/arm64
           working-directory: './operator'
