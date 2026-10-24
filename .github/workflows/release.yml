@@ -19,7 +19,7 @@ permissions: {}
 env:
   DOCKER_IMAGE: ghcr.io/${{ github.repository }}
   HELM_CHART_NAME: postgresql-operator
-  HELM_CHART_REPOSITORY: ghcr.io/${{ github.repository_owner }}/charts
+  HELM_CHART_REPOSITORY: ghcr.io/${{ github.repository_owner }}/helm-charts
 
 jobs:
   test:

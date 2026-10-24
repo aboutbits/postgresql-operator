@@ -49,7 +49,7 @@ See [Admin privileges](docs/cluster-connection.md#admin-privileges).
 ### Helm Chart
 
 ```bash
-helm install postgresql-operator oci://ghcr.io/aboutbits/charts/postgresql-operator --version 0.8.0
+helm install postgresql-operator oci://ghcr.io/aboutbits/helm-charts/postgresql-operator --version 0.8.0
 ```
 
 Alternatively, install the Helm chart from the release asset:
