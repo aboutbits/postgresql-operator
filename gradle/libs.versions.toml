@@ -6,9 +6,9 @@ axionReleasePlugin = "1.21.1"
 jooq = "3.21.9"
 jSpecify = "1.0.1"
 lombok = "1.18.48"
-postgresql = "42.7.11"
-quarkiverse-helm = "1.4.0"
-scram-client = "3.2"
+# The enforced Quarkus BOM forces postgresql and scram-client on the runtime classpath, keep both in line with it
+postgresql = "42.7.13"
+scram-client = "3.3"
 
 ## Testing ##
 assertj = "3.27.7"
@@ -62,7 +62,8 @@ postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "pos
 # https://docs.quarkiverse.io/quarkus-helm/dev/
 # https://github.com/quarkiverse/quarkus-helm
 # https://mvnrepository.com/artifact/io.quarkiverse.helm/quarkus-helm
-quarkiverse-helm = { group = "io.quarkiverse.helm", name = "quarkus-helm", version.ref = "quarkiverse-helm" }
+# The version comes from the Quarkus Operator SDK BOM
+quarkiverse-helm = { group = "io.quarkiverse.helm", name = "quarkus-helm" }
 
 # SCRAM - Salted Challenge Response Authentication Mechanism #
 # https://github.com/ongres/scram

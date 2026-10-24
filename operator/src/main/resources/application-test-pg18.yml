@@ -5,3 +5,6 @@ quarkus:
   compose:
     devservices:
       files: src/main/docker/compose-devservices-test-pg18.yml
+
+test:
+  postgresql-major-version: 18
