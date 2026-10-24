@@ -1,6 +1,6 @@
 [versions]
 # Axion Release Plugin #
-axionReleasePlugin = "1.21.1"
+axionReleasePlugin = "1.21.4"
 
 ## Libraries ##
 jooq = "3.21.9"
