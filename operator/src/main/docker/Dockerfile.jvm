@@ -78,8 +78,8 @@
 #   accessed directly. (example: "foo.example.com,bar.example.com")
 #
 ###
-# https://catalog.redhat.com/en/software/containers/ubi9/openjdk-25-runtime/69204990c46419100ce30a5b
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime:1.24
+# https://catalog.redhat.com/en/software/containers/ubi10/openjdk-25-runtime/690ca3e4c827022925ed2db5
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime:1.24
 
 ENV LANGUAGE='en_US:en'
 
