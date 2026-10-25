@@ -32,6 +32,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static it.aboutbits.postgresql._support.testdata.base.TestDataCreator.randomKubernetesNameSuffix;
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -527,9 +528,9 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the password Secret of a Role does not exist, the status should be ERROR until the Secret is back"
+            "When the password Secret of a Role does not exist, the status should be ERROR until the Secret exists"
     )
-    void missingPasswordSecret_setsErrorUntilSecretIsBack() {
+    void missingPasswordSecret_setsErrorUntilSecretExists() {
         // given: a reconciled login Role
         var clusterConnection = given.one()
                 .clusterConnection()
@@ -551,7 +552,7 @@ class RoleReconcilerTest {
 
         // when: the Role references a Secret that does not exist
         var missingSecretRef = new ResourceRef();
-        missingSecretRef.setName("non-existing-secret");
+        missingSecretRef.setName(randomKubernetesNameSuffix("test-missing-secret"));
 
         role.getSpec().setPasswordSecretRef(missingSecretRef);
 
@@ -561,13 +562,22 @@ class RoleReconcilerTest {
         assertThat(erroredRole.getStatus().getPhase()).isEqualTo(CRPhase.ERROR);
         assertThat(erroredRole.getStatus().getMessage()).startsWith("Secret reference not found");
 
-        // when: the Role references the existing Secret again
-        role.getSpec().setPasswordSecretRef(secretRef);
+        // when: the missing Secret is created
+        given.one()
+                .secretRef()
+                .withName(missingSecretRef.getName())
+                .returnFirst();
 
-        var updatedRole = applyRole(role);
+        // then: the Secret event source reconciles the Role without a spec change
+        var updatedRole = kubernetesClient.resources(Role.class)
+                .inNamespace(kubernetesClient.getNamespace())
+                .withName(role.getMetadata().getName())
+                .waitUntilCondition(
+                        r -> r.getStatus() != null && r.getStatus().getPhase() == CRPhase.READY,
+                        5,
+                        TimeUnit.SECONDS
+                );
 
-        // then
-        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(updatedRole.getStatus().getMessage()).isNull();
     }
 
