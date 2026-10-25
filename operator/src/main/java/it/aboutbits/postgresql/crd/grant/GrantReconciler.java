@@ -415,7 +415,7 @@ public class GrantReconciler
         if (!ownedObjects.isEmpty()) {
             message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s".formatted(
                     objectType,
-                    getResourceNamespaceOrOwn(resource, namespace),
+                    namespace,
                     name,
                     String.join("\n  • ", ownedObjects)
             );
