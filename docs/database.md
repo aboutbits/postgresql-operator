@@ -8,7 +8,7 @@ The `Database` Custom Resource Definition (CRD) is responsible for managing Post
 |-----------------|---------------|------------------------------------------------------------------------------------------------------|----------|---------|
 | `clusterRef`    | `ResourceRef` | Reference to the `ClusterConnection` to use.                                                         | Yes      | Yes     |
 | `name`          | `string`      | The name of the database to create.                                                                  | Yes      | No      |
-| `owner`         | `string`      | The owner of the database.                                                                           | No       | Yes     |
+| `owner`         | `string`      | The owner of the database. If not set, the database keeps its current owner.                         | No       | Yes     |
 | `reclaimPolicy` | `string`      | The policy for reclaiming the database when the CR is deleted. Values: `Retain` (Default), `Delete`. | No       | Yes     |
 
 ### ResourceRef (`clusterRef`)

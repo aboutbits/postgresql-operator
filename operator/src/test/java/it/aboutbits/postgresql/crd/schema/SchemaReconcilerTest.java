@@ -89,7 +89,7 @@ class SchemaReconcilerTest {
     @Test
     @DisplayName("When the ClusterConnection of an up-to-date Schema is back, the Schema should be reconciled to READY")
     void upToDateSchema_afterPendingClusterConnection_setsReady() {
-        // given: a reconciled Schema with an explicit owner, so that the next reconciles find it up to date
+        // given: a reconciled Schema
         var clusterConnectionMain = given.one()
                 .clusterConnection()
                 .withName("test-connection-schema-pending-to-ready")
@@ -114,12 +114,7 @@ class SchemaReconcilerTest {
                 .withReclaimPolicy(DELETE)
                 .returnFirst();
 
-        var spec = schema.getSpec();
-        var clusterRef = spec.getClusterRef();
-
-        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnectionDb);
-
-        spec.setOwner(schemaService.fetchSchemaOwner(dsl, spec));
+        var clusterRef = schema.getSpec().getClusterRef();
 
         // and: the ClusterConnection is not available for a while
         clusterRef.setName("non-existing-cc");
@@ -136,6 +131,48 @@ class SchemaReconcilerTest {
         // then
         assertThat(updatedSchema.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(updatedSchema.getStatus().getMessage()).isNull();
+    }
+
+    @Test
+    @DisplayName("When a Schema without owner is reconciled again, it should keep its owner and stay READY")
+    void schemaWithoutOwner_reconciledAgain_keepsOwner() {
+        // given: a reconciled Schema without owner
+        var clusterConnectionMain = given.one()
+                .clusterConnection()
+                .withName("test-connection-schema-without-owner")
+                .returnFirst();
+
+        var database = given.one()
+                .database()
+                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                .returnFirst();
+
+        // Creating a second ClusterConnection CR is only required for the tests
+        var clusterConnectionDb = given.one()
+                .clusterConnection()
+                .withName("test-connection-schema-without-owner-db")
+                .withDatabase(database.getSpec().getName())
+                .returnFirst();
+
+        var schema = given.one()
+                .schema()
+                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                .withDatabase(database.getSpec().getName())
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnectionDb);
+
+        var initialOwner = schemaService.fetchSchemaOwner(dsl, schema.getSpec());
+
+        // when: a spec change that needs no SQL statement triggers the next reconcile
+        schema.getSpec().setReclaimPolicy(DELETE);
+
+        var updatedSchema = applySchema(schema);
+
+        // then
+        assertThat(updatedSchema.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedSchema.getStatus().getMessage()).isNull();
+        assertThat(schemaService.fetchSchemaOwner(dsl, schema.getSpec())).isEqualTo(initialOwner);
     }
 
     private Schema applySchema(Schema schema) {

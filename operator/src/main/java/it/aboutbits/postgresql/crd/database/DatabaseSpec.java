@@ -33,6 +33,7 @@ public class DatabaseSpec {
 
     /// The owner of the database.
     /// If not specified, the database will be owned by the logged-in admin user specified in the clusterRef -> ClusterConnection#adminSecretRef CR instance.
+    /// If removed later, the database keeps its current owner.
     @io.fabric8.generator.annotation.Nullable
     private @Nullable String owner = null;
 }

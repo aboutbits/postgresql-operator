@@ -210,7 +210,8 @@ public class DatabaseReconciler
         var currentOwner = databaseService.fetchDatabaseOwner(dsl, spec);
         var expectedOwner = spec.getOwner();
 
-        if (Objects.equals(currentOwner, expectedOwner)) {
+        // Without an owner in the spec, the database keeps its current owner
+        if (expectedOwner == null || Objects.equals(currentOwner, expectedOwner)) {
             log.info(
                     "Database up-to-date [resource={}/{}]",
                     namespace,

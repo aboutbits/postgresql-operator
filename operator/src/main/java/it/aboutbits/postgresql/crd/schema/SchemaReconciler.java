@@ -214,7 +214,8 @@ public class SchemaReconciler
         var currentOwner = schemaService.fetchSchemaOwner(tx, spec);
         var expectedOwner = spec.getOwner();
 
-        if (Objects.equals(currentOwner, expectedOwner)) {
+        // Without an owner in the spec, the schema keeps its current owner
+        if (expectedOwner == null || Objects.equals(currentOwner, expectedOwner)) {
             log.info(
                     "Schema up-to-date [resource={}/{}]",
                     namespace,

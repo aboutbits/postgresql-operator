@@ -44,6 +44,7 @@ public class SchemaSpec {
 
     /// The owner of the schema.
     /// If not specified, the schema will be owned by the logged-in admin user specified in the clusterRef -> ClusterConnection#adminSecretRef CR instance.
+    /// If removed later, the schema keeps its current owner.
     @io.fabric8.generator.annotation.Nullable
     private @Nullable String owner = null;
 }
