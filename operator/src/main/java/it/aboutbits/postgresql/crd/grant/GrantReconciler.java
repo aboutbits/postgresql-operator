@@ -325,6 +325,7 @@ public class GrantReconciler
                         object,
                         privilegesToRevoke
                 );
+
                 updated = true;
             }
 
@@ -345,6 +346,7 @@ public class GrantReconciler
                             object,
                             privilegesToGrant
                     );
+
                     updated = true;
                 }
             }
@@ -382,6 +384,7 @@ public class GrantReconciler
                         object,
                         privilegesToRevoke
                 );
+
                 updated = true;
             }
         }
