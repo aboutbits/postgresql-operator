@@ -354,11 +354,19 @@ public class GrantReconciler
 
         // 2. Bulk grant ("ALL" mode only)
         if (isAllMode) {
-            updated |= grantService.grantOnAll(
+            var executed = grantService.grantOnAll(
                     tx,
                     spec,
                     expectedPrivileges
             );
+
+            // The bulk grant changes something only if a non-owned object misses an expected privilege
+            if (executed) {
+                updated |= processObjects.stream()
+                        .anyMatch(object -> !currentObjectPrivileges.getOrDefault(object, Set.of())
+                                .containsAll(expectedPrivileges)
+                        );
+            }
         }
 
         // 2. Revoke orphaned object privileges (Objects with privileges but not in Spec)
