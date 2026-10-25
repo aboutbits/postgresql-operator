@@ -399,7 +399,7 @@ public class GrantReconciler
 
         if (updated) {
             log.info(
-                    "Updated Grant [resource={}/{}]",
+                    "Updating Grant [resource={}/{}]",
                     namespace,
                     name
             );

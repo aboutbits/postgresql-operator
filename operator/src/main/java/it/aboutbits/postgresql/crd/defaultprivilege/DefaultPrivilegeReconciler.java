@@ -284,7 +284,7 @@ public class DefaultPrivilegeReconciler
             );
         } else {
             log.info(
-                    "Updated DefaultPrivilege [resource={}/{}]",
+                    "Updating DefaultPrivilege [resource={}/{}]",
                     namespace,
                     name
             );
