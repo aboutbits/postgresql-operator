@@ -20,7 +20,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     protected abstract S newStatus();
 
     public S initializeStatus(CR resource) {
-        S status = resource.getStatus();
+        var status = resource.getStatus();
 
         //noinspection ConstantConditions
         if (status == null) {
