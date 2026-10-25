@@ -711,6 +711,67 @@ class DefaultPrivilegeReconcilerTest {
         }
     }
 
+    @Test
+    @DisplayName(
+            "When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY"
+    )
+    void upToDateDefaultPrivilege_afterPendingClusterConnection_setsReady() {
+        // given: a reconciled DefaultPrivilege
+        var clusterConnectionMain = given.one()
+                .clusterConnection()
+                .returnFirst();
+
+        var database = given.one()
+                .database()
+                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                .withReclaimPolicy(DELETE)
+                .returnFirst();
+
+        // To create a Schema in the new database, we need a ClusterConnection pointing to it
+        var clusterConnectionDb = given.one()
+                .clusterConnection()
+                .withDatabase(database.getSpec().getName())
+                .returnFirst();
+
+        var role = given.one()
+                .role()
+                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                .returnFirst();
+
+        var defaultPrivilege = given.one()
+                .defaultPrivilege()
+                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                .withDatabase(database.getSpec().getName())
+                .withRole(role.getSpec().getName())
+                .withObjectType(SCHEMA)
+                .withPrivileges(USAGE)
+                .returnFirst();
+
+        var clusterRef = defaultPrivilege.getSpec().getClusterRef();
+
+        // and: the ClusterConnection is not available for a while
+        clusterRef.setName("non-existing-cc");
+
+        var pendingDefaultPrivilege = applyDefaultPrivilege(
+                defaultPrivilege,
+                dp -> dp.getStatus().getObservedGeneration() >= 2L
+        );
+
+        assertThat(pendingDefaultPrivilege.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
+
+        // when: the ClusterConnection is available again
+        clusterRef.setName(clusterConnectionDb.getMetadata().getName());
+
+        var updatedDefaultPrivilege = applyDefaultPrivilege(
+                defaultPrivilege,
+                dp -> dp.getStatus().getObservedGeneration() >= 3L
+        );
+
+        // then
+        assertThat(updatedDefaultPrivilege.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedDefaultPrivilege.getStatus().getMessage()).isNull();
+    }
+
     private DefaultPrivilege applyDefaultPrivilege(
             DefaultPrivilege defaultPrivilege,
             Predicate<DefaultPrivilege> condition

@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -173,6 +174,59 @@ class ClusterConnectionReconcilerTest {
         } finally {
             Files.deleteIfExists(credentialsFile);
         }
+    }
+
+    @Test
+    @DisplayName("When the server of a ClusterConnection is reachable again after an ERROR, the status should be ready")
+    void reachableAgainAfterError_setsReady() {
+        // given: a reconciled ClusterConnection
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-error-to-ready")
+                .returnFirst();
+
+        var spec = clusterConnection.getSpec();
+        var port = spec.getPort();
+
+        // and: the server is not reachable for a while
+        spec.setPort(1);
+
+        var erroredClusterConnection = applyClusterConnection(clusterConnection);
+
+        assertThat(erroredClusterConnection.getStatus().getPhase()).isEqualTo(CRPhase.ERROR);
+
+        // when: the server is reachable again
+        spec.setPort(port);
+
+        var updatedClusterConnection = applyClusterConnection(clusterConnection);
+
+        // then
+        assertThat(updatedClusterConnection.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedClusterConnection.getStatus().getMessage()).startsWith("PostgreSQL");
+    }
+
+    private ClusterConnection applyClusterConnection(ClusterConnection clusterConnection) {
+        var namespace = kubernetesClient.getNamespace();
+
+        clusterConnection.getMetadata().setManagedFields(null);
+        clusterConnection.getMetadata().setResourceVersion(null);
+
+        var applied = kubernetesClient.resources(ClusterConnection.class)
+                .inNamespace(namespace)
+                .resource(clusterConnection)
+                .serverSideApply();
+
+        var generation = applied.getMetadata().getGeneration();
+
+        //noinspection ConstantConditions
+        return kubernetesClient.resources(ClusterConnection.class)
+                .inNamespace(namespace)
+                .withName(applied.getMetadata().getName())
+                .waitUntilCondition(
+                        c -> c.getStatus() != null && c.getStatus().getObservedGeneration() >= generation,
+                        5,
+                        TimeUnit.SECONDS
+                );
     }
 
     private static void assertThatClusterConnectionHasExpectedStatus(

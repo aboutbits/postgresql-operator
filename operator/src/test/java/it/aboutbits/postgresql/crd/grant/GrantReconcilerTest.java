@@ -1226,6 +1226,59 @@ class GrantReconcilerTest {
         }
     }
 
+    @Test
+    @DisplayName("When the ClusterConnection of an up-to-date Grant is back, the Grant should be reconciled to READY")
+    void upToDateGrant_afterPendingClusterConnection_setsReady() {
+        // given: a reconciled Grant
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .returnFirst();
+
+        var role = given.one()
+                .role()
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
+
+        var database = given.one()
+                .database()
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withReclaimPolicy(DELETE)
+                .returnFirst();
+
+        var grant = given.one()
+                .grant()
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withDatabase(database.getSpec().getName())
+                .withRole(role.getSpec().getName())
+                .withObjectType(DATABASE)
+                .withPrivileges(CONNECT)
+                .returnFirst();
+
+        var clusterRef = grant.getSpec().getClusterRef();
+
+        // and: the ClusterConnection is not available for a while
+        clusterRef.setName("non-existing-cc");
+
+        var pendingGrant = applyGrant(
+                grant,
+                g -> g.getStatus().getObservedGeneration() >= 2L
+        );
+
+        assertThat(pendingGrant.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
+
+        // when: the ClusterConnection is available again
+        clusterRef.setName(clusterConnection.getMetadata().getName());
+
+        var updatedGrant = applyGrant(
+                grant,
+                g -> g.getStatus().getObservedGeneration() >= 3L
+        );
+
+        // then
+        assertThat(updatedGrant.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedGrant.getStatus().getMessage()).isNull();
+    }
+
     private Grant applyGrant(
             Grant grant,
             Predicate<Grant> condition
