@@ -86,6 +86,23 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         return Optional.of(clusterConnection);
     }
 
+    /// Sets the phase to [CRPhase#ERROR] for a failure without an exception, and logs the message.
+    public void setErrorPhase(
+            CR resource,
+            S status,
+            String message
+    ) {
+        log.warn(
+                "Failed to reconcile resource [resource={}/{}, message={}]",
+                resource.getMetadata().getNamespace(),
+                resource.getMetadata().getName(),
+                message
+        );
+
+        status.setPhase(CRPhase.ERROR)
+                .setMessage(message);
+    }
+
     public <E extends Exception> UpdateControl<CR> handleError(
             CR resource,
             S status,

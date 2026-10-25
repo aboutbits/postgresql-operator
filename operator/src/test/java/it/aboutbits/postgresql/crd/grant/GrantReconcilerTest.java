@@ -290,7 +290,12 @@ class GrantReconcilerTest {
                         .extracting(Grant::getStatus)
                         .satisfies(status -> {
                             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
-                            assertThat(status.getMessage()).startsWith("Grant contains invalid privileges for the specified objectType");
+                            assertThat(status.getMessage())
+                                    .startsWith("Grant contains invalid privileges for the specified objectType")
+                                    .contains("[resource=%s/%s,".formatted(
+                                            grant.getMetadata().getNamespace(),
+                                            grant.getMetadata().getName()
+                                    ));
                         });
             }
 

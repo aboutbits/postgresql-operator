@@ -68,14 +68,17 @@ public class DefaultPrivilegeReconciler
 
             invalid.removeAll(allowedPrivilegesForObjectType);
 
-            status.setPhase(CRPhase.ERROR)
-                    .setMessage("DefaultPrivilege contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName(),
+            setErrorPhase(
+                    resource,
+                    status,
+                    "DefaultPrivilege contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
+                            namespace,
+                            name,
                             objectType,
                             invalid,
                             objectType.privileges()
-                    ));
+                    )
+            );
 
             return UpdateControl.patchStatus(resource);
         }
@@ -188,7 +191,8 @@ public class DefaultPrivilegeReconciler
                     "Failed to delete DefaultPrivilege [resource={}/{}, status.phase={}]",
                     namespace,
                     name,
-                    status.getPhase()
+                    status.getPhase(),
+                    e
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
@@ -232,13 +236,16 @@ public class DefaultPrivilegeReconciler
                 ));
 
         if (!unsupportedPrivileges.isEmpty()) {
-            status.setPhase(CRPhase.ERROR)
-                    .setMessage("The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
+            setErrorPhase(
+                    resource,
+                    status,
+                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
                             databaseMajorVersion,
                             unsupportedPrivileges,
-                            getResourceNamespaceOrOwn(resource, namespace),
+                            namespace,
                             name
-                    ));
+                    )
+            );
 
             return UpdateControl.patchStatus(resource);
         }
@@ -266,6 +273,20 @@ public class DefaultPrivilegeReconciler
                     tx,
                     spec,
                     privilegesToGrant
+            );
+        }
+
+        if (privilegesToRevoke.isEmpty() && privilegesToGrant.isEmpty()) {
+            log.info(
+                    "DefaultPrivilege up-to-date [resource={}/{}]",
+                    namespace,
+                    name
+            );
+        } else {
+            log.info(
+                    "Updated DefaultPrivilege [resource={}/{}]",
+                    namespace,
+                    name
             );
         }
 
