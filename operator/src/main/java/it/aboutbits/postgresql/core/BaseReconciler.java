@@ -93,7 +93,8 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
             String message
     ) {
         log.warn(
-                "Failed to reconcile resource [resource={}/{}, message={}]",
+                "Failed to reconcile {} [resource={}/{}, message={}]",
+                resource.getKind(),
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
                 message
