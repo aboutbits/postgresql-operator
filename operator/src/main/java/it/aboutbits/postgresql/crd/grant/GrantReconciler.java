@@ -306,7 +306,7 @@ public class GrantReconciler
                     .rescheduleAfter(Duration.ofSeconds(60));
         }
 
-        // Whether any grant or revoke statement was executed, only used for the log
+        // Whether any grant or revoke statement changes a privilege, only used for the log
         var updated = false;
 
         // 1. Reconcile objects explicitly listed in the Spec (processObjects).
