@@ -420,7 +420,11 @@ public class GrantService {
         tx.execute(statement);
     }
 
-    public void grantOnAll(
+    /// Grants the privileges on all objects of the objectType in the schema.
+    /// Only `TABLE` and `SEQUENCE` support this, for all other objectTypes nothing is executed.
+    ///
+    /// @return `true` if the statement was executed
+    public boolean grantOnAll(
             DSLContext tx,
             GrantSpec spec,
             Set<Privilege> privilegesToGrant
@@ -432,7 +436,7 @@ public class GrantService {
         // grant <privileges> on all <objectType>s in schema <schema> to <role>;
         // is only supported by TABLE, SEQUENCE, FUNCTION, PROCEDURE and ROUTINE
         if (objectType != TABLE && objectType != SEQUENCE) {
-            return;
+            return false;
         }
 
         var privileges = privilegesToGrant.stream()
@@ -448,6 +452,8 @@ public class GrantService {
         );
 
         tx.execute(statement);
+
+        return true;
     }
 
     public void revoke(

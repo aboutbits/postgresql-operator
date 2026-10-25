@@ -73,14 +73,17 @@ public class GrantReconciler
 
             invalid.removeAll(allowedPrivilegesForObjectType);
 
-            status.setPhase(CRPhase.ERROR)
-                    .setMessage("Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName(),
+            setErrorPhase(
+                    resource,
+                    status,
+                    "Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
+                            namespace,
+                            name,
                             objectType,
                             invalid,
                             objectType.privileges()
-                    ));
+                    )
+            );
 
             return UpdateControl.patchStatus(resource);
         }
@@ -197,7 +200,8 @@ public class GrantReconciler
                     "Failed to delete Grant [resource={}/{}, status.phase={}]",
                     namespace,
                     name,
-                    status.getPhase()
+                    status.getPhase(),
+                    e
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
@@ -252,13 +256,16 @@ public class GrantReconciler
                 ));
 
         if (!unsupportedPrivileges.isEmpty()) {
-            status.setPhase(CRPhase.ERROR)
-                    .setMessage("The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
+            setErrorPhase(
+                    resource,
+                    status,
+                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
                             databaseMajorVersion,
                             unsupportedPrivileges,
-                            getResourceNamespaceOrOwn(resource, namespace),
+                            namespace,
                             name
-                    ));
+                    )
+            );
 
             return UpdateControl.patchStatus(resource);
         }
@@ -284,17 +291,23 @@ public class GrantReconciler
         });
 
         if (!missingObjects.isEmpty()) {
-            status.setPhase(CRPhase.ERROR)
-                    .setMessage("Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n%s".formatted(
+            setErrorPhase(
+                    resource,
+                    status,
+                    "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n  • %s".formatted(
                             objectType,
-                            getResourceNamespaceOrOwn(resource, namespace),
+                            namespace,
                             name,
                             String.join("\n  • ", missingObjects)
-                    ));
+                    )
+            );
 
             return UpdateControl.patchStatus(resource)
                     .rescheduleAfter(Duration.ofSeconds(60));
         }
+
+        // Whether any grant or revoke statement changes a privilege, only used for the log
+        var updated = false;
 
         // 1. Reconcile objects explicitly listed in the Spec (processObjects).
         // We know these are NOT owned (filtered above) and ARE in the spec.
@@ -312,6 +325,8 @@ public class GrantReconciler
                         object,
                         privilegesToRevoke
                 );
+
+                updated = true;
             }
 
             // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
@@ -331,17 +346,27 @@ public class GrantReconciler
                             object,
                             privilegesToGrant
                     );
+
+                    updated = true;
                 }
             }
         }
 
         // 2. Bulk grant ("ALL" mode only)
         if (isAllMode) {
-            grantService.grantOnAll(
+            var executed = grantService.grantOnAll(
                     tx,
                     spec,
                     expectedPrivileges
             );
+
+            // The bulk grant changes something only if a non-owned object misses an expected privilege
+            if (executed) {
+                updated |= processObjects.stream()
+                        .anyMatch(object -> !currentObjectPrivileges.getOrDefault(object, Set.of())
+                                .containsAll(expectedPrivileges)
+                        );
+            }
         }
 
         // 2. Revoke orphaned object privileges (Objects with privileges but not in Spec)
@@ -367,14 +392,30 @@ public class GrantReconciler
                         object,
                         privilegesToRevoke
                 );
+
+                updated = true;
             }
+        }
+
+        if (updated) {
+            log.info(
+                    "Updating Grant [resource={}/{}]",
+                    namespace,
+                    name
+            );
+        } else {
+            log.info(
+                    "Grant up-to-date [resource={}/{}]",
+                    namespace,
+                    name
+            );
         }
 
         String message = null;
         if (!ownedObjects.isEmpty()) {
-            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n%s".formatted(
+            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s".formatted(
                     objectType,
-                    getResourceNamespaceOrOwn(resource, namespace),
+                    namespace,
                     name,
                     String.join("\n  • ", ownedObjects)
             );

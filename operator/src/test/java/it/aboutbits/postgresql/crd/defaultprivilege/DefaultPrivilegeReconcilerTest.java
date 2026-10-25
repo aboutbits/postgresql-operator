@@ -295,7 +295,12 @@ class DefaultPrivilegeReconcilerTest {
                         .extracting(DefaultPrivilege::getStatus)
                         .satisfies(status -> {
                             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
-                            assertThat(status.getMessage()).startsWith("DefaultPrivilege contains invalid privileges for the specified objectType");
+                            assertThat(status.getMessage())
+                                    .startsWith("DefaultPrivilege contains invalid privileges for the specified objectType")
+                                    .contains("[resource=%s/%s,".formatted(
+                                            defaultPrivilege.getMetadata().getNamespace(),
+                                            defaultPrivilege.getMetadata().getName()
+                                    ));
                         });
             }
 

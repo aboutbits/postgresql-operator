@@ -290,7 +290,12 @@ class GrantReconcilerTest {
                         .extracting(Grant::getStatus)
                         .satisfies(status -> {
                             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
-                            assertThat(status.getMessage()).startsWith("Grant contains invalid privileges for the specified objectType");
+                            assertThat(status.getMessage())
+                                    .startsWith("Grant contains invalid privileges for the specified objectType")
+                                    .contains("[resource=%s/%s,".formatted(
+                                            grant.getMetadata().getNamespace(),
+                                            grant.getMetadata().getName()
+                                    ));
                         });
             }
 
@@ -908,6 +913,177 @@ class GrantReconcilerTest {
             );
         }
 
+        @Test
+        @DisplayName("Should reconcile to ERROR and list the missing tables when a listed table does not exist")
+        void errorWhenTableDoesNotExist() {
+            // given
+            var clusterConnectionMain = given.one()
+                    .clusterConnection()
+                    .returnFirst();
+
+            var database = given.one()
+                    .database()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
+                    .returnFirst();
+
+            var clusterConnectionDb = given.one()
+                    .clusterConnection()
+                    .withDatabase(database.getSpec().getName())
+                    .returnFirst();
+
+            var schema = given.one()
+                    .schema()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withReclaimPolicy(DELETE)
+                    .returnFirst();
+
+            var role = given.one()
+                    .role()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            var tableName = "test_table";
+            var missingTableName = "missing_table";
+            createTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
+
+            // when
+            var grant = given.one()
+                    .grant()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withSchema(schema.getSpec().getName())
+                    .withRole(role.getSpec().getName())
+                    .withObjectType(TABLE)
+                    .withObjects(tableName, missingTableName)
+                    .withPrivileges(SELECT)
+                    .returnFirst();
+
+            // then
+            assertThat(grant)
+                    .isNotNull()
+                    .extracting(Grant::getStatus)
+                    .satisfies(status -> {
+                        assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
+                        assertThat(status.getMessage())
+                                .startsWith("Did not grant or revoke any privileges")
+                                .contains("[resource=%s/%s]".formatted(
+                                        grant.getMetadata().getNamespace(),
+                                        grant.getMetadata().getName()
+                                ))
+                                .endsWith("%n  • \"%s\".\"%s\"".formatted(
+                                        schema.getSpec().getName(),
+                                        missingTableName
+                                ))
+                                .doesNotContain("\"%s\"".formatted(tableName));
+                    });
+
+            assertThatNoPrivileges(
+                    clusterConnectionDb,
+                    grant,
+                    tableName
+            );
+
+            // cleanup
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
+        }
+
+        @Test
+        @DisplayName("Should reconcile to READY and list the owned tables when the role is the owner of a listed table")
+        void readyWhenRoleOwnsTable() {
+            // given
+            var clusterConnectionMain = given.one()
+                    .clusterConnection()
+                    .returnFirst();
+
+            var database = given.one()
+                    .database()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .withReclaimPolicy(DELETE)
+                    .returnFirst();
+
+            var clusterConnectionDb = given.one()
+                    .clusterConnection()
+                    .withDatabase(database.getSpec().getName())
+                    .returnFirst();
+
+            var schema = given.one()
+                    .schema()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withReclaimPolicy(DELETE)
+                    .returnFirst();
+
+            var role = given.one()
+                    .role()
+                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                    .returnFirst();
+
+            var tableName = "test_table";
+            createTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
+            changeTableOwner(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName,
+                    role.getSpec().getName()
+            );
+
+            // when
+            var grant = given.one()
+                    .grant()
+                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                    .withDatabase(database.getSpec().getName())
+                    .withSchema(schema.getSpec().getName())
+                    .withRole(role.getSpec().getName())
+                    .withObjectType(TABLE)
+                    .withObjects(tableName)
+                    .withPrivileges(SELECT)
+                    .returnFirst();
+
+            // then
+            assertThat(grant)
+                    .isNotNull()
+                    .extracting(Grant::getStatus)
+                    .satisfies(status -> {
+                        assertThat(status.getPhase()).isEqualTo(CRPhase.READY);
+                        assertThat(status.getMessage())
+                                .startsWith("The role is the owner of the listed")
+                                .contains("[resource=%s/%s]".formatted(
+                                        grant.getMetadata().getNamespace(),
+                                        grant.getMetadata().getName()
+                                ))
+                                .endsWith("%n  • \"%s\".\"%s\"".formatted(
+                                        schema.getSpec().getName(),
+                                        tableName
+                                ));
+                    });
+
+            // cleanup: the role cannot be dropped while it owns the table
+            deleteTable(
+                    clusterConnectionDb,
+                    database.getSpec().getName(),
+                    schema.getSpec().getName(),
+                    tableName
+            );
+        }
+
         static Stream<List<Privilege>> provideAllSupportedPrivileges() {
             int version = ConfigProvider.getConfig().getValue("test.postgresql-major-version", Integer.class);
 
@@ -1347,6 +1523,22 @@ class GrantReconcilerTest {
             dsl.createTable(quotedName(schemaName, tableName))
                     .column("id", SQLDataType.BIGINT.generatedByDefaultAsIdentity())
                     .execute();
+        }
+    }
+
+    private void changeTableOwner(
+            ClusterConnection clusterConnection,
+            String databaseName,
+            String schemaName,
+            String tableName,
+            String owner
+    ) {
+        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
+            dsl.execute(
+                    "alter table {0} owner to {1}",
+                    quotedName(schemaName, tableName),
+                    quotedName(owner)
+            );
         }
     }
 
