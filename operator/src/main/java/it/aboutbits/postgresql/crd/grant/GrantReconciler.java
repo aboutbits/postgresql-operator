@@ -294,7 +294,7 @@ public class GrantReconciler
             setErrorPhase(
                     resource,
                     status,
-                    "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n%s".formatted(
+                    "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n  • %s".formatted(
                             objectType,
                             namespace,
                             name,
@@ -413,7 +413,7 @@ public class GrantReconciler
 
         String message = null;
         if (!ownedObjects.isEmpty()) {
-            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n%s".formatted(
+            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s".formatted(
                     objectType,
                     getResourceNamespaceOrOwn(resource, namespace),
                     name,
