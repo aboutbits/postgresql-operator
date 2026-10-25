@@ -43,8 +43,6 @@ public class ClusterConnectionReconciler
 
             return UpdateControl.patchStatus(resource);
         } catch (RuntimeException e) {
-            log.error("Failed to check database connectivity", e);
-
             return handleError(
                     resource,
                     status,
