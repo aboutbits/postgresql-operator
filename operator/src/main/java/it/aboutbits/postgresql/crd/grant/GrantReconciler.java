@@ -89,7 +89,7 @@ public class GrantReconciler
         }
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setPhase(CRPhase.PENDING)
+            status.updatePhase(CRPhase.PENDING)
                     .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
@@ -143,7 +143,7 @@ public class GrantReconciler
         );
 
         if (status.getPhase() != CRPhase.DELETING) {
-            status.setPhase(CRPhase.DELETING)
+            status.updatePhase(CRPhase.DELETING)
                     .setMessage("Grant deletion in progress");
 
             context.getClient().resource(resource).patchStatus();
@@ -421,7 +421,7 @@ public class GrantReconciler
             );
         }
 
-        status.setPhase(CRPhase.READY)
+        status.updatePhase(CRPhase.READY)
                 .setMessage(message);
 
         return UpdateControl.patchStatus(resource);

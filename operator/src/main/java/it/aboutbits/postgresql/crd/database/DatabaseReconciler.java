@@ -57,7 +57,7 @@ public class DatabaseReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setPhase(CRPhase.PENDING)
+            status.updatePhase(CRPhase.PENDING)
                     .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
@@ -110,7 +110,7 @@ public class DatabaseReconciler
         );
 
         if (status.getPhase() != CRPhase.DELETING) {
-            status.setPhase(CRPhase.DELETING);
+            status.updatePhase(CRPhase.DELETING);
 
             if (spec.getReclaimPolicy() == ReclaimPolicy.DELETE) {
                 status.setMessage("Database deletion in progress");
@@ -201,7 +201,7 @@ public class DatabaseReconciler
                     spec
             );
 
-            status.setPhase(CRPhase.READY)
+            status.updatePhase(CRPhase.READY)
                     .setMessage(null);
 
             return UpdateControl.patchStatus(resource);
@@ -218,7 +218,7 @@ public class DatabaseReconciler
                     name
             );
 
-            status.setPhase(CRPhase.READY)
+            status.updatePhase(CRPhase.READY)
                     .setMessage(null);
 
             return UpdateControl.patchStatus(resource);
@@ -232,7 +232,7 @@ public class DatabaseReconciler
 
         databaseService.changeDatabaseOwner(dsl, spec);
 
-        status.setPhase(CRPhase.READY)
+        status.updatePhase(CRPhase.READY)
                 .setMessage("Database owner changed [previousOwner=%s, newOwner=%s]".formatted(
                         currentOwner,
                         expectedOwner

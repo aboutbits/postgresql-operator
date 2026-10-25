@@ -84,7 +84,7 @@ public class DefaultPrivilegeReconciler
         }
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setPhase(CRPhase.PENDING)
+            status.updatePhase(CRPhase.PENDING)
                     .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
@@ -138,7 +138,7 @@ public class DefaultPrivilegeReconciler
         );
 
         if (status.getPhase() != CRPhase.DELETING) {
-            status.setPhase(CRPhase.DELETING)
+            status.updatePhase(CRPhase.DELETING)
                     .setMessage("DefaultPrivilege deletion in progress");
 
             context.getClient().resource(resource).patchStatus();
@@ -290,7 +290,7 @@ public class DefaultPrivilegeReconciler
             );
         }
 
-        status.setPhase(CRPhase.READY)
+        status.updatePhase(CRPhase.READY)
                 .setMessage(null);
 
         return UpdateControl.patchStatus(resource);

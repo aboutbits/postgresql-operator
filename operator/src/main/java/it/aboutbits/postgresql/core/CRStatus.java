@@ -39,11 +39,15 @@ public class CRStatus {
     private long observedGeneration = 0;
 
     /// Update the current phase. When the phase changes, the [#lastPhaseTransitionTime]
-    /// is updated to the current UTC time and the message is set to `null`.
+    /// is updated to the current UTC time.
+    ///
+    /// Deliberately not a setter: Jackson would call it while it reads a status from the cluster.
+    /// The API server sends `lastPhaseTransitionTime` before `phase`, so the stored time would be
+    /// overwritten with now.
     ///
     /// @param newPhase the new phase
     /// @return this status instance
-    public CRStatus setPhase(CRPhase newPhase) {
+    public CRStatus updatePhase(CRPhase newPhase) {
         if (this.phase == newPhase) {
             return this;
         }

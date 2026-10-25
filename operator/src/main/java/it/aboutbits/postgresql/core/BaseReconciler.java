@@ -100,7 +100,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                 message
         );
 
-        status.setPhase(CRPhase.ERROR)
+        status.updatePhase(CRPhase.ERROR)
                 .setMessage(message);
     }
 
@@ -117,7 +117,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                 exception
         );
 
-        status.setPhase(CRPhase.ERROR)
+        status.updatePhase(CRPhase.ERROR)
                 .setMessage(exception.getMessage());
 
         return UpdateControl.patchStatus(resource)

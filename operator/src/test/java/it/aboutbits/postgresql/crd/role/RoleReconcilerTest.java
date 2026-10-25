@@ -81,7 +81,7 @@ class RoleReconcilerTest {
         // then: assert READY
         var expectedStatus = new RoleStatus()
                 .setName(roleName)
-                .setPhase(CRPhase.READY)
+                .updatePhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
         assertThatRoleHasExpectedStatus(
@@ -118,7 +118,7 @@ class RoleReconcilerTest {
 
         var expectedStatus = new RoleStatus()
                 .setName(roleName)
-                .setPhase(CRPhase.READY)
+                .updatePhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
         assertThatRoleHasExpectedStatus(
@@ -160,7 +160,7 @@ class RoleReconcilerTest {
                 role,
                 new RoleStatus()
                         .setName(roleName)
-                        .setPhase(CRPhase.READY)
+                        .updatePhase(CRPhase.READY)
                         .setObservedGeneration(1L),
                 now
         );

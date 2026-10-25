@@ -57,7 +57,7 @@ public class SchemaReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setPhase(CRPhase.PENDING)
+            status.updatePhase(CRPhase.PENDING)
                     .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
                             getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                             clusterRef.getName()
@@ -113,7 +113,7 @@ public class SchemaReconciler
         );
 
         if (status.getPhase() != CRPhase.DELETING) {
-            status.setPhase(CRPhase.DELETING);
+            status.updatePhase(CRPhase.DELETING);
 
             if (spec.getReclaimPolicy() == ReclaimPolicy.DELETE) {
                 status.setMessage("Schema deletion in progress");
@@ -205,7 +205,7 @@ public class SchemaReconciler
                     spec
             );
 
-            status.setPhase(CRPhase.READY)
+            status.updatePhase(CRPhase.READY)
                     .setMessage(null);
 
             return UpdateControl.patchStatus(resource);
@@ -222,7 +222,7 @@ public class SchemaReconciler
                     name
             );
 
-            status.setPhase(CRPhase.READY)
+            status.updatePhase(CRPhase.READY)
                     .setMessage(null);
 
             return UpdateControl.patchStatus(resource);
@@ -236,7 +236,7 @@ public class SchemaReconciler
 
         schemaService.changeSchemaOwner(tx, spec);
 
-        status.setPhase(CRPhase.READY)
+        status.updatePhase(CRPhase.READY)
                 .setMessage("Schema owner changed [previousOwner=%s, newOwner=%s]".formatted(
                         currentOwner,
                         expectedOwner
