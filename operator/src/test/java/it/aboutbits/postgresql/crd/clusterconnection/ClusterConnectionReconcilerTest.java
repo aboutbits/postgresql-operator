@@ -255,7 +255,7 @@ class ClusterConnectionReconcilerTest {
     private static CRStatus getInitialClusterConnectionStatus(ClusterConnection clusterConnection) {
         return new CRStatus()
                 .setName(clusterConnection.getName())
-                .setPhase(CRPhase.READY)
+                .updatePhase(CRPhase.READY)
                 .setObservedGeneration(1L);
     }
 }

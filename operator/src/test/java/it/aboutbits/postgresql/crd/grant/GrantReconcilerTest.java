@@ -415,7 +415,7 @@ class GrantReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatGrantHasStatus(
@@ -536,7 +536,7 @@ class GrantReconcilerTest {
 
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatGrantHasStatus(
@@ -666,7 +666,7 @@ class GrantReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatGrantHasStatus(
@@ -808,7 +808,7 @@ class GrantReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatGrantHasStatus(
@@ -1155,7 +1155,7 @@ class GrantReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatGrantHasStatus(
@@ -1296,7 +1296,7 @@ class GrantReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatGrantHasStatus(

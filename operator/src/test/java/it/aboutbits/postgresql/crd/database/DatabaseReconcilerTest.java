@@ -59,7 +59,7 @@ class DatabaseReconcilerTest {
         // then
         var expectedStatus = new CRStatus()
                 .setName(dbName)
-                .setPhase(CRPhase.READY)
+                .updatePhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
         assertThatDatabaseHasExpectedStatus(

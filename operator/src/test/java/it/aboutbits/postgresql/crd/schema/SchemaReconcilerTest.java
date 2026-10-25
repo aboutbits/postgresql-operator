@@ -72,7 +72,7 @@ class SchemaReconcilerTest {
         // then
         var expectedStatus = new CRStatus()
                 .setName(schemaName)
-                .setPhase(CRPhase.READY)
+                .updatePhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
         assertThatSchemaHasExpectedStatus(

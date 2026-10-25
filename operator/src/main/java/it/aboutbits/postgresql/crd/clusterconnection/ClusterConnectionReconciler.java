@@ -39,7 +39,7 @@ public class ClusterConnectionReconciler
         try (var dsl = contextFactory.getDSLContext(resource)) {
             var version = dsl.fetchSingle("select version()").into(String.class);
 
-            status.setPhase(CRPhase.READY).setMessage(version);
+            status.updatePhase(CRPhase.READY).setMessage(version);
 
             return UpdateControl.patchStatus(resource);
         } catch (RuntimeException e) {

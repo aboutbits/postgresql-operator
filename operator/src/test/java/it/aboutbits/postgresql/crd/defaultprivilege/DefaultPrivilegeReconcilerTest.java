@@ -409,7 +409,7 @@ class DefaultPrivilegeReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatDefaultPrivilegeHasStatus(
@@ -526,7 +526,7 @@ class DefaultPrivilegeReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatDefaultPrivilegeHasStatus(
@@ -651,7 +651,7 @@ class DefaultPrivilegeReconcilerTest {
             // then
             var expectedStatus = new CRStatus()
                     .setName("")
-                    .setPhase(CRPhase.READY)
+                    .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
             assertThatDefaultPrivilegeHasStatus(
