@@ -109,12 +109,16 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
                 .resource(item)
                 .serverSideApply();
 
+        // Wait for the probe of the current generation: a re-apply with a new spec keeps the old status for a while,
+        // and the dependent resources do not use the status of an older generation.
         //noinspection ConstantConditions
         return kubernetesClient.resources(ClusterConnection.class)
                 .inNamespace(namespace)
                 .withName(name)
                 .waitUntilCondition(
-                        clusterConnection -> clusterConnection != null && clusterConnection.getStatus() != null,
+                        clusterConnection -> clusterConnection != null
+                                && clusterConnection.getStatus() != null
+                                && clusterConnection.getStatus().getObservedGeneration() == clusterConnection.getMetadata().getGeneration(),
                         5,
                         TimeUnit.SECONDS
                 );

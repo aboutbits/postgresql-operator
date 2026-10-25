@@ -28,8 +28,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@NullMarked
 @EnableKubernetesMockClient(crud = true)
+@NullMarked
 class KubernetesServiceTest {
     @SuppressWarnings("NullAway.Init")
     KubernetesClient client;

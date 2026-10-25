@@ -46,6 +46,8 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         return resource.getMetadata().getNamespace();
     }
 
+    /// Returns empty when the ClusterConnection does not exist, is not READY, or is READY for an older generation.
+    /// Callers treat this as "not yet", not "broken", and try again after 60 seconds.
     public Optional<ClusterConnection> getReferencedClusterConnection(
             KubernetesClient kubernetesClient,
             CR resource,
@@ -70,14 +72,42 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
             return Optional.empty();
         }
 
-        var currentPhase = clusterConnection.getStatus().getPhase();
+        var status = clusterConnection.getStatus();
+
+        // No status yet means the connection has not been probed yet.
+        //noinspection ConstantConditions
+        if (status == null) {
+            log.warn(
+                    "The specified ClusterConnection has not been probed yet [resource={}/{}]",
+                    connectionNamespace,
+                    connectionName
+            );
+
+            return Optional.empty();
+        }
+
+        var currentPhase = status.getPhase();
         var expectedPhase = CRPhase.READY;
 
         if (!Objects.equals(currentPhase, expectedPhase)) {
             log.warn(
-                    "The specified ClusterConnection is not ready yet [resource={}/{}]",
+                    "The specified ClusterConnection is not ready yet [resource={}/{}, status.phase={}]",
                     connectionNamespace,
-                    connectionName
+                    connectionName,
+                    currentPhase
+            );
+
+            return Optional.empty();
+        }
+
+        // READY of an older generation says nothing about the current spec.
+        if (status.getObservedGeneration() != clusterConnection.getMetadata().getGeneration()) {
+            log.warn(
+                    "The specified ClusterConnection changed and has not been probed again yet [resource={}/{}, status.observedGeneration={}, metadata.generation={}]",
+                    connectionNamespace,
+                    connectionName,
+                    status.getObservedGeneration(),
+                    clusterConnection.getMetadata().getGeneration()
             );
 
             return Optional.empty();

@@ -107,10 +107,10 @@ public class RoleReconciler
             // Read the Secret inside the try block, so that a missing or invalid Secret sets the phase to ERROR
             var password = passwordSecretRef != null
                     ? kubernetesService.getSecretRefCredentials(
-                            kubernetesClient,
-                            passwordSecretRef,
-                            namespace
-                    ).password()
+                    kubernetesClient,
+                    passwordSecretRef,
+                    namespace
+            ).password()
                     : null;
             var passwordEncryption = spec.getPasswordEncryption();
 

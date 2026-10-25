@@ -19,8 +19,8 @@ import java.util.Base64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@NullMarked
 @EnableKubernetesMockClient(crud = true)
+@NullMarked
 class PasswordFingerprintServiceTest {
     private static final String SECRET_NAME = "test-password-fingerprint-key";
 
