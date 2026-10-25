@@ -412,7 +412,9 @@ class RoleReconcilerTest {
     }
 
     @Test
-    @DisplayName("When an existing Role has no password fingerprint in its status, the Secret password should be applied once")
+    @DisplayName(
+            "When an existing Role has no password fingerprint in its status, the Secret password should be applied once"
+    )
     void missingPasswordFingerprint_appliesSecretPasswordOnce() {
         // given: a Role created by the operator
         var clusterConnection = given.one()
@@ -487,6 +489,40 @@ class RoleReconcilerTest {
         assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(updatedRole.getStatus().getPasswordFingerprint()).isEqualTo(initialFingerprint);
         assertThat(PostgreSQLPasswordVerifier.storedVerifier(dsl, roleName)).isEqualTo(verifierAfterUpgrade);
+    }
+
+    @Test
+    @DisplayName("When the ClusterConnection of an up-to-date Role is back, the Role should be reconciled to READY")
+    void upToDateRole_afterPendingClusterConnection_setsReady() {
+        // given: a reconciled Role
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-pending-to-ready")
+                .returnFirst();
+
+        var role = given.one()
+                .role()
+                .withName("test-role-pending-to-ready")
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
+
+        var clusterRef = role.getSpec().getClusterRef();
+
+        // and: the ClusterConnection is not available for a while
+        clusterRef.setName("non-existing-cc");
+
+        var pendingRole = applyRole(role);
+
+        assertThat(pendingRole.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
+
+        // when: the ClusterConnection is available again
+        clusterRef.setName(clusterConnection.getMetadata().getName());
+
+        var updatedRole = applyRole(role);
+
+        // then
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getMessage()).isNull();
     }
 
     @Test

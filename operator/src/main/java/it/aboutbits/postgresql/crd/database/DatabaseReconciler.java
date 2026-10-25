@@ -217,7 +217,10 @@ public class DatabaseReconciler
                     name
             );
 
-            return UpdateControl.noUpdate();
+            status.setPhase(CRPhase.READY)
+                    .setMessage(null);
+
+            return UpdateControl.patchStatus(resource);
         }
 
         log.info(

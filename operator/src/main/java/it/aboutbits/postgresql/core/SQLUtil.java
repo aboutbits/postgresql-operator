@@ -22,7 +22,7 @@ public final class SQLUtil {
             List<? extends QueryPart> items,
             String separator
     ) {
-        int size = items.size();
+        var size = items.size();
 
         if (items.isEmpty()) {
             return sql("");

@@ -87,7 +87,7 @@ class HelmTest {
 
         // 1. Verify files exist and contain expected data
         // ./Chart.yaml
-        Map<String, Object> chartMetadata = serialization.unmarshal(
+        var chartMetadata = serialization.unmarshal(
                 Files.newInputStream(chartPath.resolve("Chart.yaml")),
                 new TypeReference<Map<String, Object>>() {
                 }
@@ -96,7 +96,7 @@ class HelmTest {
         assertThat(chartMetadata.get("name")).isEqualTo(chartName);
 
         // ./values.yaml
-        Map<String, Object> values = serialization.unmarshal(
+        var values = serialization.unmarshal(
                 Files.newInputStream(chartPath.resolve("values.yaml")),
                 new TypeReference<Map<String, Object>>() {
                 }
@@ -215,7 +215,7 @@ class HelmTest {
                     .consumeLinesWith(65536, line -> installOutput.append(line).append(System.lineSeparator()))
                     .run();
 
-            int installExitCode = holder.exitCode;
+            var installExitCode = holder.exitCode;
             assertThat(installExitCode)
                     .withFailMessage("Helm install failed with output:\n" + installOutput)
                     .isZero();
