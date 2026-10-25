@@ -78,7 +78,7 @@ class DatabaseReconcilerTest {
             "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY"
     )
     void upToDateDatabase_afterPendingClusterConnection_setsReady() {
-        // given: a reconciled Database with an explicit owner, so that the next reconciles find it up to date
+        // given: a reconciled Database
         var clusterConnection = given.one()
                 .clusterConnection()
                 .withName("test-connection-database-pending-to-ready")
@@ -90,12 +90,7 @@ class DatabaseReconcilerTest {
                 .withReclaimPolicy(DELETE)
                 .returnFirst();
 
-        var spec = database.getSpec();
-        var clusterRef = spec.getClusterRef();
-
-        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
-
-        spec.setOwner(databaseService.fetchDatabaseOwner(dsl, spec));
+        var clusterRef = database.getSpec().getClusterRef();
 
         // and: the ClusterConnection is not available for a while
         clusterRef.setName("non-existing-cc");
@@ -112,6 +107,35 @@ class DatabaseReconcilerTest {
         // then
         assertThat(updatedDatabase.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(updatedDatabase.getStatus().getMessage()).isNull();
+    }
+
+    @Test
+    @DisplayName("When a Database without owner is reconciled again, it should keep its owner and stay READY")
+    void databaseWithoutOwner_reconciledAgain_keepsOwner() {
+        // given: a reconciled Database without owner
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-database-without-owner")
+                .returnFirst();
+
+        var database = given.one()
+                .database()
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .returnFirst();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        var initialOwner = databaseService.fetchDatabaseOwner(dsl, database.getSpec());
+
+        // when: a spec change that needs no SQL statement triggers the next reconcile
+        database.getSpec().setReclaimPolicy(DELETE);
+
+        var updatedDatabase = applyDatabase(database);
+
+        // then
+        assertThat(updatedDatabase.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedDatabase.getStatus().getMessage()).isNull();
+        assertThat(databaseService.fetchDatabaseOwner(dsl, database.getSpec())).isEqualTo(initialOwner);
     }
 
     private Database applyDatabase(Database database) {
