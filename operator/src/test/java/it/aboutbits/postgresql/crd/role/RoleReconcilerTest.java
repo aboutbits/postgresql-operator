@@ -526,6 +526,52 @@ class RoleReconcilerTest {
     }
 
     @Test
+    @DisplayName(
+            "When the password Secret of a Role does not exist, the status should be ERROR until the Secret is back"
+    )
+    void missingPasswordSecret_setsErrorUntilSecretIsBack() {
+        // given: a reconciled login Role
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-role-missing-secret")
+                .returnFirst();
+
+        var secretRef = given.one()
+                .secretRef()
+                .returnFirst();
+
+        var role = given.one()
+                .role()
+                .withName("test-role-missing-secret")
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withPasswordSecretRef(secretRef)
+                .returnFirst();
+
+        assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+
+        // when: the Role references a Secret that does not exist
+        var missingSecretRef = new ResourceRef();
+        missingSecretRef.setName("non-existing-secret");
+
+        role.getSpec().setPasswordSecretRef(missingSecretRef);
+
+        var erroredRole = applyRole(role);
+
+        // then
+        assertThat(erroredRole.getStatus().getPhase()).isEqualTo(CRPhase.ERROR);
+        assertThat(erroredRole.getStatus().getMessage()).startsWith("Secret reference not found");
+
+        // when: the Role references the existing Secret again
+        role.getSpec().setPasswordSecretRef(secretRef);
+
+        var updatedRole = applyRole(role);
+
+        // then
+        assertThat(updatedRole.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedRole.getStatus().getMessage()).isNull();
+    }
+
+    @Test
     @DisplayName("When the Secret already contains a SCRAM-SHA-256 verifier, it should be stored verbatim")
     void preHashedPassword_isStoredVerbatim() {
         // given

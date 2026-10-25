@@ -101,20 +101,17 @@ public class RoleReconciler
 
         var passwordSecretRef = spec.getPasswordSecretRef();
 
-        String password;
-        if (passwordSecretRef != null) {
-            password = kubernetesService.getSecretRefCredentials(
-                    kubernetesClient,
-                    passwordSecretRef,
-                    namespace
-            ).password();
-        } else {
-            password = null;
-        }
-
         UpdateControl<Role> updateControl;
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
+            // Read the Secret inside the try block, so that a missing or invalid Secret sets the phase to ERROR
+            var password = passwordSecretRef != null
+                    ? kubernetesService.getSecretRefCredentials(
+                            kubernetesClient,
+                            passwordSecretRef,
+                            namespace
+                    ).password()
+                    : null;
             var passwordEncryption = spec.getPasswordEncryption();
 
             // The password hash in pg_authid is readable by superusers only.
