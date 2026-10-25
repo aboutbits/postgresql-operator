@@ -412,7 +412,9 @@ class RoleReconcilerTest {
     }
 
     @Test
-    @DisplayName("When an existing Role has no password fingerprint in its status, the Secret password should be applied once")
+    @DisplayName(
+            "When an existing Role has no password fingerprint in its status, the Secret password should be applied once"
+    )
     void missingPasswordFingerprint_appliesSecretPasswordOnce() {
         // given: a Role created by the operator
         var clusterConnection = given.one()

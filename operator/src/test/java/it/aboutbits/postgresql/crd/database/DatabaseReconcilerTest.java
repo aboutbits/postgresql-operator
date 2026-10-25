@@ -74,7 +74,9 @@ class DatabaseReconcilerTest {
     }
 
     @Test
-    @DisplayName("When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY")
+    @DisplayName(
+            "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY"
+    )
     void upToDateDatabase_afterPendingClusterConnection_setsReady() {
         // given: a reconciled Database with an explicit owner, so that the next reconciles find it up to date
         var clusterConnection = given.one()
