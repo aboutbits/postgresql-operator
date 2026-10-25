@@ -313,7 +313,10 @@ public class RoleReconciler
                     name
             );
 
-            return UpdateControl.noUpdate();
+            status.setPhase(CRPhase.READY)
+                    .setMessage(null);
+
+            return UpdateControl.patchStatus(resource);
         }
 
         var changePassword = loginExpected && !passwordMatches;

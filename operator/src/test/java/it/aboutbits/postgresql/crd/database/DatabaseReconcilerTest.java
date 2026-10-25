@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.concurrent.TimeUnit;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +71,69 @@ class DatabaseReconcilerTest {
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
         assertThat(databaseService.databaseExists(dsl, database.getSpec())).isTrue();
+    }
+
+    @Test
+    @DisplayName("When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY")
+    void upToDateDatabase_afterPendingClusterConnection_setsReady() {
+        // given: a reconciled Database with an explicit owner, so that the next reconciles find it up to date
+        var clusterConnection = given.one()
+                .clusterConnection()
+                .withName("test-connection-database-pending-to-ready")
+                .returnFirst();
+
+        var database = given.one()
+                .database()
+                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                .withReclaimPolicy(DELETE)
+                .returnFirst();
+
+        var spec = database.getSpec();
+        var clusterRef = spec.getClusterRef();
+
+        var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
+
+        spec.setOwner(databaseService.fetchDatabaseOwner(dsl, spec));
+
+        // and: the ClusterConnection is not available for a while
+        clusterRef.setName("non-existing-cc");
+
+        var pendingDatabase = applyDatabase(database);
+
+        assertThat(pendingDatabase.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
+
+        // when: the ClusterConnection is available again
+        clusterRef.setName(clusterConnection.getMetadata().getName());
+
+        var updatedDatabase = applyDatabase(database);
+
+        // then
+        assertThat(updatedDatabase.getStatus().getPhase()).isEqualTo(CRPhase.READY);
+        assertThat(updatedDatabase.getStatus().getMessage()).isNull();
+    }
+
+    private Database applyDatabase(Database database) {
+        var namespace = kubernetesClient.getNamespace();
+
+        database.getMetadata().setManagedFields(null);
+        database.getMetadata().setResourceVersion(null);
+
+        var applied = kubernetesClient.resources(Database.class)
+                .inNamespace(namespace)
+                .resource(database)
+                .serverSideApply();
+
+        var generation = applied.getMetadata().getGeneration();
+
+        //noinspection ConstantConditions
+        return kubernetesClient.resources(Database.class)
+                .inNamespace(namespace)
+                .withName(applied.getMetadata().getName())
+                .waitUntilCondition(
+                        d -> d.getStatus() != null && d.getStatus().getObservedGeneration() >= generation,
+                        5,
+                        TimeUnit.SECONDS
+                );
     }
 
     private static void assertThatDatabaseHasExpectedStatus(
