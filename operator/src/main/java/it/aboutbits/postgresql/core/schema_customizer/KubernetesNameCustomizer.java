@@ -1,14 +1,14 @@
 package it.aboutbits.postgresql.core.schema_customizer;
 
-import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
-import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
-import org.jspecify.annotations.NullMarked;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
+import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
+import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
+import org.jspecify.annotations.NullMarked;
 
 /// A [SchemaCustomizer.Customizer] that adds a Kubernetes name validation
 /// `pattern` (RFC 1123 DNS label) to string properties in the generated CRD
@@ -61,27 +61,19 @@ public class KubernetesNameCustomizer implements SchemaCustomizer.Customizer {
     static final String KUBERNETES_NAME_PATTERN = "^[a-z]([a-z0-9\\-]{0,61}[a-z0-9])?$";
 
     @Override
-    public JSONSchemaProps apply(
-            JSONSchemaProps jsonSchemaProps,
-            String input,
-            KubernetesSerialization kubernetesSerialization
-    ) {
+    public JSONSchemaProps apply(JSONSchemaProps jsonSchemaProps, String input, KubernetesSerialization kubernetesSerialization) {
         var properties = jsonSchemaProps.getProperties();
         if (properties == null) {
             return jsonSchemaProps;
         }
 
-        var targetFields = input.isBlank()
-                ? Set.<String>of()
-                : Arrays.stream(input.split(","))
-                        .map(String::trim)
-                        .collect(Collectors.toSet());
+        var targetFields = input.isBlank() ? Set.<String>of() : Arrays.stream(input.split(","))
+                .map(String::trim)
+                .collect(Collectors.toSet());
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();
-            if (Objects.equals(prop.getType(), "string")
-                    && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))
-            ) {
+            if (Objects.equals(prop.getType(), "string") && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))) {
                 prop.setPattern(KUBERNETES_NAME_PATTERN);
             }
         }

@@ -1,12 +1,12 @@
 package it.aboutbits.postgresql._support.testdata.base;
 
-import net.datafaker.Faker;
-import org.jspecify.annotations.NullMarked;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import net.datafaker.Faker;
+import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public abstract class TestDataCreator<T> {
@@ -38,9 +38,7 @@ public abstract class TestDataCreator<T> {
         var result = new ArrayList<T>();
 
         for (var index = 0; index < numberOfItems; index++) {
-            result.add(
-                    create(index)
-            );
+            result.add(create(index));
         }
 
         return result;
@@ -52,13 +50,7 @@ public abstract class TestDataCreator<T> {
         var maxLength = 63; // Kubernetes hard enforces RFC-1123
 
         if (name.length() > 60) {
-            throw new IllegalArgumentException(
-                    "The name is too long (must be <= 60 to allow '-' + at least 2 random chars, max %d total) [name=%s, length=%d]".formatted(
-                            maxLength,
-                            name,
-                            name.length()
-                    )
-            );
+            throw new IllegalArgumentException("The name is too long (must be <= 60 to allow '-' + at least 2 random chars, max %d total) [name=%s, length=%d]".formatted(maxLength, name, name.length()));
         }
 
         var separator = "-";

@@ -1,5 +1,12 @@
 package it.aboutbits.postgresql.crd.role;
 
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
+
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
@@ -19,13 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.stream.Stream;
-
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -33,9 +33,11 @@ import static org.jooq.impl.DSL.role;
 
 /// Runs the Role reconciler with an admin role that is not a superuser.
 ///
-/// The admin role has only `LOGIN`, `CREATEDB`, and `CREATEROLE`, like the master user of managed PostgreSQL services
-/// of cloud providers, such as AWS RDS, Google Cloud SQL, or Azure Database for PostgreSQL.
-/// Such a role cannot read `pg_authid` or `pg_shadow` and cannot name `SUPERUSER`, `REPLICATION`, or `BYPASSRLS` in `ALTER ROLE`.
+/// The admin role has only `LOGIN`, `CREATEDB`, and `CREATEROLE`, like the
+/// master user of managed PostgreSQL services of cloud providers, such as AWS
+/// RDS, Google Cloud SQL, or Azure Database for PostgreSQL. Such a role cannot
+/// read `pg_authid` or `pg_shadow` and cannot name `SUPERUSER`, `REPLICATION`,
+/// or `BYPASSRLS` in `ALTER ROLE`.
 @QuarkusTest
 @RequiredArgsConstructor
 @NullMarked
@@ -69,18 +71,18 @@ class RoleReconcilerNonSuperuserTest {
         var newPassword = "new-password";
 
         var secretRef = given.one()
-                .secretRef()
-                .withPassword(initialPassword)
-                .returnFirst();
+                             .secretRef()
+                             .withPassword(initialPassword)
+                             .returnFirst();
 
         // when: create
         var role = given.one()
-                .role()
-                .withName(roleName)
-                .withClusterConnectionName(adminConnection.getMetadata().getName())
-                .withPasswordSecretRef(secretRef)
-                .withComment("created by a non-superuser admin")
-                .returnFirst();
+                        .role()
+                        .withName(roleName)
+                        .withClusterConnectionName(adminConnection.getMetadata().getName())
+                        .withPasswordSecretRef(secretRef)
+                        .withComment("created by a non-superuser admin")
+                        .returnFirst();
 
         // then: the reads through pg_roles work as non-superuser
         assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
@@ -88,11 +90,7 @@ class RoleReconcilerNonSuperuserTest {
         assertThat(roleService.roleExists(adminDsl, role.getSpec())).isTrue();
         assertThat(roleService.roleLoginMatches(adminDsl, role.getSpec())).isTrue();
         assertThat(roleService.fetchCurrentRoleComment(adminDsl, roleName)).isEqualTo("created by a non-superuser admin");
-        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
-                rootDsl,
-                roleName,
-                initialPassword
-        )).isTrue();
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(rootDsl, roleName, initialPassword)).isTrue();
 
         // when: update flags, comment, and connection limit
         var spec = role.getSpec();
@@ -121,28 +119,26 @@ class RoleReconcilerNonSuperuserTest {
                 .build();
 
         kubernetesClient.secrets()
-                .inNamespace(kubernetesClient.getNamespace())
-                .resource(secret)
-                .serverSideApply();
+                        .inNamespace(kubernetesClient.getNamespace())
+                        .resource(secret)
+                        .serverSideApply();
 
         // then
-        await().atMost(Duration.ofSeconds(5))
+        await()
+                .atMost(Duration.ofSeconds(5))
                 .pollInterval(Duration.ofMillis(100))
-                .until(() -> PostgreSQLPasswordVerifier.passwordMatches(
-                        rootDsl,
-                        roleName,
-                        newPassword
-                ));
+                .until(() -> PostgreSQLPasswordVerifier.passwordMatches(rootDsl, roleName, newPassword));
 
         // when: drop
         kubernetesClient.resources(Role.class)
-                .inNamespace(role.getMetadata().getNamespace())
-                .withName(role.getMetadata().getName())
-                .withTimeout(5, TimeUnit.SECONDS)
-                .delete();
+                        .inNamespace(role.getMetadata().getNamespace())
+                        .withName(role.getMetadata().getName())
+                        .withTimeout(5, TimeUnit.SECONDS)
+                        .delete();
 
         // then
-        await().atMost(Duration.ofSeconds(5))
+        await()
+                .atMost(Duration.ofSeconds(5))
                 .pollInterval(Duration.ofMillis(100))
                 .until(() -> !roleService.roleExists(rootDsl, role.getSpec()));
     }
@@ -165,10 +161,10 @@ class RoleReconcilerNonSuperuserTest {
 
         // when: create a NOLOGIN role
         var role = given.one()
-                .role()
-                .withName(roleName)
-                .withClusterConnectionName(adminConnection.getMetadata().getName())
-                .returnFirst();
+                        .role()
+                        .withName(roleName)
+                        .withClusterConnectionName(adminConnection.getMetadata().getName())
+                        .returnFirst();
 
         var spec = role.getSpec();
 
@@ -181,8 +177,7 @@ class RoleReconcilerNonSuperuserTest {
         spec.setPasswordSecretRef(given.one()
                 .secretRef()
                 .withPassword(password)
-                .returnFirst()
-        );
+                .returnFirst());
         spec.getFlags().setInRole(List.of(parentRole));
 
         var updated = applyRole(role);
@@ -190,12 +185,10 @@ class RoleReconcilerNonSuperuserTest {
         // then
         assertThat(updated.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(roleService.roleCanLogin(adminDsl, spec)).isTrue();
-        assertThat(roleService.fetchCurrentFlags(adminDsl, spec).getInRole()).containsExactly(parentRole);
-        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
-                rootDsl,
-                roleName,
-                password
-        )).isTrue();
+        assertThat(roleService.fetchCurrentFlags(adminDsl, spec)
+                              .getInRole())
+                .containsExactly(parentRole);
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(rootDsl, roleName, password)).isTrue();
 
         // when: back to NOLOGIN without membership
         spec.setPasswordSecretRef(null);
@@ -207,16 +200,16 @@ class RoleReconcilerNonSuperuserTest {
         assertThat(updated.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(updated.getStatus().getPasswordFingerprint()).isNull();
         assertThat(roleService.roleCanLogin(adminDsl, spec)).isFalse();
-        assertThat(roleService.fetchCurrentFlags(adminDsl, spec).getInRole()).isEmpty();
+        assertThat(roleService.fetchCurrentFlags(adminDsl, spec)
+                              .getInRole())
+                .isEmpty();
 
         // cleanup
         adminDsl.execute("drop role if exists {0}", role(parentRole));
     }
 
     @Test
-    @DisplayName(
-            "When the admin is not a superuser, its implicit membership in a created Role should be ignored and kept"
-    )
+    @DisplayName("When the admin is not a superuser, its implicit membership in a created Role should be ignored and kept")
     void nonSuperuserAdmin_implicitAdminMembership_isIgnoredAndKept() {
         // given
         var rootConnection = givenRootClusterConnection("test-connection-root-self-grant");
@@ -228,10 +221,10 @@ class RoleReconcilerNonSuperuserTest {
 
         // when: create a NOLOGIN role
         var role = given.one()
-                .role()
-                .withName(roleName)
-                .withClusterConnectionName(adminConnection.getMetadata().getName())
-                .returnFirst();
+                        .role()
+                        .withName(roleName)
+                        .withClusterConnectionName(adminConnection.getMetadata().getName())
+                        .returnFirst();
 
         var spec = role.getSpec();
 
@@ -244,11 +237,7 @@ class RoleReconcilerNonSuperuserTest {
         // given: the admin grants itself membership in the role.
         // On PostgreSQL 16+ the defaults are SET TRUE and INHERIT TRUE, like `createrole_self_grant = 'set, inherit'`.
         // `WITH SET TRUE, INHERIT TRUE` is not used, because PostgreSQL 15 does not support this syntax.
-        adminDsl.execute(
-                "grant {0} to {1}",
-                role(roleName),
-                role(ADMIN_ROLE)
-        );
+        adminDsl.execute("grant {0} to {1}", role(roleName), role(ADMIN_ROLE));
 
         // when: change a flag, so that the reconciler runs the membership reconciliation
         spec.getFlags().setConnectionLimit(3);
@@ -264,13 +253,8 @@ class RoleReconcilerNonSuperuserTest {
 
     @ParameterizedTest(name = "flag {0}")
     @MethodSource("provideSuperuserOnlyFlags")
-    @DisplayName(
-            "When the admin is not a superuser and the Role asks for a superuser-only flag, the status should be ERROR"
-    )
-    void nonSuperuserAdmin_superuserOnlyFlag_setsError(
-            String flagName,
-            BiConsumer<RoleSpec.Flags, Boolean> flagSetter
-    ) {
+    @DisplayName("When the admin is not a superuser and the Role asks for a superuser-only flag, the status should be ERROR")
+    void nonSuperuserAdmin_superuserOnlyFlag_setsError(String flagName, BiConsumer<RoleSpec.Flags, Boolean> flagSetter) {
         // given
         var rootConnection = givenRootClusterConnection("test-connection-root-%s-flag".formatted(flagName));
         var rootDsl = postgreSQLContextFactory.getDSLContext(rootConnection);
@@ -283,31 +267,24 @@ class RoleReconcilerNonSuperuserTest {
 
         // when
         var role = given.one()
-                .role()
-                .withName(roleName)
-                .withClusterConnectionName(adminConnection.getMetadata().getName())
-                .withFlags(flags)
-                .returnFirst();
+                        .role()
+                        .withName(roleName)
+                        .withClusterConnectionName(adminConnection.getMetadata().getName())
+                        .withFlags(flags)
+                        .returnFirst();
 
         // then
         var failed = kubernetesClient.resources(Role.class)
                 .inNamespace(role.getMetadata().getNamespace())
                 .withName(role.getMetadata().getName())
-                .waitUntilCondition(
-                        r -> r.getStatus() != null && r.getStatus().getPhase() == CRPhase.ERROR,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                .waitUntilCondition(r -> r.getStatus() != null && r.getStatus().getPhase() == CRPhase.ERROR, 5, TimeUnit.SECONDS);
 
-        assertThat(failed.getStatus().getMessage())
-                .containsAnyOf("permission denied", "must be superuser");
+        assertThat(failed.getStatus().getMessage()).containsAnyOf("permission denied", "must be superuser");
         assertThat(roleService.roleExists(rootDsl, role.getSpec())).isFalse();
     }
 
     @Test
-    @DisplayName(
-            "When the admin is not a superuser and passwordEncryption is 'server', the server should hash the password"
-    )
+    @DisplayName("When the admin is not a superuser and passwordEncryption is 'server', the server should hash the password")
     void nonSuperuserAdmin_serverPasswordEncryption_letsTheServerHash() {
         // given
         var rootConnection = givenRootClusterConnection("test-connection-root-server-encryption");
@@ -318,32 +295,26 @@ class RoleReconcilerNonSuperuserTest {
         var password = "server-side-password";
 
         var secretRef = given.one()
-                .secretRef()
-                .withPassword(password)
-                .returnFirst();
+                             .secretRef()
+                             .withPassword(password)
+                             .returnFirst();
 
         // when
         var role = given.one()
-                .role()
-                .withName(roleName)
-                .withClusterConnectionName(adminConnection.getMetadata().getName())
-                .withPasswordSecretRef(secretRef)
-                .withPasswordEncryption(PasswordEncryption.SERVER)
-                .returnFirst();
+                        .role()
+                        .withName(roleName)
+                        .withClusterConnectionName(adminConnection.getMetadata().getName())
+                        .withPasswordSecretRef(secretRef)
+                        .withPasswordEncryption(PasswordEncryption.SERVER)
+                        .returnFirst();
 
         // then
         assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
-        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
-                rootDsl,
-                roleName,
-                password
-        )).isTrue();
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(rootDsl, roleName, password)).isTrue();
     }
 
     @Test
-    @DisplayName(
-            "When the admin is not a superuser and the Secret contains a SCRAM-SHA-256 verifier, it should be stored verbatim"
-    )
+    @DisplayName("When the admin is not a superuser and the Secret contains a SCRAM-SHA-256 verifier, it should be stored verbatim")
     void nonSuperuserAdmin_preHashedPassword_isStoredVerbatim() {
         // given
         var rootConnection = givenRootClusterConnection("test-connection-root-prehashed");
@@ -356,50 +327,41 @@ class RoleReconcilerNonSuperuserTest {
         var verifier = "SCRAM-SHA-256$4096:gxUQWxfrRYegSTNiHXFT+g==$lxMC2yO9Lx9gm2dgNPo/1Qar+pjAvxCP2VN4yPWYnzE=:0QzcS9VJHJszBq4vSce3n4M6NZmyWa1GWdkJDi8hRNc=";
 
         var secretRef = given.one()
-                .secretRef()
-                .withPassword(verifier)
-                .returnFirst();
+                             .secretRef()
+                             .withPassword(verifier)
+                             .returnFirst();
 
         // when
         var role = given.one()
-                .role()
-                .withName(roleName)
-                .withClusterConnectionName(adminConnection.getMetadata().getName())
-                .withPasswordSecretRef(secretRef)
-                .returnFirst();
+                        .role()
+                        .withName(roleName)
+                        .withClusterConnectionName(adminConnection.getMetadata().getName())
+                        .withPasswordSecretRef(secretRef)
+                        .returnFirst();
 
         // then
         assertThat(role.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(PostgreSQLPasswordVerifier.storedVerifier(rootDsl, roleName)).isEqualTo(verifier);
-        assertThat(PostgreSQLPasswordVerifier.passwordMatches(
-                rootDsl,
-                roleName,
-                "abc"
-        )).isTrue();
+        assertThat(PostgreSQLPasswordVerifier.passwordMatches(rootDsl, roleName, "abc")).isTrue();
     }
 
     private static Stream<Arguments> provideSuperuserOnlyFlags() {
-        return Stream.of(
-                Arguments.of("superuser", (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setSuperuser),
-                Arguments.of("replication", (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
-                Arguments.of("bypassrls", (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setBypassrls)
-        );
+        return Stream.of(Arguments.of("superuser", (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setSuperuser), Arguments.of("replication", (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
+                Arguments.of("bypassrls", (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setBypassrls));
     }
 
     private ClusterConnection givenRootClusterConnection(String name) {
         return given.one()
-                .clusterConnection()
-                .withName(name)
-                .returnFirst();
+                    .clusterConnection()
+                    .withName(name)
+                    .returnFirst();
     }
 
-    /// Creates the non-superuser admin role in PostgreSQL (if missing) and a ClusterConnection that uses it.
-    private ClusterConnection givenNonSuperuserClusterConnection(
-            DSLContext rootDsl,
-            String name
-    ) {
-        rootDsl.execute(
-                """
+    /// Creates the non-superuser admin role in PostgreSQL (if missing) and a
+    /// ClusterConnection that uses it.
+    private ClusterConnection givenNonSuperuserClusterConnection(DSLContext rootDsl, String name) {
+        rootDsl
+                .execute("""
                 do $$
                 begin
                     if not exists (select from pg_catalog.pg_roles where rolname = '%s') then
@@ -407,8 +369,8 @@ class RoleReconcilerNonSuperuserTest {
                     end if;
                 end
                 $$
-                """.formatted(ADMIN_ROLE, ADMIN_ROLE, ADMIN_PASSWORD)
-        );
+                """
+                        .formatted(ADMIN_ROLE, ADMIN_ROLE, ADMIN_PASSWORD));
 
         var adminSecretRef = given.one()
                 .secretRef()
@@ -423,28 +385,14 @@ class RoleReconcilerNonSuperuserTest {
                 .returnFirst();
 
         return kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(clusterConnection.getMetadata().getNamespace())
-                .withName(clusterConnection.getMetadata().getName())
-                .waitUntilCondition(
-                        c -> c.getStatus() != null && c.getStatus().getPhase() == CRPhase.READY,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(clusterConnection.getMetadata().getNamespace())
+                               .withName(clusterConnection.getMetadata().getName())
+                               .waitUntilCondition(c -> c.getStatus() != null && c.getStatus().getPhase() == CRPhase.READY, 5, TimeUnit.SECONDS);
     }
 
     /// Whether the admin can use the privileges of the role without `SET ROLE`.
-    private static boolean adminHasUsage(
-            DSLContext rootDsl,
-            String roleName
-    ) {
-        return Objects.equals(
-                rootDsl.fetchValue(
-                        "select pg_has_role({0}, {1}, 'USAGE')",
-                        ADMIN_ROLE,
-                        roleName
-                ),
-                true
-        );
+    private static boolean adminHasUsage(DSLContext rootDsl, String roleName) {
+        return Objects.equals(rootDsl.fetchValue("select pg_has_role({0}, {1}, 'USAGE')", ADMIN_ROLE, roleName), true);
     }
 
     private Role applyRole(Role role) {
@@ -462,12 +410,8 @@ class RoleReconcilerNonSuperuserTest {
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .withName(applied.getMetadata().getName())
-                .waitUntilCondition(
-                        r -> r.getStatus() != null && r.getStatus().getObservedGeneration() >= generation,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(applied.getMetadata().getName())
+                               .waitUntilCondition(r -> r.getStatus() != null && r.getStatus().getObservedGeneration() >= generation, 5, TimeUnit.SECONDS);
     }
 }

@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql.core;
 
+import java.util.Locale;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +9,6 @@ import lombok.experimental.Accessors;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.Locale;
 
 /// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
 @Getter
@@ -37,8 +37,6 @@ public enum Privilege {
     }
 
     public org.jooq.Privilege privilege() {
-        return DSL.privilege(
-                name().toLowerCase(Locale.ROOT)
-        );
+        return DSL.privilege(name().toLowerCase(Locale.ROOT));
     }
 }

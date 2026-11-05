@@ -1,5 +1,13 @@
 package it.aboutbits.postgresql.crd.defaultprivilege;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
@@ -21,14 +29,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.MAINTAIN;
@@ -64,87 +64,89 @@ class DefaultPrivilegeReconcilerTest {
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the database is a blank or empty String (CEL rule)")
-            void failWhenDatabaseIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenDatabaseIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withDatabase(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The DefaultPrivilege database must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .defaultPrivilege()
+                                     .withDatabase(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The DefaultPrivilege database must not be empty.");
             }
 
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the role is a blank or empty String (CEL rule)")
-            void failWhenRoleIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenRoleIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withRole(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The DefaultPrivilege role must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .defaultPrivilege()
+                                     .withRole(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The DefaultPrivilege role must not be empty.");
             }
 
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the owner is a blank or empty String (CEL rule)")
-            void failWhenOwnerIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenOwnerIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withOwner(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The DefaultPrivilege owner must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .defaultPrivilege()
+                                     .withOwner(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The DefaultPrivilege owner must not be empty.");
             }
 
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the schema is a blank or empty String (CEL rule)")
-            void failWhenSchemaIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenSchemaIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withSchema(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The DefaultPrivilege schema must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .defaultPrivilege()
+                                     .withSchema(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The DefaultPrivilege schema must not be empty.");
             }
 
             @Test
             @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
             void failWhenPrivilegesAreAnEmptyList() {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(List.of())
-                                .apply()
-                ).withMessageContaining("The DefaultPrivilege privileges must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .defaultPrivilege()
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(List.of())
+                                     .apply())
+                        .withMessageContaining("The DefaultPrivilege privileges must not be empty.");
             }
         }
 
@@ -155,21 +157,23 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenDatabaseChanges() {
                 // given
                 var item = given.one()
-                        .defaultPrivilege()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .defaultPrivilege()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setDatabase("new-database");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setDatabase("new-database");
 
-                    kubernetesClient.resources(DefaultPrivilege.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The DefaultPrivilege database is immutable.");
+                            kubernetesClient.resources(DefaultPrivilege.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The DefaultPrivilege database is immutable.");
             }
 
             @Test
@@ -177,21 +181,23 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenRoleChanges() {
                 // given
                 var item = given.one()
-                        .defaultPrivilege()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .defaultPrivilege()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setRole("new-role");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setRole("new-role");
 
-                    kubernetesClient.resources(DefaultPrivilege.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The DefaultPrivilege role is immutable.");
+                            kubernetesClient.resources(DefaultPrivilege.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The DefaultPrivilege role is immutable.");
             }
 
             @Test
@@ -199,21 +205,23 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenOwnerChanges() {
                 // given
                 var item = given.one()
-                        .defaultPrivilege()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .defaultPrivilege()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setOwner("new-owner");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setOwner("new-owner");
 
-                    kubernetesClient.resources(DefaultPrivilege.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The DefaultPrivilege owner is immutable.");
+                            kubernetesClient.resources(DefaultPrivilege.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The DefaultPrivilege owner is immutable.");
             }
 
             @Test
@@ -221,21 +229,23 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenSchemaChanges() {
                 // given
                 var item = given.one()
-                        .defaultPrivilege()
-                        .withObjectType(TABLE)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .defaultPrivilege()
+                                .withObjectType(TABLE)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setSchema("new-schema");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setSchema("new-schema");
 
-                    kubernetesClient.resources(DefaultPrivilege.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The DefaultPrivilege schema is immutable.");
+                            kubernetesClient.resources(DefaultPrivilege.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The DefaultPrivilege schema is immutable.");
             }
 
             @Test
@@ -243,21 +253,23 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenObjectTypeChanges() {
                 // given
                 var item = given.one()
-                        .defaultPrivilege()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .defaultPrivilege()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setObjectType(SEQUENCE);
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setObjectType(SEQUENCE);
 
-                    kubernetesClient.resources(DefaultPrivilege.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The DefaultPrivilege objectType is immutable.");
+                            kubernetesClient.resources(DefaultPrivilege.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The DefaultPrivilege objectType is immutable.");
             }
         }
 
@@ -267,15 +279,17 @@ class DefaultPrivilegeReconcilerTest {
             @DisplayName("Should fail when objectType is SCHEMA but schema is set (CEL rule)")
             void failWhenDatabaseHasSchema() {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withSchema("some-schema")
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .returnFirst()
-                ).withMessageContaining("The DefaultPrivilege schema must be not set if objectType is 'schema'");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .defaultPrivilege()
+                                     .withSchema("some-schema")
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .returnFirst())
+                        .withMessageContaining("The DefaultPrivilege schema must be not set if objectType is 'schema'");
             }
 
             @Test
@@ -297,10 +311,8 @@ class DefaultPrivilegeReconcilerTest {
                             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
                             assertThat(status.getMessage())
                                     .startsWith("DefaultPrivilege contains invalid privileges for the specified objectType")
-                                    .contains("[resource=%s/%s,".formatted(
-                                            defaultPrivilege.getMetadata().getNamespace(),
-                                            defaultPrivilege.getMetadata().getName()
-                                    ));
+                                    .contains(
+                                            "[resource=%s/%s,".formatted(defaultPrivilege.getMetadata().getNamespace(), defaultPrivilege.getMetadata().getName()));
                         });
             }
 
@@ -308,11 +320,8 @@ class DefaultPrivilegeReconcilerTest {
             @EnabledIfConfig(
                     named = "test.postgresql-major-version",
                     matches = "15|16",
-                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
-            )
-            @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
-            )
+                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege")
+            @DisplayName("Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege")
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given
                 var clusterConnectionMain = given.one()
@@ -320,10 +329,10 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 var database = given.one()
-                        .database()
-                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                        .withReclaimPolicy(DELETE)
-                        .returnFirst();
+                                    .database()
+                                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                    .withReclaimPolicy(DELETE)
+                                    .returnFirst();
 
                 var clusterConnectionDb = given.one()
                         .clusterConnection()
@@ -331,16 +340,16 @@ class DefaultPrivilegeReconcilerTest {
                         .returnFirst();
 
                 var schema = given.one()
-                        .schema()
-                        .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                        .withDatabase(database.getSpec().getName())
-                        .withReclaimPolicy(DELETE)
-                        .returnFirst();
+                                  .schema()
+                                  .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                                  .withDatabase(database.getSpec().getName())
+                                  .withReclaimPolicy(DELETE)
+                                  .returnFirst();
 
                 var role = given.one()
-                        .role()
-                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                        .returnFirst();
+                                .role()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .returnFirst();
 
                 // when
                 var defaultPrivilege = given.one()
@@ -380,10 +389,10 @@ class DefaultPrivilegeReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             // To create a Schema in the new database, we need a ClusterConnection pointing to it
             var clusterConnectionDb = given.one()
@@ -392,9 +401,9 @@ class DefaultPrivilegeReconcilerTest {
                     .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             // when
             var defaultPrivilege = given.one()
@@ -412,17 +421,9 @@ class DefaultPrivilegeReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatDefaultPrivilegeHasStatus(
-                    defaultPrivilege,
-                    expectedStatus,
-                    now
-            );
+            assertThatDefaultPrivilegeHasStatus(defaultPrivilege, expectedStatus, now);
 
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.of(USAGE)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.of(USAGE));
 
             // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
@@ -432,45 +433,28 @@ class DefaultPrivilegeReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyDefaultPrivilege(
-                    defaultPrivilege,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyDefaultPrivilege(defaultPrivilege, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.copyOf(expectedPrivileges));
 
             // given: DefaultPrivilege privileges change
             spec.setPrivileges(List.of(CREATE));
 
             // when
-            applyDefaultPrivilege(
-                    defaultPrivilege,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyDefaultPrivilege(defaultPrivilege, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.of(CREATE)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.of(CREATE));
 
             // when: DefaultPrivilege CR instance delete
             kubernetesClient.resources(DefaultPrivilege.class)
-                    .resource(defaultPrivilege)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(defaultPrivilege)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege
-            );
+            assertThatNoDefaultPrivileges(clusterConnectionDb, defaultPrivilege);
         }
     }
 
@@ -479,9 +463,7 @@ class DefaultPrivilegeReconcilerTest {
         @ParameterizedTest
         @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke default privileges on table")
-        void defaultPrivilegeOnTable(
-                List<Privilege> allSupportedPrivileges
-        ) {
+        void defaultPrivilegeOnTable(List<Privilege> allSupportedPrivileges) {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
 
@@ -490,10 +472,10 @@ class DefaultPrivilegeReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -501,16 +483,16 @@ class DefaultPrivilegeReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             // when
             var defaultPrivilege = given.one()
@@ -529,17 +511,9 @@ class DefaultPrivilegeReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatDefaultPrivilegeHasStatus(
-                    defaultPrivilege,
-                    expectedStatus,
-                    now
-            );
+            assertThatDefaultPrivilegeHasStatus(defaultPrivilege, expectedStatus, now);
 
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.of(SELECT)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.of(SELECT));
 
             // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
@@ -549,56 +523,37 @@ class DefaultPrivilegeReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyDefaultPrivilege(
-                    defaultPrivilege,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyDefaultPrivilege(defaultPrivilege, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.copyOf(expectedPrivileges));
 
             // given: DefaultPrivilege privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
-            applyDefaultPrivilege(
-                    defaultPrivilege,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyDefaultPrivilege(defaultPrivilege, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.of(SELECT)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.of(SELECT));
 
             // when: DefaultPrivilege CR instance delete
             kubernetesClient.resources(DefaultPrivilege.class)
-                    .resource(defaultPrivilege)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(defaultPrivilege)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege
-            );
+            assertThatNoDefaultPrivileges(clusterConnectionDb, defaultPrivilege);
         }
 
         static Stream<List<Privilege>> provideAllSupportedPrivileges() {
             int version = ConfigProvider.getConfig().getValue("test.postgresql-major-version", Integer.class);
 
-            return Stream.of(TABLE.privilegesSet().stream()
-                    .filter(privilege -> privilege.minimumPostgresVersion() == null
-                            || privilege.minimumPostgresVersion() <= version
-                    )
-                    .toList()
-            );
+            return Stream.of(TABLE.privilegesSet()
+                                  .stream()
+                                  .filter(privilege -> privilege.minimumPostgresVersion() == null || privilege.minimumPostgresVersion() <= version)
+                                  .toList());
         }
     }
 
@@ -615,10 +570,10 @@ class DefaultPrivilegeReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -626,16 +581,16 @@ class DefaultPrivilegeReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             // when
             var defaultPrivilege = given.one()
@@ -654,17 +609,9 @@ class DefaultPrivilegeReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatDefaultPrivilegeHasStatus(
-                    defaultPrivilege,
-                    expectedStatus,
-                    now
-            );
+            assertThatDefaultPrivilegeHasStatus(defaultPrivilege, expectedStatus, now);
 
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.of(USAGE)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.of(USAGE));
 
             // given: grant all default privileges change
             var spec = defaultPrivilege.getSpec();
@@ -674,52 +621,33 @@ class DefaultPrivilegeReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyDefaultPrivilege(
-                    defaultPrivilege,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyDefaultPrivilege(defaultPrivilege, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.copyOf(expectedPrivileges));
 
             // given: DefaultPrivilege privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
-            applyDefaultPrivilege(
-                    defaultPrivilege,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyDefaultPrivilege(defaultPrivilege, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege,
-                    Set.of(SELECT)
-            );
+            assertThatDefaultPrivileges(clusterConnectionDb, defaultPrivilege, Set.of(SELECT));
 
             // when: DefaultPrivilege CR instance delete
             kubernetesClient.resources(DefaultPrivilege.class)
-                    .resource(defaultPrivilege)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(defaultPrivilege)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoDefaultPrivileges(
-                    clusterConnectionDb,
-                    defaultPrivilege
-            );
+            assertThatNoDefaultPrivileges(clusterConnectionDb, defaultPrivilege);
         }
     }
 
     @Test
-    @DisplayName(
-            "When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY"
-    )
+    @DisplayName("When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY")
     void upToDateDefaultPrivilege_afterPendingClusterConnection_setsReady() {
         // given: a reconciled DefaultPrivilege
         var clusterConnectionMain = given.one()
@@ -727,10 +655,10 @@ class DefaultPrivilegeReconcilerTest {
                 .returnFirst();
 
         var database = given.one()
-                .database()
-                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                            .database()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .withReclaimPolicy(DELETE)
+                            .returnFirst();
 
         // To create a Schema in the new database, we need a ClusterConnection pointing to it
         var clusterConnectionDb = given.one()
@@ -739,9 +667,9 @@ class DefaultPrivilegeReconcilerTest {
                 .returnFirst();
 
         var role = given.one()
-                .role()
-                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                .returnFirst();
+                        .role()
+                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                        .returnFirst();
 
         var defaultPrivilege = given.one()
                 .defaultPrivilege()
@@ -757,30 +685,28 @@ class DefaultPrivilegeReconcilerTest {
         // and: the ClusterConnection is not available for a while
         clusterRef.setName("non-existing-cc");
 
-        var pendingDefaultPrivilege = applyDefaultPrivilege(
-                defaultPrivilege,
-                dp -> dp.getStatus().getObservedGeneration() >= 2L
-        );
+        var pendingDefaultPrivilege = applyDefaultPrivilege(defaultPrivilege, dp -> dp.getStatus().getObservedGeneration() >= 2L);
 
-        assertThat(pendingDefaultPrivilege.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
+        assertThat(pendingDefaultPrivilege.getStatus()
+                .getPhase())
+                .isEqualTo(CRPhase.PENDING);
 
         // when: the ClusterConnection is available again
-        clusterRef.setName(clusterConnectionDb.getMetadata().getName());
+        clusterRef.setName(clusterConnectionDb.getMetadata()
+                .getName());
 
-        var updatedDefaultPrivilege = applyDefaultPrivilege(
-                defaultPrivilege,
-                dp -> dp.getStatus().getObservedGeneration() >= 3L
-        );
+        var updatedDefaultPrivilege = applyDefaultPrivilege(defaultPrivilege, dp -> dp.getStatus().getObservedGeneration() >= 3L);
 
         // then
-        assertThat(updatedDefaultPrivilege.getStatus().getPhase()).isEqualTo(CRPhase.READY);
-        assertThat(updatedDefaultPrivilege.getStatus().getMessage()).isNull();
+        assertThat(updatedDefaultPrivilege.getStatus()
+                .getPhase())
+                .isEqualTo(CRPhase.READY);
+        assertThat(updatedDefaultPrivilege.getStatus()
+                .getMessage())
+                .isNull();
     }
 
-    private DefaultPrivilege applyDefaultPrivilege(
-            DefaultPrivilege defaultPrivilege,
-            Predicate<DefaultPrivilege> condition
-    ) {
+    private DefaultPrivilege applyDefaultPrivilege(DefaultPrivilege defaultPrivilege, Predicate<DefaultPrivilege> condition) {
         var namespace = kubernetesClient.getNamespace();
 
         defaultPrivilege.getMetadata().setManagedFields(null);
@@ -792,41 +718,25 @@ class DefaultPrivilegeReconcilerTest {
                 .serverSideApply();
 
         return kubernetesClient.resources(DefaultPrivilege.class)
-                .inNamespace(namespace)
-                .withName(applied.getMetadata().getName())
-                .waitUntilCondition(
-                        condition,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(applied.getMetadata().getName())
+                               .waitUntilCondition(condition, 5, TimeUnit.SECONDS);
     }
 
-    private static void assertThatDefaultPrivilegeHasStatus(
-            DefaultPrivilege defaultPrivilege,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
+    private static void assertThatDefaultPrivilegeHasStatus(DefaultPrivilege defaultPrivilege, CRStatus expectedStatus, OffsetDateTime now) {
         assertThat(defaultPrivilege)
                 .isNotNull()
                 .extracting(DefaultPrivilege::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isAfter(
-                            now
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
-                            now
-                    );
+                    assertThat(status.getLastProbeTime()).isAfter(now);
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(now);
                 })
                 .usingRecursiveComparison()
                 .ignoringFields("message", "lastProbeTime", "lastPhaseTransitionTime")
                 .isEqualTo(expectedStatus);
     }
 
-    private void assertThatDefaultPrivileges(
-            ClusterConnection clusterConnection,
-            DefaultPrivilege defaultPrivilege,
-            Set<Privilege> expectedPrivileges
-    ) {
+    private void assertThatDefaultPrivileges(ClusterConnection clusterConnection, DefaultPrivilege defaultPrivilege, Set<Privilege> expectedPrivileges) {
         var databaseName = defaultPrivilege.getSpec().getDatabase();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
@@ -836,10 +746,7 @@ class DefaultPrivilegeReconcilerTest {
         }
     }
 
-    private void assertThatNoDefaultPrivileges(
-            ClusterConnection clusterConnection,
-            DefaultPrivilege defaultPrivilege
-    ) {
+    private void assertThatNoDefaultPrivileges(ClusterConnection clusterConnection, DefaultPrivilege defaultPrivilege) {
         var databaseName = defaultPrivilege.getSpec().getDatabase();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {

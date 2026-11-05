@@ -1,5 +1,9 @@
 package it.aboutbits.postgresql.crd.schema;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
@@ -12,10 +16,6 @@ import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,9 +46,9 @@ class SchemaReconcilerTest {
                 .returnFirst();
 
         var database = given.one()
-                .database()
-                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                .returnFirst();
+                            .database()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
         // Creating a second ClusterConnection CR is only required for the tests
         var clusterConnectionDb = given.one()
@@ -62,12 +62,12 @@ class SchemaReconcilerTest {
 
         // when
         var schema = given.one()
-                .schema()
-                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                .withDatabase(database.getSpec().getName())
-                .withName(schemaName)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                          .schema()
+                          .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                          .withDatabase(database.getSpec().getName())
+                          .withName(schemaName)
+                          .withReclaimPolicy(DELETE)
+                          .returnFirst();
 
         // then
         var expectedStatus = new CRStatus()
@@ -75,11 +75,7 @@ class SchemaReconcilerTest {
                 .updatePhase(CRPhase.READY)
                 .setObservedGeneration(1L);
 
-        assertThatSchemaHasExpectedStatus(
-                schema,
-                expectedStatus,
-                now
-        );
+        assertThatSchemaHasExpectedStatus(schema, expectedStatus, now);
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnectionDb);
 
@@ -96,9 +92,9 @@ class SchemaReconcilerTest {
                 .returnFirst();
 
         var database = given.one()
-                .database()
-                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                .returnFirst();
+                            .database()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
         // Creating a second ClusterConnection CR is only required for the tests
         var clusterConnectionDb = given.one()
@@ -108,11 +104,11 @@ class SchemaReconcilerTest {
                 .returnFirst();
 
         var schema = given.one()
-                .schema()
-                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                .withDatabase(database.getSpec().getName())
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                          .schema()
+                          .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                          .withDatabase(database.getSpec().getName())
+                          .withReclaimPolicy(DELETE)
+                          .returnFirst();
 
         var clusterRef = schema.getSpec().getClusterRef();
 
@@ -124,7 +120,8 @@ class SchemaReconcilerTest {
         assertThat(pendingSchema.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
 
         // when: the ClusterConnection is available again
-        clusterRef.setName(clusterConnectionDb.getMetadata().getName());
+        clusterRef.setName(clusterConnectionDb.getMetadata()
+                .getName());
 
         var updatedSchema = applySchema(schema);
 
@@ -143,9 +140,9 @@ class SchemaReconcilerTest {
                 .returnFirst();
 
         var database = given.one()
-                .database()
-                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                .returnFirst();
+                            .database()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
         // Creating a second ClusterConnection CR is only required for the tests
         var clusterConnectionDb = given.one()
@@ -155,10 +152,10 @@ class SchemaReconcilerTest {
                 .returnFirst();
 
         var schema = given.one()
-                .schema()
-                .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                .withDatabase(database.getSpec().getName())
-                .returnFirst();
+                          .schema()
+                          .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                          .withDatabase(database.getSpec().getName())
+                          .returnFirst();
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnectionDb);
 
@@ -190,30 +187,18 @@ class SchemaReconcilerTest {
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .withName(applied.getMetadata().getName())
-                .waitUntilCondition(
-                        s -> s.getStatus() != null && s.getStatus().getObservedGeneration() >= generation,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(applied.getMetadata().getName())
+                               .waitUntilCondition(s -> s.getStatus() != null && s.getStatus().getObservedGeneration() >= generation, 5, TimeUnit.SECONDS);
     }
 
-    private static void assertThatSchemaHasExpectedStatus(
-            Schema schema,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
+    private static void assertThatSchemaHasExpectedStatus(Schema schema, CRStatus expectedStatus, OffsetDateTime now) {
         assertThat(schema)
                 .isNotNull()
                 .extracting(Schema::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isAfter(
-                            now
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
-                            now
-                    );
+                    assertThat(status.getLastProbeTime()).isAfter(now);
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(now);
                 })
                 .usingRecursiveComparison()
                 .ignoringFields("lastProbeTime", "lastPhaseTransitionTime")

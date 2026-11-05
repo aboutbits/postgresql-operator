@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -13,8 +15,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.TimeUnit;
 
 @Setter
 @Accessors(fluent = true, chain = true)
@@ -43,11 +43,7 @@ public class RoleCreate extends TestDataCreator<Role> {
 
     private @Nullable PasswordEncryption withPasswordEncryption;
 
-    public RoleCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public RoleCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -87,8 +83,7 @@ public class RoleCreate extends TestDataCreator<Role> {
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
                 .withNamespace(namespace)
-                .build()
-        );
+                .build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
@@ -112,19 +107,15 @@ public class RoleCreate extends TestDataCreator<Role> {
         item.setSpec(spec);
 
         kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+                        .inNamespace(namespace)
+                        .resource(item)
+                        .serverSideApply();
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        role -> role != null && role.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(name)
+                               .waitUntilCondition(role -> role != null && role.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {

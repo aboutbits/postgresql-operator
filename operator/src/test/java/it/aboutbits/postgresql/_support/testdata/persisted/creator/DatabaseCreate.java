@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -13,8 +15,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.TimeUnit;
 
 @Setter
 @Accessors(fluent = true, chain = true)
@@ -39,11 +39,7 @@ public class DatabaseCreate extends TestDataCreator<Database> {
 
     private @Nullable String withOwner;
 
-    public DatabaseCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public DatabaseCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -65,8 +61,7 @@ public class DatabaseCreate extends TestDataCreator<Database> {
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
                 .withNamespace(namespace)
-                .build()
-        );
+                .build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
@@ -82,19 +77,15 @@ public class DatabaseCreate extends TestDataCreator<Database> {
         item.setSpec(spec);
 
         kubernetesClient.resources(Database.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+                        .inNamespace(namespace)
+                        .resource(item)
+                        .serverSideApply();
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(Database.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        db -> db != null && db.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(name)
+                               .waitUntilCondition(db -> db != null && db.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {

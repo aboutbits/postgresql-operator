@@ -10,17 +10,19 @@ import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/// A reference to a Kubernetes resource identified by [#namespace] (optional) and [#name].
+/// A reference to a Kubernetes resource identified by [#namespace] (optional)
+/// and [#name].
 ///
-/// This class is used wherever a CRD spec needs to point to another Kubernetes resource.
+/// This class is used wherever a CRD spec needs to point to another Kubernetes
+/// resource.
 ///
 /// ### Namespace resolution
 ///
-/// The [#namespace] field is **nullable**. When it is `null` (or omitted
-/// in the CR manifest), the operator resolves the target resource in the
-/// **same namespace as the CR that contains the reference**. This convention
-/// keeps single-namespace deployments simple — users only need to set
-/// `namespace` when referring to a resource in a *different* namespace.
+/// The [#namespace] field is **nullable**. When it is `null` (or omitted in the
+/// CR manifest), the operator resolves the target resource in the **same
+/// namespace as the CR that contains the reference**. This convention keeps
+/// single-namespace deployments simple — users only need to set `namespace`
+/// when referring to a resource in a *different* namespace.
 ///
 /// | `namespace` value | Resolved namespace                                  |
 /// |-------------------|-----------------------------------------------------|
@@ -39,9 +41,6 @@ public class ResourceRef {
 
     @Required
     @Max(63)
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The name must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The name must not be empty.")
     private String name = "";
 }

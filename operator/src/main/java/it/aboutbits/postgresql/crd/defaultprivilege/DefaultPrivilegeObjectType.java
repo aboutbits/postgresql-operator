@@ -1,15 +1,15 @@
 package it.aboutbits.postgresql.crd.defaultprivilege;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import it.aboutbits.postgresql.core.Privilege;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jooq.Keyword;
 import org.jspecify.annotations.NullMarked;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.DELETE;
@@ -28,34 +28,12 @@ import static org.jooq.impl.DSL.keyword;
 @Accessors(fluent = true)
 @NullMarked
 public enum DefaultPrivilegeObjectType {
-    SCHEMA(
-            "n",
-            List.of(
-                    USAGE,
-                    CREATE
-            )
-    ),
+    SCHEMA("n", List.of(USAGE, CREATE)),
     TABLE(
             "r",
-            List.of(
-                    SELECT,
-                    INSERT,
-                    UPDATE,
-                    DELETE,
-                    TRUNCATE,
-                    REFERENCES,
-                    TRIGGER,
-                    MAINTAIN
-            )
-    ),
-    SEQUENCE(
-            "S",
-            List.of(
-                    USAGE,
-                    SELECT,
-                    UPDATE
-            )
-    );
+            List.of(SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES,
+                    TRIGGER, MAINTAIN)),
+    SEQUENCE("S", List.of(USAGE, SELECT, UPDATE));
 
     private final String objectTypeChar;
 
@@ -65,10 +43,7 @@ public enum DefaultPrivilegeObjectType {
     @SuppressWarnings("ImmutableEnumChecker")
     private final Set<Privilege> privilegesSet;
 
-    DefaultPrivilegeObjectType(
-            String objectTypeChar,
-            List<Privilege> privileges
-    ) {
+    DefaultPrivilegeObjectType(String objectTypeChar, List<Privilege> privileges) {
         this.objectTypeChar = objectTypeChar;
 
         this.privileges = privileges;
@@ -81,8 +56,6 @@ public enum DefaultPrivilegeObjectType {
     }
 
     public Keyword objectType() {
-        return keyword(
-                name().toLowerCase(Locale.ROOT)
-        );
+        return keyword(name().toLowerCase(Locale.ROOT));
     }
 }

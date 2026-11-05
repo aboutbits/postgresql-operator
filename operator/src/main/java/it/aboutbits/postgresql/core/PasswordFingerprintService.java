@@ -1,5 +1,14 @@
 package it.aboutbits.postgresql.core;
 
+import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -11,28 +20,21 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.net.HttpURLConnection;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
-
 /// Computes keyed fingerprints (HMAC-SHA256) of `Role` passwords.
 ///
-/// The operator stores the fingerprint of the password it applied last in the `Role` status.
-/// On the next reconcile it compares the referenced Secret against that fingerprint.
-/// This replaces a read of the password hash from `pg_authid`, which needs superuser rights.
-/// Managed PostgreSQL services of cloud providers, such as AWS RDS, Google Cloud SQL, or Azure Database for PostgreSQL,
-/// do not grant these rights.
+/// The operator stores the fingerprint of the password it applied last in the
+/// `Role` status. On the next reconcile it compares the referenced Secret
+/// against that fingerprint. This replaces a read of the password hash from
+/// `pg_authid`, which needs superuser rights. Managed PostgreSQL services of
+/// cloud providers, such as AWS RDS, Google Cloud SQL, or Azure Database for
+/// PostgreSQL, do not grant these rights.
 ///
-/// The HMAC key is random, generated once, and kept in a Secret in the operator namespace.
-/// Without the key, the fingerprint in the status is useless for an attack on the password.
-/// The key is read once and kept in memory for the lifetime of the process.
-/// If the key Secret is lost, the operator generates a new key after its next restart and then re-applies every
-/// `Role` password once.
+/// The HMAC key is random, generated once, and kept in a Secret in the operator
+/// namespace. Without the key, the fingerprint in the status is useless for an
+/// attack on the password. The key is read once and kept in memory for the
+/// lifetime of the process. If the key Secret is lost, the operator generates a
+/// new key after its next restart and then re-applies every `Role` password
+/// once.
 @Slf4j
 @Singleton
 @RequiredArgsConstructor
@@ -54,10 +56,7 @@ public class PasswordFingerprintService {
 
     /// Fingerprint of the password together with the requested encryption,
     /// so that a change of either re-applies the password.
-    public String fingerprint(
-            String password,
-            PasswordEncryption passwordEncryption
-    ) {
+    public String fingerprint(String password, PasswordEncryption passwordEncryption) {
         var encryption = passwordEncryption.toValue().getBytes(StandardCharsets.UTF_8);
         var secret = password.getBytes(StandardCharsets.UTF_8);
 
@@ -90,9 +89,7 @@ public class PasswordFingerprintService {
     private byte[] loadOrCreateKey() {
         var namespace = kubernetesClient.getNamespace();
         if (namespace == null) {
-            throw new IllegalStateException(
-                    "Cannot determine the operator namespace to store the password fingerprint key Secret [secret.name=%s]".formatted(secretName)
-            );
+            throw new IllegalStateException("Cannot determine the operator namespace to store the password fingerprint key Secret [secret.name=%s]".formatted(secretName));
         }
 
         var secrets = kubernetesClient.secrets()
@@ -119,11 +116,8 @@ public class PasswordFingerprintService {
                         .resource(newSecret)
                         .create();
 
-                log.info(
-                        "Created password fingerprint key Secret [secret.namespace={}, secret.name={}]",
-                        namespace,
-                        secretName
-                );
+                log.info("Created password fingerprint key Secret [secret.namespace={}, secret.name={}]",
+                        namespace, secretName);
             } catch (KubernetesClientException e) {
                 if (e.getCode() != HttpURLConnection.HTTP_CONFLICT) {
                     throw e;
@@ -135,17 +129,9 @@ public class PasswordFingerprintService {
         }
 
         var data = secret.getData();
-        var keyBase64 = data == null
-                ? null
-                : data.get(SECRET_DATA_KEY);
+        var keyBase64 = data == null ? null : data.get(SECRET_DATA_KEY);
         if (keyBase64 == null || keyBase64.isBlank()) {
-            throw new IllegalStateException(
-                    "The password fingerprint key Secret is missing required data '%s' [secret.namespace=%s, secret.name=%s]".formatted(
-                            SECRET_DATA_KEY,
-                            namespace,
-                            secretName
-                    )
-            );
+            throw new IllegalStateException("The password fingerprint key Secret is missing required data '%s' [secret.namespace=%s, secret.name=%s]".formatted(SECRET_DATA_KEY, namespace, secretName));
         }
 
         return Base64.getDecoder().decode(keyBase64);

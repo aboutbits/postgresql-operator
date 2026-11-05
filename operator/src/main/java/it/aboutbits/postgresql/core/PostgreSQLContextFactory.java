@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql.core;
 
+import java.util.Properties;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -8,8 +10,6 @@ import org.jooq.CloseableDSLContext;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
-
-import java.util.Properties;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -23,50 +23,26 @@ public class PostgreSQLContextFactory {
 
     /// Create a DSLContext with a JDBC connection to the PostgreSQL maintenance database.
     public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection) throws DataAccessException {
-        return getDSLContext(
-                clusterConnection,
-                clusterConnection.getSpec().getDatabase()
-        );
+        return getDSLContext(clusterConnection, clusterConnection.getSpec().getDatabase());
     }
 
     /// Create a DSLContext with a JDBC connection to the specified database.
-    public CloseableDSLContext getDSLContext(
-            ClusterConnection clusterConnection,
-            String database
-    ) throws DataAccessException {
-        var credentials = kubernetesService.getAdminCredentials(
-                kubernetesClient,
-                clusterConnection
-        );
+    public CloseableDSLContext getDSLContext(ClusterConnection clusterConnection, String database) throws DataAccessException {
+        var credentials = kubernetesService.getAdminCredentials(kubernetesClient, clusterConnection);
 
         var spec = clusterConnection.getSpec();
 
-        var jdbcUrl = "jdbc:postgresql://%s:%d/%s".formatted(
-                spec.getHost(),
-                spec.getPort(),
-                database
-        );
+        var jdbcUrl = "jdbc:postgresql://%s:%d/%s".formatted(spec.getHost(), spec.getPort(), database);
 
         var properties = new Properties(2 + spec.getParameters().size());
 
-        properties.setProperty(
-                POSTGRESQL_AUTHENTICATION_USER_KEY,
-                credentials.username()
-        );
-        properties.setProperty(
-                POSTGRESQL_AUTHENTICATION_PASSWORD_KEY,
-                credentials.password()
-        );
+        properties.setProperty(POSTGRESQL_AUTHENTICATION_USER_KEY, credentials.username());
+        properties.setProperty(POSTGRESQL_AUTHENTICATION_PASSWORD_KEY, credentials.password());
 
         if (!spec.getParameters().isEmpty()) {
-            properties.putAll(
-                    spec.getParameters()
-            );
+            properties.putAll(spec.getParameters());
         }
 
-        return DSL.using(
-                jdbcUrl,
-                properties
-        );
+        return DSL.using(jdbcUrl, properties);
     }
 }

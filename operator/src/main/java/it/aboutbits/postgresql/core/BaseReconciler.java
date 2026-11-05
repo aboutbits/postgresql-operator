@@ -1,5 +1,11 @@
 package it.aboutbits.postgresql.core;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Objects;
+import java.util.Optional;
+
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
@@ -7,12 +13,6 @@ import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 @NullMarked
@@ -30,15 +30,13 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
 
         status.setName(resource.getName());
         status.setLastProbeTime(OffsetDateTime.now(ZoneOffset.UTC));
-        status.setObservedGeneration(resource.getMetadata().getGeneration());
+        status.setObservedGeneration(resource.getMetadata()
+                .getGeneration());
 
         return status;
     }
 
-    public String getResourceNamespaceOrOwn(
-            CR resource,
-            @Nullable String resourceNamespace
-    ) {
+    public String getResourceNamespaceOrOwn(CR resource, @Nullable String resourceNamespace) {
         if (resourceNamespace != null) {
             return resourceNamespace;
         }
@@ -46,13 +44,10 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         return resource.getMetadata().getNamespace();
     }
 
-    /// Returns empty when the ClusterConnection does not exist, is not READY, or is READY for an older generation.
-    /// Callers treat this as "not yet", not "broken", and try again after 60 seconds.
-    public Optional<ClusterConnection> getReferencedClusterConnection(
-            KubernetesClient kubernetesClient,
-            CR resource,
-            ResourceRef clusterRef
-    ) {
+    /// Returns empty when the ClusterConnection does not exist, is not READY,
+    /// or is READY for an older generation. Callers treat this as "not yet",
+    /// not "broken", and try again after 60 seconds.
+    public Optional<ClusterConnection> getReferencedClusterConnection(KubernetesClient kubernetesClient, CR resource, ResourceRef clusterRef) {
         var connectionName = clusterRef.getName();
         var connectionNamespace = getResourceNamespaceOrOwn(resource, clusterRef.getNamespace());
 
@@ -63,11 +58,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
 
         //noinspection ConstantConditions
         if (clusterConnection == null) {
-            log.error(
-                    "The specified ClusterConnection does not exist [resource={}/{}]",
-                    connectionNamespace,
-                    connectionName
-            );
+            log.error("The specified ClusterConnection does not exist [resource={}/{}]", connectionNamespace, connectionName);
 
             return Optional.empty();
         }
@@ -77,11 +68,8 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         // No status yet means the connection has not been probed yet.
         //noinspection ConstantConditions
         if (status == null) {
-            log.warn(
-                    "The specified ClusterConnection has not been probed yet [resource={}/{}]",
-                    connectionNamespace,
-                    connectionName
-            );
+            log.warn("The specified ClusterConnection has not been probed yet [resource={}/{}]",
+                    connectionNamespace, connectionName);
 
             return Optional.empty();
         }
@@ -90,25 +78,16 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         var expectedPhase = CRPhase.READY;
 
         if (!Objects.equals(currentPhase, expectedPhase)) {
-            log.warn(
-                    "The specified ClusterConnection is not ready yet [resource={}/{}, status.phase={}]",
-                    connectionNamespace,
-                    connectionName,
-                    currentPhase
-            );
+            log.warn("The specified ClusterConnection is not ready yet [resource={}/{}, status.phase={}]",
+                    connectionNamespace, connectionName, currentPhase);
 
             return Optional.empty();
         }
 
         // READY of an older generation says nothing about the current spec.
         if (status.getObservedGeneration() != clusterConnection.getMetadata().getGeneration()) {
-            log.warn(
-                    "The specified ClusterConnection changed and has not been probed again yet [resource={}/{}, status.observedGeneration={}, metadata.generation={}]",
-                    connectionNamespace,
-                    connectionName,
-                    status.getObservedGeneration(),
-                    clusterConnection.getMetadata().getGeneration()
-            );
+            log.warn("The specified ClusterConnection changed and has not been probed again yet [resource={}/{}, status.observedGeneration={}, metadata.generation={}]",
+                    connectionNamespace, connectionName, status.getObservedGeneration(), clusterConnection.getMetadata().getGeneration());
 
             return Optional.empty();
         }
@@ -116,41 +95,30 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         return Optional.of(clusterConnection);
     }
 
-    /// Sets the phase to [CRPhase#ERROR] for a failure without an exception, and logs the message.
-    public void setErrorPhase(
-            CR resource,
-            S status,
-            String message
-    ) {
+    /// Sets the phase to [CRPhase#ERROR] for a failure without an exception,
+    /// and logs the message.
+    public void setErrorPhase(CR resource, S status, String message) {
         log.warn(
                 "Failed to reconcile {} [resource={}/{}, message={}]",
                 resource.getKind(),
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
-                message
-        );
+                message);
 
-        status.updatePhase(CRPhase.ERROR)
-                .setMessage(message);
+        status.updatePhase(CRPhase.ERROR).setMessage(message);
     }
 
-    public <E extends Exception> UpdateControl<CR> handleError(
-            CR resource,
-            S status,
-            E exception
-    ) {
+    public <E extends Exception> UpdateControl<CR> handleError(CR resource, S status,
+            E exception) {
         log.error(
                 "Failed to reconcile {} [resource={}/{}]",
                 resource.getKind(),
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
-                exception
-        );
+                exception);
 
-        status.updatePhase(CRPhase.ERROR)
-                .setMessage(exception.getMessage());
+        status.updatePhase(CRPhase.ERROR).setMessage(exception.getMessage());
 
-        return UpdateControl.patchStatus(resource)
-                .rescheduleAfter(Duration.ofSeconds(60));
+        return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
     }
 }

@@ -14,20 +14,13 @@ import static org.jooq.impl.DSL.selectOne;
 @Singleton
 @NullMarked
 public class DatabaseService {
-    public boolean databaseExists(
-            DSLContext dsl,
-            DatabaseSpec spec
-    ) {
+    public boolean databaseExists(DSLContext dsl, DatabaseSpec spec) {
         return dsl.fetchExists(selectOne()
                 .from(PG_DATABASE)
-                .where(PG_DATABASE.DATNAME.eq(spec.getName()))
-        );
+                .where(PG_DATABASE.DATNAME.eq(spec.getName())));
     }
 
-    public void createDatabase(
-            DSLContext dsl,
-            DatabaseSpec spec
-    ) {
+    public void createDatabase(DSLContext dsl, DatabaseSpec spec) {
         var name = quotedName(spec.getName());
 
         dsl.createDatabase(name).execute();
@@ -37,38 +30,20 @@ public class DatabaseService {
         }
     }
 
-    public String fetchDatabaseOwner(
-            DSLContext dsl,
-            DatabaseSpec spec
-    ) {
-        return dsl
-                .select(Routines.pgGetUserbyid(
-                        PG_DATABASE.DATDBA
-                ))
-                .from(PG_DATABASE)
-                .where(PG_DATABASE.DATNAME.eq(spec.getName()))
-                .fetchSingleInto(String.class);
+    public String fetchDatabaseOwner(DSLContext dsl, DatabaseSpec spec) {
+        return dsl.select(Routines.pgGetUserbyid(PG_DATABASE.DATDBA))
+                  .from(PG_DATABASE)
+                  .where(PG_DATABASE.DATNAME.eq(spec.getName()))
+                  .fetchSingleInto(String.class);
     }
 
-    public void changeDatabaseOwner(
-            DSLContext dsl,
-            DatabaseSpec spec
-    ) {
+    public void changeDatabaseOwner(DSLContext dsl, DatabaseSpec spec) {
         var name = quotedName(spec.getName());
 
-        dsl.execute(query(
-                "alter database {0} owner to {1}",
-                name,
-                role(spec.getOwner())
-        ));
+        dsl.execute(query("alter database {0} owner to {1}", name, role(spec.getOwner())));
     }
 
-    public void dropDatabase(
-            DSLContext dsl,
-            DatabaseSpec spec
-    ) {
-        dsl.dropDatabaseIfExists(
-                quotedName(spec.getName())
-        ).execute();
+    public void dropDatabase(DSLContext dsl, DatabaseSpec spec) {
+        dsl.dropDatabaseIfExists(quotedName(spec.getName())).execute();
     }
 }

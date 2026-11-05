@@ -14,20 +14,13 @@ import static org.jooq.impl.DSL.selectOne;
 @Singleton
 @NullMarked
 public class SchemaService {
-    public boolean schemaExists(
-            DSLContext tx,
-            SchemaSpec spec
-    ) {
+    public boolean schemaExists(DSLContext tx, SchemaSpec spec) {
         return tx.fetchExists(selectOne()
                 .from(PG_NAMESPACE)
-                .where(PG_NAMESPACE.NSPNAME.eq(spec.getName()))
-        );
+                .where(PG_NAMESPACE.NSPNAME.eq(spec.getName())));
     }
 
-    public void createSchema(
-            DSLContext dsl,
-            SchemaSpec spec
-    ) {
+    public void createSchema(DSLContext dsl, SchemaSpec spec) {
         var name = quotedName(spec.getName());
 
         dsl.createSchema(name).execute();
@@ -37,38 +30,20 @@ public class SchemaService {
         }
     }
 
-    public String fetchSchemaOwner(
-            DSLContext tx,
-            SchemaSpec spec
-    ) {
-        return tx
-                .select(Routines.pgGetUserbyid(
-                        PG_NAMESPACE.NSPOWNER
-                ))
-                .from(PG_NAMESPACE)
-                .where(PG_NAMESPACE.NSPNAME.eq(spec.getName()))
-                .fetchSingleInto(String.class);
+    public String fetchSchemaOwner(DSLContext tx, SchemaSpec spec) {
+        return tx.select(Routines.pgGetUserbyid(PG_NAMESPACE.NSPOWNER))
+                 .from(PG_NAMESPACE)
+                 .where(PG_NAMESPACE.NSPNAME.eq(spec.getName()))
+                 .fetchSingleInto(String.class);
     }
 
-    public void changeSchemaOwner(
-            DSLContext tx,
-            SchemaSpec spec
-    ) {
+    public void changeSchemaOwner(DSLContext tx, SchemaSpec spec) {
         var name = quotedName(spec.getName());
 
-        tx.execute(query(
-                "alter schema {0} owner to {1}",
-                name,
-                role(spec.getOwner())
-        ));
+        tx.execute(query("alter schema {0} owner to {1}", name, role(spec.getOwner())));
     }
 
-    public void dropSchema(
-            DSLContext dsl,
-            SchemaSpec spec
-    ) {
-        dsl.dropSchemaIfExists(
-                quotedName(spec.getName())
-        ).execute();
+    public void dropSchema(DSLContext dsl, SchemaSpec spec) {
+        dsl.dropSchemaIfExists(quotedName(spec.getName())).execute();
     }
 }

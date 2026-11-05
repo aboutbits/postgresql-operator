@@ -37,10 +37,7 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
     @Setter(AccessLevel.NONE)
     private boolean withoutPassword = false;
 
-    public SecretRefCreate(
-            int numberOfItems,
-            KubernetesClient kubernetesClient
-    ) {
+    public SecretRefCreate(int numberOfItems, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.kubernetesClient = kubernetesClient;
     }
@@ -79,9 +76,9 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
                 .build();
 
         kubernetesClient.secrets()
-                .inNamespace(namespace)
-                .resource(secret)
-                .serverSideApply();
+                        .inNamespace(namespace)
+                        .resource(secret)
+                        .serverSideApply();
 
         var secretRef = new ResourceRef();
         secretRef.setName(name);

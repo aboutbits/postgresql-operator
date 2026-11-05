@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -13,8 +15,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.TimeUnit;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 
@@ -43,11 +43,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
     private @Nullable String withOwner;
 
-    public SchemaCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public SchemaCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -69,8 +65,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
                 .withNamespace(namespace)
-                .build()
-        );
+                .build());
 
         // We have to create the database first which also modifies the specified withClusterConnectionName so the connection points to the newly created DB
         var database = getDatabase();
@@ -90,19 +85,15 @@ public class SchemaCreate extends TestDataCreator<Schema> {
         item.setSpec(spec);
 
         kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+                        .inNamespace(namespace)
+                        .resource(item)
+                        .serverSideApply();
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        db -> db != null && db.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(name)
+                               .waitUntilCondition(db -> db != null && db.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {
@@ -150,11 +141,11 @@ public class SchemaCreate extends TestDataCreator<Schema> {
         }
 
         var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                        .database()
+                        .withClusterConnectionName(getClusterConnectionName())
+                        .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                        .withReclaimPolicy(DELETE)
+                        .returnFirst();
 
         withDatabase = item.getSpec().getName();
 

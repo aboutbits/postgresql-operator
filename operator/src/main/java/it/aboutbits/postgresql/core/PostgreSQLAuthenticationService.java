@@ -1,14 +1,5 @@
 package it.aboutbits.postgresql.core;
 
-import com.ongres.scram.common.StringPreparation;
-import it.aboutbits.postgresql.crd.role.PasswordEncryption;
-import jakarta.inject.Singleton;
-import org.jspecify.annotations.NullMarked;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -16,13 +7,24 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
+import javax.crypto.Mac;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
-/// Builds the password literal that the operator sends to PostgreSQL in `CREATE ROLE` and `ALTER ROLE`.
+import com.ongres.scram.common.StringPreparation;
+import it.aboutbits.postgresql.crd.role.PasswordEncryption;
+import jakarta.inject.Singleton;
+import org.jspecify.annotations.NullMarked;
+
+/// Builds the password literal that the operator sends to PostgreSQL in `CREATE
+/// ROLE` and `ALTER ROLE`.
 ///
-/// By default, the operator computes the SCRAM-SHA-256 verifier itself,
-/// exactly like `psql \password` or libpq's `PQencryptPasswordConn`.
-/// PostgreSQL stores a verifier as is, regardless of its `password_encryption` setting.
-/// This keeps the cleartext password out of the server's statement log and out of extensions such as `pg_stat_statements` or `pgaudit`.
+/// By default, the operator computes the SCRAM-SHA-256 verifier itself, exactly
+/// like `psql \password` or libpq's `PQencryptPasswordConn`. PostgreSQL stores
+/// a verifier as is, regardless of its `password_encryption` setting. This
+/// keeps the cleartext password out of the server's statement log and out of
+/// extensions such as `pg_stat_statements` or `pgaudit`.
 @Singleton
 @NullMarked
 public final class PostgreSQLAuthenticationService {
@@ -41,14 +43,12 @@ public final class PostgreSQLAuthenticationService {
 
     private final SecureRandom secureRandom = new SecureRandom();
 
-    /// Convert the password from the Secret into the literal to send to PostgreSQL.
+    /// Convert the password from the Secret into the literal to send to
+    /// PostgreSQL.
     ///
-    /// A value that already is an MD5 or SCRAM-SHA-256 verifier is forwarded unchanged, so users keep
-    /// full control over the stored hash.
-    public String toServerPassword(
-            String password,
-            PasswordEncryption passwordEncryption
-    ) {
+    /// A value that already is an MD5 or SCRAM-SHA-256 verifier is forwarded
+    /// unchanged, so users keep full control over the stored hash.
+    public String toServerPassword(String password, PasswordEncryption passwordEncryption) {
         if (passwordEncryption == PasswordEncryption.SERVER || isEncrypted(password)) {
             return password;
         }
@@ -61,15 +61,16 @@ public final class PostgreSQLAuthenticationService {
         return password.startsWith(SCRAM_SHA_256_PREFIX) || isMd5Verifier(password);
     }
 
-    /// Compute a PostgreSQL SCRAM-SHA-256 verifier for the given cleartext password.
+    /// Compute a PostgreSQL SCRAM-SHA-256 verifier for the given cleartext
+    /// password.
     ///
-    /// Format: `SCRAM-SHA-256$<iterations>:<saltB64>$<storedKeyB64>:<serverKeyB64>`
-    /// as described in RFC 5802 and RFC 7677 and used by PostgreSQL since version 10.
+    /// Format:
+    /// `SCRAM-SHA-256$<iterations>:<saltB64>$<storedKeyB64>:<serverKeyB64>` as
+    /// described in RFC 5802 and RFC 7677 and used by PostgreSQL since version
+    /// 10.
     public String scramSha256Verifier(String cleartextPassword) {
         // Prepare the cleartext password with SASLprep, as PostgreSQL does
-        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(
-                cleartextPassword.toCharArray()
-        );
+        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(cleartextPassword.toCharArray());
 
         var salt = new byte[SCRAM_SALT_LENGTH_BYTES];
         secureRandom.nextBytes(salt);
@@ -91,13 +92,8 @@ public final class PostgreSQLAuthenticationService {
 
             var encoder = Base64.getEncoder();
 
-            return "%s%d:%s$%s:%s".formatted(
-                    SCRAM_SHA_256_PREFIX,
-                    SCRAM_SHA_256_ITERATIONS,
-                    encoder.encodeToString(salt),
-                    encoder.encodeToString(storedKey),
-                    encoder.encodeToString(serverKey)
-            );
+            return "%s%d:%s$%s:%s".formatted(SCRAM_SHA_256_PREFIX, SCRAM_SHA_256_ITERATIONS, encoder.encodeToString(salt), encoder.encodeToString(storedKey),
+                    encoder.encodeToString(serverKey));
         } finally {
             Arrays.fill(preparedPassword, '\0');
             if (saltedPassword != null) {
@@ -122,23 +118,15 @@ public final class PostgreSQLAuthenticationService {
         }
 
         try {
-            HexFormat.of().parseHex(
-                    password.toLowerCase(Locale.ROOT),
-                    3,
-                    password.length()
-            );
+            HexFormat.of().parseHex(password.toLowerCase(Locale.ROOT), 3, password.length());
             return true;
         } catch (IllegalArgumentException _) {
             return false;
         }
     }
 
-    private static byte[] pbkdf2HmacSha256(
-            char[] password,
-            byte[] salt,
-            int iterations,
-            int keyLenBytes
-    ) {
+    private static byte[] pbkdf2HmacSha256(char[] password, byte[] salt, int iterations,
+            int keyLenBytes) {
         try {
             var secretKeyFactory = SecretKeyFactory.getInstance(PBKDF2_WITH_HMAC_SHA256);
             var spec = new PBEKeySpec(password, salt, iterations, keyLenBytes * 8);

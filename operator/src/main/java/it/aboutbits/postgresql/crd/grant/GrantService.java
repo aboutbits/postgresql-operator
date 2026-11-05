@@ -1,5 +1,12 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.core.SQLUtil;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
@@ -9,13 +16,6 @@ import org.jooq.DataType;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.ACLEXPLODE;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_CLASS;
@@ -40,15 +40,14 @@ public class GrantService {
     // language=SQL
     private static final String NAMESPACE_OID_SQL = "{0}::regnamespace";
 
-    /// Determines all existing privileges for the specified `role`, when applicable `schema`, and the given `objectType`.
+    /// Determines all existing privileges for the specified `role`, when
+    /// applicable `schema`, and the given `objectType`.
     ///
-    /// @param tx   The [DSLContext] for database operations.
+    /// @param tx The [DSLContext] for database operations.
     /// @param spec The [GrantSpec] containing the specification details.
-    /// @return A map with object names as keys and lists of [Privilege] as values.
-    public Map<String, Set<Privilege>> determineCurrentObjectPrivileges(
-            DSLContext tx,
-            GrantSpec spec
-    ) {
+    /// @return A map with object names as keys and lists of [Privilege] as
+    ///   values.
+    public Map<String, Set<Privilege>> determineCurrentObjectPrivileges(DSLContext tx, GrantSpec spec) {
         var database = spec.getDatabase();
         var role = spec.getRole();
         var schema = spec.getSchema();
@@ -66,25 +65,12 @@ public class GrantService {
              *   d.datname = '<database_name>'
              *   and a.grantee = '<role_name>'::regrole
              */
-            case DATABASE -> tx
-                    .select(
-                            PG_DATABASE.DATNAME,
-                            ACLEXPLODE.PRIVILEGE_TYPE
-                    )
-                    .from(PG_DATABASE)
-                    .crossJoin(Routines.aclexplode(PG_DATABASE.DATACL))
-                    .where(
-                            PG_DATABASE.DATNAME.eq(database),
-                            ACLEXPLODE.GRANTEE.eq(field(
-                                    ROLE_OID_SQL,
-                                    OID_DATA_TYPE,
-                                    val(role)
-                            ))
-                    )
-                    .fetchGroups(
-                            PG_DATABASE.DATNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
-                    );
+            case DATABASE ->
+                    tx.select(PG_DATABASE.DATNAME, ACLEXPLODE.PRIVILEGE_TYPE)
+                      .from(PG_DATABASE)
+                      .crossJoin(Routines.aclexplode(PG_DATABASE.DATACL))
+                      .where(PG_DATABASE.DATNAME.eq(database), ACLEXPLODE.GRANTEE.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role))))
+                      .fetchGroups(PG_DATABASE.DATNAME, r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class));
             /*
              * select
              *   s.nspname,
@@ -95,25 +81,12 @@ public class GrantService {
              *   s.nspname = '<schema_name>'
              *   and a.grantee = '<role_name>'::regrole
              */
-            case SCHEMA -> tx
-                    .select(
-                            PG_NAMESPACE.NSPNAME,
-                            ACLEXPLODE.PRIVILEGE_TYPE
-                    )
-                    .from(PG_NAMESPACE)
-                    .crossJoin(Routines.aclexplode(PG_NAMESPACE.NSPACL))
-                    .where(
-                            PG_NAMESPACE.NSPNAME.eq(schema),
-                            ACLEXPLODE.GRANTEE.eq(field(
-                                    ROLE_OID_SQL,
-                                    OID_DATA_TYPE,
-                                    val(role)
-                            ))
-                    )
-                    .fetchGroups(
-                            PG_NAMESPACE.NSPNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
-                    );
+            case SCHEMA ->
+                    tx.select(PG_NAMESPACE.NSPNAME, ACLEXPLODE.PRIVILEGE_TYPE)
+                      .from(PG_NAMESPACE)
+                      .crossJoin(Routines.aclexplode(PG_NAMESPACE.NSPACL))
+                      .where(PG_NAMESPACE.NSPNAME.eq(schema), ACLEXPLODE.GRANTEE.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role))))
+                      .fetchGroups(PG_NAMESPACE.NSPNAME, r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class));
 
             /*
              * select
@@ -126,37 +99,20 @@ public class GrantService {
              *   and c.relkind in ('r', 'p', 'v', 'm', 'f')
              *   and a.grantee = '<role_name>'::regrole
              */
-            case TABLE -> tx
-                    .select(
-                            PG_CLASS.RELNAME,
-                            ACLEXPLODE.PRIVILEGE_TYPE
-                    )
-                    .from(PG_CLASS)
-                    .crossJoin(Routines.aclexplode(PG_CLASS.RELACL))
-                    .where(
-                            PG_CLASS.RELNAMESPACE.eq(field(
-                                    NAMESPACE_OID_SQL,
-                                    OID_DATA_TYPE,
-                                    val(schema)
-                            )),
-                            // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
-                            PG_CLASS.RELKIND.in(
-                                    "r", // Ordinary Table
-                                    "p", // Partitioned Table
-                                    "v", // View
-                                    "m", // Materialized View
-                                    "f" // Foreign Table
-                            ),
-                            ACLEXPLODE.GRANTEE.eq(field(
-                                    ROLE_OID_SQL,
-                                    OID_DATA_TYPE,
-                                    val(role)
-                            ))
-                    )
-                    .fetchGroups(
-                            PG_CLASS.RELNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
-                    );
+            case TABLE ->
+                    tx.select(PG_CLASS.RELNAME, ACLEXPLODE.PRIVILEGE_TYPE)
+                      .from(PG_CLASS)
+                      .crossJoin(Routines.aclexplode(PG_CLASS.RELACL))
+                      .where(PG_CLASS.RELNAMESPACE.eq(field(NAMESPACE_OID_SQL, OID_DATA_TYPE, val(schema))),
+                      // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
+                      PG_CLASS.RELKIND.in("r", // Ordinary Table
+                      "p", // Partitioned Table
+                      "v", // View
+                      "m", // Materialized View
+                      "f" // Foreign Table
+                      ),
+                              ACLEXPLODE.GRANTEE.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role))))
+                      .fetchGroups(PG_CLASS.RELNAME, r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class));
             /*
              * select
              *   c.relname,
@@ -168,71 +124,47 @@ public class GrantService {
              *   and c.relkind = 'S'
              *   and a.grantee = '<role_name>'::regrole
              */
-            case SEQUENCE -> tx
-                    .select(
-                            PG_CLASS.RELNAME,
-                            ACLEXPLODE.PRIVILEGE_TYPE
-                    )
-                    .from(PG_CLASS)
-                    .crossJoin(Routines.aclexplode(PG_CLASS.RELACL))
-                    .where(
-                            PG_CLASS.RELNAMESPACE.eq(field(
-                                    NAMESPACE_OID_SQL,
-                                    OID_DATA_TYPE,
-                                    val(schema)
-                            )),
-                            // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
-                            PG_CLASS.RELKIND.eq(
-                                    "S" // Sequence
-                            ),
-                            ACLEXPLODE.GRANTEE.eq(field(
-                                    ROLE_OID_SQL,
-                                    OID_DATA_TYPE,
-                                    val(role)
-                            ))
-                    )
-                    .fetchGroups(
-                            PG_CLASS.RELNAME,
-                            r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class)
-                    );
+            case SEQUENCE ->
+                    tx.select(PG_CLASS.RELNAME, ACLEXPLODE.PRIVILEGE_TYPE)
+                      .from(PG_CLASS)
+                      .crossJoin(Routines.aclexplode(PG_CLASS.RELACL))
+                      .where(PG_CLASS.RELNAMESPACE.eq(field(NAMESPACE_OID_SQL, OID_DATA_TYPE, val(schema))),
+                      // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
+                      PG_CLASS.RELKIND.eq("S" // Sequence
+                      ),
+                              ACLEXPLODE.GRANTEE.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role))))
+                      .fetchGroups(PG_CLASS.RELNAME, r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class));
         };
 
         return currentObjectPrivileges.entrySet()
                 .stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> Set.copyOf(entry.getValue())
-                ));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
     }
 
-    /// Determines the database `objects` existence, and if it exists, the ownership
-    /// based on the given resource specification and transaction context.
+    /// Determines the database `objects` existence, and if it exists, the
+    /// ownership based on the given resource specification and transaction
+    /// context.
     ///
-    /// If the `objects` List is empty, no condition is applied for object filtering,
-    /// and thus all objects from this `namespace`/`schema` are returned.
+    /// If the `objects` List is empty, no condition is applied for object
+    /// filtering, and thus all objects from this `namespace`/`schema` are
+    /// returned.
     ///
-    /// @param tx   the [DSLContext] used to execute database operations
-    /// @param spec the [GrantSpec] object containing specifications about the target database objects and privileges
-    /// @return a map where the keys represent object names and the values indicate ownership status,
-    /// or `null` if the object does not exist
+    /// @param tx the [DSLContext] used to execute database operations
+    /// @param spec the [GrantSpec] object containing specifications about the
+    ///   target database objects and privileges
+    /// @return a map where the keys represent object names and the values
+    ///   indicate ownership status, or `null` if the object does not exist
     @SuppressWarnings("java:S3776")
-    public Map<String, @Nullable Boolean> determineObjectExistenceAndOwnership(
-            DSLContext tx,
-            GrantSpec spec
-    ) {
+    public Map<String, @Nullable Boolean> determineObjectExistenceAndOwnership(DSLContext tx, GrantSpec spec) {
         var database = spec.getDatabase();
         var role = spec.getRole();
         var schema = spec.getSchema();
 
         var objectType = spec.getObjectType();
-        var objects = Objects.requireNonNullElse(
-                spec.getObjects(),
-                Collections.<String>emptySet()
-        );
+        var objects = Objects.requireNonNullElse(spec.getObjects(), Collections.<String>emptySet());
 
-        var objectExistenceAndOwnershipMap = HashMap.<String, @Nullable Boolean>newHashMap(
-                (objects.isEmpty() ? 1 : objects.size()) * spec.getPrivileges().size()
-        );
+        var objectExistenceAndOwnershipMap = HashMap.<String, @Nullable Boolean>newHashMap((objects.isEmpty() ? 1 : objects.size())
+                * spec.getPrivileges().size());
 
         var isAllMode = objects.isEmpty();
 
@@ -244,17 +176,10 @@ public class GrantService {
                  * where
                  *   d.datname = '<database_name>'
                  */
-                var isOwner = tx
-                        .select(
-                                field(PG_DATABASE.DATDBA.eq(field(
-                                        ROLE_OID_SQL,
-                                        OID_DATA_TYPE,
-                                        val(role)
-                                )))
-                        )
-                        .from(PG_DATABASE)
-                        .where(PG_DATABASE.DATNAME.eq(database))
-                        .fetchOneInto(Boolean.class);
+                var isOwner = tx.select(field(PG_DATABASE.DATDBA.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role)))))
+                                .from(PG_DATABASE)
+                                .where(PG_DATABASE.DATNAME.eq(database))
+                                .fetchOneInto(Boolean.class);
 
                 objectExistenceAndOwnershipMap.put(database, isOwner);
             }
@@ -265,17 +190,10 @@ public class GrantService {
                  * where
                  *   s.nspname = '<schema_name>'
                  */
-                var isOwner = tx
-                        .select(
-                                field(PG_NAMESPACE.NSPOWNER.eq(field(
-                                        ROLE_OID_SQL,
-                                        OID_DATA_TYPE,
-                                        val(role)
-                                )))
-                        )
-                        .from(PG_NAMESPACE)
-                        .where(PG_NAMESPACE.NSPNAME.eq(schema))
-                        .fetchOneInto(Boolean.class);
+                var isOwner = tx.select(field(PG_NAMESPACE.NSPOWNER.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role)))))
+                                .from(PG_NAMESPACE)
+                                .where(PG_NAMESPACE.NSPNAME.eq(schema))
+                                .fetchOneInto(Boolean.class);
 
                 objectExistenceAndOwnershipMap.put(schema, isOwner);
             }
@@ -292,45 +210,27 @@ public class GrantService {
                  *   and c.relname in (<table_1>, <table_2>, ..., <table_n>) // only if we specified objects in the CRD
                  *   and c.relkind in ('r', 'p', 'v', 'm', 'f')
                  */
-                var isOwnerCondition = PG_CLASS.RELOWNER.eq(field(
-                                ROLE_OID_SQL,
-                                OID_DATA_TYPE,
-                                val(role)
-                        )
-                );
+                var isOwnerCondition = PG_CLASS.RELOWNER.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role)));
 
-                var existingObjectsOwner = tx
-                        .select(
-                                PG_CLASS.RELNAME,
-                                isOwnerCondition
-                        )
+                var existingObjectsOwner = tx.select(PG_CLASS.RELNAME, isOwnerCondition)
                         .from(PG_CLASS)
                         .where(
-                                PG_CLASS.RELNAMESPACE.eq(field(
-                                        NAMESPACE_OID_SQL,
-                                        OID_DATA_TYPE,
-                                        val(schema)
-                                )),
+                                PG_CLASS.RELNAMESPACE.eq(field(NAMESPACE_OID_SQL, OID_DATA_TYPE, val(schema))),
                                 isAllMode ? noCondition() : PG_CLASS.RELNAME.in(objects),
                                 // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
-                                PG_CLASS.RELKIND.in(
-                                        "r", // Ordinary Table
-                                        "p", // Partitioned Table
-                                        "v", // View
-                                        "m", // Materialized View
-                                        "f" // Foreign Table
-                                )
-                        )
+                                PG_CLASS.RELKIND.in("r", // Ordinary Table
+                                "p", // Partitioned Table
+                                "v", // View
+                                "m", // Materialized View
+                                "f" // Foreign Table
+                                ))
                         .fetchMap(PG_CLASS.RELNAME, isOwnerCondition);
 
                 if (isAllMode) {
                     objectExistenceAndOwnershipMap.putAll(existingObjectsOwner);
                 } else {
                     for (var object : objects) {
-                        objectExistenceAndOwnershipMap.put(
-                                object,
-                                existingObjectsOwner.get(object)
-                        );
+                        objectExistenceAndOwnershipMap.put(object, existingObjectsOwner.get(object));
                     }
                 }
             }
@@ -347,41 +247,23 @@ public class GrantService {
                  *   and c.relname in (<sequence_1>, <sequence_2>, ..., <sequence_n>) // only if we specified objects in the CRD
                  *   and c.relkind = 'S'
                  */
-                var isOwnerCondition = PG_CLASS.RELOWNER.eq(field(
-                                ROLE_OID_SQL,
-                                OID_DATA_TYPE,
-                                val(role)
-                        )
-                );
+                var isOwnerCondition = PG_CLASS.RELOWNER.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role)));
 
-                var existingObjectsOwner = tx
-                        .select(
-                                PG_CLASS.RELNAME,
-                                isOwnerCondition
-                        )
+                var existingObjectsOwner = tx.select(PG_CLASS.RELNAME, isOwnerCondition)
                         .from(PG_CLASS)
                         .where(
-                                PG_CLASS.RELNAMESPACE.eq(field(
-                                        NAMESPACE_OID_SQL,
-                                        OID_DATA_TYPE,
-                                        val(schema)
-                                )),
+                                PG_CLASS.RELNAMESPACE.eq(field(NAMESPACE_OID_SQL, OID_DATA_TYPE, val(schema))),
                                 isAllMode ? noCondition() : PG_CLASS.RELNAME.in(objects),
                                 // See https://www.postgresql.org/docs/current/catalog-pg-class.html#CATALOG-PG-CLASS
-                                PG_CLASS.RELKIND.eq(
-                                        "S" // Sequence
-                                )
-                        )
+                                PG_CLASS.RELKIND.eq("S" // Sequence
+                                ))
                         .fetchMap(PG_CLASS.RELNAME, isOwnerCondition);
 
                 if (isAllMode) {
                     objectExistenceAndOwnershipMap.putAll(existingObjectsOwner);
                 } else {
                     for (var object : objects) {
-                        objectExistenceAndOwnershipMap.put(
-                                object,
-                                existingObjectsOwner.get(object)
-                        );
+                        objectExistenceAndOwnershipMap.put(object, existingObjectsOwner.get(object));
                     }
                 }
             }
@@ -390,12 +272,8 @@ public class GrantService {
         return objectExistenceAndOwnershipMap;
     }
 
-    public void grant(
-            DSLContext tx,
-            GrantSpec spec,
-            String object,
-            Set<Privilege> privilegesToGrant
-    ) {
+    public void grant(DSLContext tx, GrantSpec spec, String object,
+                      Set<Privilege> privilegesToGrant) {
         var schema = spec.getSchema();
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
@@ -409,26 +287,18 @@ public class GrantService {
                 .map(Privilege::privilege)
                 .toList();
 
-        var statement = query(
-                "grant {0} on {1} {2} to {3}",
-                SQLUtil.concatenateQueryPartsWithComma(privileges),
-                objectType.objectType(),
-                qualifiedObject,
-                role
-        );
+        var statement = query("grant {0} on {1} {2} to {3}", SQLUtil.concatenateQueryPartsWithComma(privileges),
+                objectType.objectType(), qualifiedObject, role);
 
         tx.execute(statement);
     }
 
     /// Grants the privileges on all objects of the objectType in the schema.
-    /// Only `TABLE` and `SEQUENCE` support this, for all other objectTypes nothing is executed.
+    /// Only `TABLE` and `SEQUENCE` support this, for all other objectTypes
+    /// nothing is executed.
     ///
     /// @return `true` if the statement was executed
-    public boolean grantOnAll(
-            DSLContext tx,
-            GrantSpec spec,
-            Set<Privilege> privilegesToGrant
-    ) {
+    public boolean grantOnAll(DSLContext tx, GrantSpec spec, Set<Privilege> privilegesToGrant) {
         var schema = quotedName(spec.getSchema());
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
@@ -443,25 +313,16 @@ public class GrantService {
                 .map(Privilege::privilege)
                 .toList();
 
-        var statement = query(
-                "grant {0} on all {1}s in schema {2} to {3}",
-                SQLUtil.concatenateQueryPartsWithComma(privileges),
-                objectType.objectType(),
-                schema,
-                role
-        );
+        var statement = query("grant {0} on all {1}s in schema {2} to {3}", SQLUtil.concatenateQueryPartsWithComma(privileges),
+                objectType.objectType(), schema, role);
 
         tx.execute(statement);
 
         return true;
     }
 
-    public void revoke(
-            DSLContext tx,
-            GrantSpec spec,
-            String object,
-            Set<Privilege> privilegesToRevoke
-    ) {
+    public void revoke(DSLContext tx, GrantSpec spec, String object,
+                       Set<Privilege> privilegesToRevoke) {
         var schema = spec.getSchema();
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
@@ -475,13 +336,8 @@ public class GrantService {
                 .map(Privilege::privilege)
                 .toList();
 
-        var statement = query(
-                "revoke {0} on {1} {2} from {3}",
-                SQLUtil.concatenateQueryPartsWithComma(privileges),
-                objectType.objectType(),
-                qualifiedObject,
-                role
-        );
+        var statement = query("revoke {0} on {1} {2} from {3}", SQLUtil.concatenateQueryPartsWithComma(privileges),
+                objectType.objectType(), qualifiedObject, role);
 
         tx.execute(statement);
     }

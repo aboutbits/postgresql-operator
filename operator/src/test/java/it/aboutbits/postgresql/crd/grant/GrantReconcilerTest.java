@@ -1,5 +1,14 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
@@ -22,15 +31,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static it.aboutbits.postgresql.core.Privilege.CONNECT;
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
@@ -69,69 +69,71 @@ class GrantReconcilerTest {
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the database is a blank or empty String (CEL rule)")
-            void failWhenDatabaseIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenDatabaseIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withDatabase(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The Grant database must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withDatabase(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The Grant database must not be empty.");
             }
 
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the role is a blank or empty String (CEL rule)")
-            void failWhenRoleIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenRoleIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withRole(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The Grant role must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withRole(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The Grant role must not be empty.");
             }
 
             @ParameterizedTest
             @BlankSource
             @DisplayName("Should fail when the schema is a blank or empty String (CEL rule)")
-            void failWhenSchemaIsBlankOrEmptyString(
-                    String blankOrEmptyString
-            ) {
+            void failWhenSchemaIsBlankOrEmptyString(String blankOrEmptyString) {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withSchema(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
-                ).withMessageContaining("The Grant schema must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withSchema(blankOrEmptyString)
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(USAGE)
+                                     .apply())
+                        .withMessageContaining("The Grant schema must not be empty.");
             }
 
             @Test
             @DisplayName("Should fail when the privileges are an empty List (CEL rule)")
             void failWhenPrivilegesAreAnEmptyList() {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(List.of())
-                                .apply()
-                ).withMessageContaining("The Grant privileges must not be empty.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withObjectType(SCHEMA)
+                                     .withPrivileges(List.of())
+                                     .apply())
+                        .withMessageContaining("The Grant privileges must not be empty.");
             }
         }
 
@@ -142,21 +144,23 @@ class GrantReconcilerTest {
             void failWhenDatabaseChanges() {
                 // given
                 var item = given.one()
-                        .grant()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .grant()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setDatabase("new-database");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setDatabase("new-database");
 
-                    kubernetesClient.resources(Grant.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The Grant database is immutable.");
+                            kubernetesClient.resources(Grant.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The Grant database is immutable.");
             }
 
             @Test
@@ -164,21 +168,23 @@ class GrantReconcilerTest {
             void failWhenRoleChanges() {
                 // given
                 var item = given.one()
-                        .grant()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .grant()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setRole("new-role");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setRole("new-role");
 
-                    kubernetesClient.resources(Grant.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The Grant role is immutable.");
+                            kubernetesClient.resources(Grant.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The Grant role is immutable.");
             }
 
             @Test
@@ -186,21 +192,23 @@ class GrantReconcilerTest {
             void failWhenSchemaChanges() {
                 // given
                 var item = given.one()
-                        .grant()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .grant()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setSchema("new-schema");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setSchema("new-schema");
 
-                    kubernetesClient.resources(Grant.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The Grant schema is immutable.");
+                            kubernetesClient.resources(Grant.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The Grant schema is immutable.");
             }
 
             @Test
@@ -208,21 +216,23 @@ class GrantReconcilerTest {
             void failWhenObjectTypeChanges() {
                 // given
                 var item = given.one()
-                        .grant()
-                        .withObjectType(SCHEMA)
-                        .withPrivileges(USAGE)
-                        .returnFirst();
+                                .grant()
+                                .withObjectType(SCHEMA)
+                                .withPrivileges(USAGE)
+                                .returnFirst();
 
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() -> {
-                    // when
-                    item.getSpec().setObjectType(SEQUENCE);
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(() -> {
+                            // when
+                            item.getSpec().setObjectType(SEQUENCE);
 
-                    kubernetesClient.resources(Grant.class)
-                            .inNamespace(item.getMetadata().getNamespace())
-                            .withName(item.getMetadata().getName())
-                            .patch(item);
-                }).withMessageContaining("The Grant objectType is immutable.");
+                            kubernetesClient.resources(Grant.class)
+                                            .inNamespace(item.getMetadata().getNamespace())
+                                            .withName(item.getMetadata().getName())
+                                            .patch(item);
+                        })
+                        .withMessageContaining("The Grant objectType is immutable.");
             }
         }
 
@@ -232,45 +242,51 @@ class GrantReconcilerTest {
             @DisplayName("Should fail when objectType is DATABASE but schema is set (CEL rule)")
             void failWhenDatabaseHasSchema() {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withSchema("some-schema")
-                                .withObjectType(DATABASE)
-                                .withPrivileges(CONNECT)
-                                .returnFirst()
-                ).withMessageContaining("The Grant schema must be not set if objectType is 'database'");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withSchema("some-schema")
+                                     .withObjectType(DATABASE)
+                                     .withPrivileges(CONNECT)
+                                     .returnFirst())
+                        .withMessageContaining("The Grant schema must be not set if objectType is 'database'");
             }
 
             @Test
             @DisplayName("Should fail when objectType is DATABASE but objects has items (CEL rule)")
             void failWhenDatabaseHasObjects() {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withObjectType(DATABASE)
-                                .withObjects("some_object", "other_object")
-                                .withPrivileges(CONNECT)
-                                .returnFirst()
-                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withObjectType(DATABASE)
+                                     .withObjects("some_object", "other_object")
+                                     .withPrivileges(CONNECT)
+                                     .returnFirst())
+                        .withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
             @DisplayName("Should fail when objectType is SCHEMA but objects has items (CEL rule)")
             void failWhenSchemaHasObjects() {
                 // then
-                assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withObjectType(SCHEMA)
-                                .withObjects("some_object", "other_object")
-                                .withPrivileges(USAGE)
-                                .returnFirst()
-                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                assertThatExceptionOfType(KubernetesClientException.class)
+                        .isThrownBy(
+                                () ->
+                                // given / when
+                                given.one()
+                                     .grant()
+                                     .withObjectType(SCHEMA)
+                                     .withObjects("some_object", "other_object")
+                                     .withPrivileges(USAGE)
+                                     .returnFirst())
+                        .withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
@@ -278,11 +294,11 @@ class GrantReconcilerTest {
             void errorWhenInvalidPrivileges() {
                 // given / when
                 var grant = given.one()
-                        .grant()
-                        .withObjectType(SCHEMA)
-                        // SELECT is not allowed for SCHEMA
-                        .withPrivileges(SELECT)
-                        .returnFirst();
+                                 .grant()
+                                 .withObjectType(SCHEMA)
+                                 // SELECT is not allowed for SCHEMA
+                                 .withPrivileges(SELECT)
+                                 .returnFirst();
 
                 // then
                 assertThat(grant)
@@ -292,10 +308,8 @@ class GrantReconcilerTest {
                             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
                             assertThat(status.getMessage())
                                     .startsWith("Grant contains invalid privileges for the specified objectType")
-                                    .contains("[resource=%s/%s,".formatted(
-                                            grant.getMetadata().getNamespace(),
-                                            grant.getMetadata().getName()
-                                    ));
+                                    .contains(
+                                            "[resource=%s/%s,".formatted(grant.getMetadata().getNamespace(), grant.getMetadata().getName()));
                         });
             }
 
@@ -303,11 +317,8 @@ class GrantReconcilerTest {
             @EnabledIfConfig(
                     named = "test.postgresql-major-version",
                     matches = "15|16",
-                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
-            )
-            @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
-            )
+                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege")
+            @DisplayName("Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege")
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given
                 var clusterConnectionMain = given.one()
@@ -315,10 +326,10 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 var database = given.one()
-                        .database()
-                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                        .withReclaimPolicy(DELETE)
-                        .returnFirst();
+                                    .database()
+                                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                    .withReclaimPolicy(DELETE)
+                                    .returnFirst();
 
                 var clusterConnectionDb = given.one()
                         .clusterConnection()
@@ -326,36 +337,35 @@ class GrantReconcilerTest {
                         .returnFirst();
 
                 var schema = given.one()
-                        .schema()
-                        .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                        .withDatabase(database.getSpec().getName())
-                        .withReclaimPolicy(DELETE)
-                        .returnFirst();
+                                  .schema()
+                                  .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                                  .withDatabase(database.getSpec().getName())
+                                  .withReclaimPolicy(DELETE)
+                                  .returnFirst();
 
                 var role = given.one()
-                        .role()
-                        .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                        .returnFirst();
+                                .role()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .returnFirst();
 
                 var tableName = "test_table";
                 createTable(
                         clusterConnectionDb,
                         database.getSpec().getName(),
                         schema.getSpec().getName(),
-                        tableName
-                );
+                        tableName);
 
                 // when
                 var grant = given.one()
-                        .grant()
-                        .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                        .withDatabase(database.getSpec().getName())
-                        .withSchema(schema.getSpec().getName())
-                        .withRole(role.getSpec().getName())
-                        .withObjectType(TABLE)
-                        .withObjects(tableName)
-                        .withPrivileges(MAINTAIN)
-                        .returnFirst();
+                                 .grant()
+                                 .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                                 .withDatabase(database.getSpec().getName())
+                                 .withSchema(schema.getSpec().getName())
+                                 .withRole(role.getSpec().getName())
+                                 .withObjectType(TABLE)
+                                 .withObjects(tableName)
+                                 .withPrivileges(MAINTAIN)
+                                 .returnFirst();
 
                 // then
                 assertThat(grant)
@@ -373,8 +383,7 @@ class GrantReconcilerTest {
                         clusterConnectionDb,
                         database.getSpec().getName(),
                         schema.getSpec().getName(),
-                        tableName
-                );
+                        tableName);
             }
         }
     }
@@ -392,25 +401,25 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnection.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                            .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnection.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnection.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(DATABASE)
-                    .withPrivileges(CONNECT)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(DATABASE)
+                             .withPrivileges(CONNECT)
+                             .returnFirst();
 
             // then
             var expectedStatus = new CRStatus()
@@ -418,18 +427,13 @@ class GrantReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatGrantHasStatus(
-                    grant,
-                    expectedStatus,
-                    now
-            );
+            assertThatGrantHasStatus(grant, expectedStatus, now);
 
             assertThatPrivileges(
                     clusterConnection,
                     grant,
                     grant.getSpec().getDatabase(),
-                    Set.of(CONNECT)
-            );
+                    Set.of(CONNECT));
 
             // given: grant all privileges change
             var spec = grant.getSpec();
@@ -439,48 +443,37 @@ class GrantReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
             assertThatPrivileges(
                     clusterConnection,
                     grant,
                     grant.getSpec().getDatabase(),
-                    Set.copyOf(expectedPrivileges)
-            );
+                    Set.copyOf(expectedPrivileges));
 
             // given: grant privileges change
             spec.setPrivileges(List.of(CONNECT));
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
             assertThatPrivileges(
                     clusterConnection,
                     grant,
                     grant.getSpec().getDatabase(),
-                    Set.of(CONNECT)
-            );
+                    Set.of(CONNECT));
 
             // when: grant CR instance delete
             kubernetesClient.resources(Grant.class)
-                    .resource(grant)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(grant)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoPrivileges(
-                    clusterConnection,
-                    grant,
-                    grant.getSpec().getDatabase()
-            );
+            assertThatNoPrivileges(clusterConnection, grant,
+                    grant.getSpec().getDatabase());
         }
     }
 
@@ -497,10 +490,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             // To create a Schema in the new database, we need a ClusterConnection pointing to it
             var clusterConnectionDb = given.one()
@@ -509,27 +502,27 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(SCHEMA)
-                    .withPrivileges(USAGE)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(SCHEMA)
+                             .withPrivileges(USAGE)
+                             .returnFirst();
 
             // then
             var schemaName = Objects.requireNonNull(grant.getSpec().getSchema());
@@ -539,18 +532,13 @@ class GrantReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatGrantHasStatus(
-                    grant,
-                    expectedStatus,
-                    now
-            );
+            assertThatGrantHasStatus(grant, expectedStatus, now);
 
             assertThatPrivileges(
                     clusterConnectionDb,
                     grant,
                     Objects.requireNonNull(grant.getSpec().getSchema()),
-                    Set.of(USAGE)
-            );
+                    Set.of(USAGE));
 
             // given: grant all privileges change
             var spec = grant.getSpec();
@@ -560,48 +548,28 @@ class GrantReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    schemaName,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, schemaName, Set.copyOf(expectedPrivileges));
 
             // given: grant privileges change
             spec.setPrivileges(List.of(CREATE));
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    schemaName,
-                    Set.of(CREATE)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, schemaName, Set.of(CREATE));
 
             // when: grant CR instance delete
             kubernetesClient.resources(Grant.class)
-                    .resource(grant)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(grant)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    schemaName
-            );
+            assertThatNoPrivileges(clusterConnectionDb, grant, schemaName);
         }
     }
 
@@ -610,9 +578,7 @@ class GrantReconcilerTest {
         @ParameterizedTest
         @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on table")
-        void grantOnTable(
-                List<Privilege> allSupportedPrivileges
-        ) {
+        void grantOnTable(List<Privilege> allSupportedPrivileges) {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
 
@@ -621,10 +587,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -632,36 +598,35 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             var tableName = "test_table";
             createTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(TABLE)
-                    .withObjects(tableName)
-                    .withPrivileges(SELECT)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(TABLE)
+                             .withObjects(tableName)
+                             .withPrivileges(SELECT)
+                             .returnFirst();
 
             // then
             var expectedStatus = new CRStatus()
@@ -669,18 +634,9 @@ class GrantReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatGrantHasStatus(
-                    grant,
-                    expectedStatus,
-                    now
-            );
+            assertThatGrantHasStatus(grant, expectedStatus, now);
 
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName,
-                    Set.of(SELECT)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, tableName, Set.of(SELECT));
 
             // given: grant all privileges change
             var spec = grant.getSpec();
@@ -690,64 +646,41 @@ class GrantReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, tableName, Set.copyOf(expectedPrivileges));
 
             // given: grant privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName,
-                    Set.of(SELECT)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, tableName, Set.of(SELECT));
 
             // when: grant CR instance delete
             kubernetesClient.resources(Grant.class)
-                    .resource(grant)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(grant)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName
-            );
+            assertThatNoPrivileges(clusterConnectionDb, grant, tableName);
 
             // cleanup
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
         }
 
         @ParameterizedTest
         @MethodSource("provideAllSupportedPrivileges")
         @DisplayName("Should grant and revoke privileges on all tables")
-        void grantOnAllTables(
-                List<Privilege> allSupportedPrivileges
-        ) {
+        void grantOnAllTables(List<Privilege> allSupportedPrivileges) {
             // given
             var now = OffsetDateTime.now(ZoneOffset.UTC);
 
@@ -756,10 +689,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -767,16 +700,16 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             var tableName1 = "test_table_1";
             var tableName2 = "test_table_2";
@@ -784,26 +717,24 @@ class GrantReconcilerTest {
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName1
-            );
+                    tableName1);
             createTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName2
-            );
+                    tableName2);
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(TABLE)
-                    .withObjects(List.of())
-                    .withPrivileges(SELECT)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(TABLE)
+                             .withObjects(List.of())
+                             .withPrivileges(SELECT)
+                             .returnFirst();
 
             // then
             var expectedStatus = new CRStatus()
@@ -811,24 +742,10 @@ class GrantReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatGrantHasStatus(
-                    grant,
-                    expectedStatus,
-                    now
-            );
+            assertThatGrantHasStatus(grant, expectedStatus, now);
 
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName1,
-                    Set.of(SELECT)
-            );
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName2,
-                    Set.of(SELECT)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, tableName1, Set.of(SELECT));
+            assertThatPrivileges(clusterConnectionDb, grant, tableName2, Set.of(SELECT));
 
             // given: grant all privileges change
             var spec = grant.getSpec();
@@ -838,79 +755,43 @@ class GrantReconcilerTest {
             spec.setPrivileges(allSupportedPrivileges);
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName1,
-                    Set.copyOf(expectedPrivileges)
-            );
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName2,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, tableName1, Set.copyOf(expectedPrivileges));
+            assertThatPrivileges(clusterConnectionDb, grant, tableName2, Set.copyOf(expectedPrivileges));
 
             // given: grant privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName1,
-                    Set.of(SELECT)
-            );
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName2,
-                    Set.of(SELECT)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, tableName1, Set.of(SELECT));
+            assertThatPrivileges(clusterConnectionDb, grant, tableName2, Set.of(SELECT));
 
             // when: grant CR instance delete
             kubernetesClient.resources(Grant.class)
-                    .resource(grant)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(grant)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName1
-            );
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName2
-            );
+            assertThatNoPrivileges(clusterConnectionDb, grant, tableName1);
+            assertThatNoPrivileges(clusterConnectionDb, grant, tableName2);
 
             // cleanup
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName1
-            );
+                    tableName1);
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName2
-            );
+                    tableName2);
         }
 
         @Test
@@ -922,10 +803,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -933,16 +814,16 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             var tableName = "test_table";
             var missingTableName = "missing_table";
@@ -950,20 +831,19 @@ class GrantReconcilerTest {
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(TABLE)
-                    .withObjects(tableName, missingTableName)
-                    .withPrivileges(SELECT)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(TABLE)
+                             .withObjects(tableName, missingTableName)
+                             .withPrivileges(SELECT)
+                             .returnFirst();
 
             // then
             assertThat(grant)
@@ -973,30 +853,20 @@ class GrantReconcilerTest {
                         assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
                         assertThat(status.getMessage())
                                 .startsWith("Did not grant or revoke any privileges")
-                                .contains("[resource=%s/%s]".formatted(
-                                        grant.getMetadata().getNamespace(),
-                                        grant.getMetadata().getName()
-                                ))
-                                .endsWith("%n  • \"%s\".\"%s\"".formatted(
-                                        schema.getSpec().getName(),
-                                        missingTableName
-                                ))
+                                .contains(
+                                        "[resource=%s/%s]".formatted(grant.getMetadata().getNamespace(), grant.getMetadata().getName()))
+                                .endsWith("%n  • \"%s\".\"%s\"".formatted(schema.getSpec().getName(), missingTableName))
                                 .doesNotContain("\"%s\"".formatted(tableName));
                     });
 
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    tableName
-            );
+            assertThatNoPrivileges(clusterConnectionDb, grant, tableName);
 
             // cleanup
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
         }
 
         @Test
@@ -1008,10 +878,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -1019,43 +889,41 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             var tableName = "test_table";
             createTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
             changeTableOwner(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
                     tableName,
-                    role.getSpec().getName()
-            );
+                    role.getSpec().getName());
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(TABLE)
-                    .withObjects(tableName)
-                    .withPrivileges(SELECT)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(TABLE)
+                             .withObjects(tableName)
+                             .withPrivileges(SELECT)
+                             .returnFirst();
 
             // then
             assertThat(grant)
@@ -1065,14 +933,9 @@ class GrantReconcilerTest {
                         assertThat(status.getPhase()).isEqualTo(CRPhase.READY);
                         assertThat(status.getMessage())
                                 .startsWith("The role is the owner of the listed")
-                                .contains("[resource=%s/%s]".formatted(
-                                        grant.getMetadata().getNamespace(),
-                                        grant.getMetadata().getName()
-                                ))
-                                .endsWith("%n  • \"%s\".\"%s\"".formatted(
-                                        schema.getSpec().getName(),
-                                        tableName
-                                ));
+                                .contains(
+                                        "[resource=%s/%s]".formatted(grant.getMetadata().getNamespace(), grant.getMetadata().getName()))
+                                .endsWith("%n  • \"%s\".\"%s\"".formatted(schema.getSpec().getName(), tableName));
                     });
 
             // cleanup: the role cannot be dropped while it owns the table
@@ -1080,19 +943,16 @@ class GrantReconcilerTest {
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
         }
 
         static Stream<List<Privilege>> provideAllSupportedPrivileges() {
             int version = ConfigProvider.getConfig().getValue("test.postgresql-major-version", Integer.class);
 
-            return Stream.of(TABLE.privilegesSet().stream()
-                    .filter(privilege -> privilege.minimumPostgresVersion() == null
-                            || privilege.minimumPostgresVersion() <= version
-                    )
-                    .toList()
-            );
+            return Stream.of(TABLE.privilegesSet()
+                                  .stream()
+                                  .filter(privilege -> privilege.minimumPostgresVersion() == null || privilege.minimumPostgresVersion() <= version)
+                                  .toList());
         }
     }
 
@@ -1109,10 +969,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -1120,37 +980,36 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             var tableName = "test_sequence_table";
             createTableWithSerial(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
             var sequenceName = tableName + "_id_seq";
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(SEQUENCE)
-                    .withObjects(sequenceName)
-                    .withPrivileges(USAGE)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(SEQUENCE)
+                             .withObjects(sequenceName)
+                             .withPrivileges(USAGE)
+                             .returnFirst();
 
             // then
             var expectedStatus = new CRStatus()
@@ -1158,18 +1017,9 @@ class GrantReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatGrantHasStatus(
-                    grant,
-                    expectedStatus,
-                    now
-            );
+            assertThatGrantHasStatus(grant, expectedStatus, now);
 
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName,
-                    Set.of(USAGE)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName, Set.of(USAGE));
 
             // given: grant all privileges change
             var spec = grant.getSpec();
@@ -1179,56 +1029,35 @@ class GrantReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName, Set.copyOf(expectedPrivileges));
 
             // given: grant privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName,
-                    Set.of(SELECT)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName, Set.of(SELECT));
 
             // when: grant CR instance delete
             kubernetesClient.resources(Grant.class)
-                    .resource(grant)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(grant)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName
-            );
+            assertThatNoPrivileges(clusterConnectionDb, grant, sequenceName);
 
             // cleanup
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName
-            );
+                    tableName);
         }
 
         @Test
@@ -1242,10 +1071,10 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var database = given.one()
-                    .database()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                                .database()
+                                .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                                .withReclaimPolicy(DELETE)
+                                .returnFirst();
 
             var clusterConnectionDb = given.one()
                     .clusterConnection()
@@ -1253,16 +1082,16 @@ class GrantReconcilerTest {
                     .returnFirst();
 
             var schema = given.one()
-                    .schema()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst();
+                              .schema()
+                              .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                              .withDatabase(database.getSpec().getName())
+                              .withReclaimPolicy(DELETE)
+                              .returnFirst();
 
             var role = given.one()
-                    .role()
-                    .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
-                    .returnFirst();
+                            .role()
+                            .withClusterConnectionName(clusterConnectionMain.getMetadata().getName())
+                            .returnFirst();
 
             var tableName1 = "test_sequence_table_1";
             var tableName2 = "test_sequence_table_2";
@@ -1270,28 +1099,26 @@ class GrantReconcilerTest {
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName1
-            );
+                    tableName1);
             createTableWithSerial(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName2
-            );
+                    tableName2);
             var sequenceName1 = tableName1 + "_id_seq";
             var sequenceName2 = tableName2 + "_id_seq";
 
             // when
             var grant = given.one()
-                    .grant()
-                    .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
-                    .withDatabase(database.getSpec().getName())
-                    .withSchema(schema.getSpec().getName())
-                    .withRole(role.getSpec().getName())
-                    .withObjectType(SEQUENCE)
-                    .withObjects(List.of())
-                    .withPrivileges(USAGE)
-                    .returnFirst();
+                             .grant()
+                             .withClusterConnectionName(clusterConnectionDb.getMetadata().getName())
+                             .withDatabase(database.getSpec().getName())
+                             .withSchema(schema.getSpec().getName())
+                             .withRole(role.getSpec().getName())
+                             .withObjectType(SEQUENCE)
+                             .withObjects(List.of())
+                             .withPrivileges(USAGE)
+                             .returnFirst();
 
             // then
             var expectedStatus = new CRStatus()
@@ -1299,24 +1126,10 @@ class GrantReconcilerTest {
                     .updatePhase(CRPhase.READY)
                     .setObservedGeneration(1L);
 
-            assertThatGrantHasStatus(
-                    grant,
-                    expectedStatus,
-                    now
-            );
+            assertThatGrantHasStatus(grant, expectedStatus, now);
 
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName1,
-                    Set.of(USAGE)
-            );
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName2,
-                    Set.of(USAGE)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName1, Set.of(USAGE));
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName2, Set.of(USAGE));
 
             // given: grant all privileges change
             var spec = grant.getSpec();
@@ -1326,79 +1139,43 @@ class GrantReconcilerTest {
             spec.setPrivileges(expectedPrivileges);
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 1);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName1,
-                    Set.copyOf(expectedPrivileges)
-            );
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName2,
-                    Set.copyOf(expectedPrivileges)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName1, Set.copyOf(expectedPrivileges));
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName2, Set.copyOf(expectedPrivileges));
 
             // given: grant privileges change
             spec.setPrivileges(List.of(SELECT));
 
             // when
-            applyGrant(
-                    grant,
-                    g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2
-            );
+            applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= initialGeneration + 2);
 
             // then
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName1,
-                    Set.of(SELECT)
-            );
-            assertThatPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName2,
-                    Set.of(SELECT)
-            );
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName1, Set.of(SELECT));
+            assertThatPrivileges(clusterConnectionDb, grant, sequenceName2, Set.of(SELECT));
 
             // when: grant CR instance delete
             kubernetesClient.resources(Grant.class)
-                    .resource(grant)
-                    .withTimeout(5, TimeUnit.SECONDS)
-                    .delete();
+                            .resource(grant)
+                            .withTimeout(5, TimeUnit.SECONDS)
+                            .delete();
 
             // then
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName1
-            );
-            assertThatNoPrivileges(
-                    clusterConnectionDb,
-                    grant,
-                    sequenceName2
-            );
+            assertThatNoPrivileges(clusterConnectionDb, grant, sequenceName1);
+            assertThatNoPrivileges(clusterConnectionDb, grant, sequenceName2);
 
             // cleanup
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName1
-            );
+                    tableName1);
             deleteTable(
                     clusterConnectionDb,
                     database.getSpec().getName(),
                     schema.getSpec().getName(),
-                    tableName2
-            );
+                    tableName2);
         }
     }
 
@@ -1411,54 +1188,46 @@ class GrantReconcilerTest {
                 .returnFirst();
 
         var role = given.one()
-                .role()
-                .withClusterConnectionName(clusterConnection.getMetadata().getName())
-                .returnFirst();
+                        .role()
+                        .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                        .returnFirst();
 
         var database = given.one()
-                .database()
-                .withClusterConnectionName(clusterConnection.getMetadata().getName())
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                            .database()
+                            .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                            .withReclaimPolicy(DELETE)
+                            .returnFirst();
 
         var grant = given.one()
-                .grant()
-                .withClusterConnectionName(clusterConnection.getMetadata().getName())
-                .withDatabase(database.getSpec().getName())
-                .withRole(role.getSpec().getName())
-                .withObjectType(DATABASE)
-                .withPrivileges(CONNECT)
-                .returnFirst();
+                         .grant()
+                         .withClusterConnectionName(clusterConnection.getMetadata().getName())
+                         .withDatabase(database.getSpec().getName())
+                         .withRole(role.getSpec().getName())
+                         .withObjectType(DATABASE)
+                         .withPrivileges(CONNECT)
+                         .returnFirst();
 
         var clusterRef = grant.getSpec().getClusterRef();
 
         // and: the ClusterConnection is not available for a while
         clusterRef.setName("non-existing-cc");
 
-        var pendingGrant = applyGrant(
-                grant,
-                g -> g.getStatus().getObservedGeneration() >= 2L
-        );
+        var pendingGrant = applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= 2L);
 
         assertThat(pendingGrant.getStatus().getPhase()).isEqualTo(CRPhase.PENDING);
 
         // when: the ClusterConnection is available again
-        clusterRef.setName(clusterConnection.getMetadata().getName());
+        clusterRef.setName(clusterConnection.getMetadata()
+                .getName());
 
-        var updatedGrant = applyGrant(
-                grant,
-                g -> g.getStatus().getObservedGeneration() >= 3L
-        );
+        var updatedGrant = applyGrant(grant, g -> g.getStatus().getObservedGeneration() >= 3L);
 
         // then
         assertThat(updatedGrant.getStatus().getPhase()).isEqualTo(CRPhase.READY);
         assertThat(updatedGrant.getStatus().getMessage()).isNull();
     }
 
-    private Grant applyGrant(
-            Grant grant,
-            Predicate<Grant> condition
-    ) {
+    private Grant applyGrant(Grant grant, Predicate<Grant> condition) {
         var namespace = kubernetesClient.getNamespace();
 
         grant.getMetadata().setManagedFields(null);
@@ -1470,112 +1239,68 @@ class GrantReconcilerTest {
                 .serverSideApply();
 
         return kubernetesClient.resources(Grant.class)
-                .inNamespace(namespace)
-                .withName(applied.getMetadata().getName())
-                .waitUntilCondition(
-                        condition,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(applied.getMetadata().getName())
+                               .waitUntilCondition(condition, 5, TimeUnit.SECONDS);
     }
 
-    private static void assertThatGrantHasStatus(
-            Grant grant,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
+    private static void assertThatGrantHasStatus(Grant grant, CRStatus expectedStatus, OffsetDateTime now) {
         assertThat(grant)
                 .isNotNull()
                 .extracting(Grant::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isAfter(
-                            now
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
-                            now
-                    );
+                    assertThat(status.getLastProbeTime()).isAfter(now);
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(now);
                 })
                 .usingRecursiveComparison()
                 .ignoringFields("message", "lastProbeTime", "lastPhaseTransitionTime")
                 .isEqualTo(expectedStatus);
     }
 
-    private void createTable(
-            ClusterConnection clusterConnection,
-            String databaseName,
-            String schemaName,
-            String tableName
-    ) {
+    private void createTable(ClusterConnection clusterConnection, String databaseName, String schemaName,
+            String tableName) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.createTable(quotedName(schemaName, tableName))
-                    .column("id", SQLDataType.INTEGER)
-                    .execute();
+               .column("id", SQLDataType.INTEGER)
+               .execute();
         }
     }
 
-    private void createTableWithSerial(
-            ClusterConnection clusterConnection,
-            String databaseName,
-            String schemaName,
-            String tableName
-    ) {
+    private void createTableWithSerial(ClusterConnection clusterConnection, String databaseName, String schemaName,
+            String tableName) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.createTable(quotedName(schemaName, tableName))
-                    .column("id", SQLDataType.BIGINT.generatedByDefaultAsIdentity())
-                    .execute();
+               .column("id", SQLDataType.BIGINT.generatedByDefaultAsIdentity())
+               .execute();
         }
     }
 
-    private void changeTableOwner(
-            ClusterConnection clusterConnection,
-            String databaseName,
-            String schemaName,
-            String tableName,
-            String owner
-    ) {
+    private void changeTableOwner(ClusterConnection clusterConnection, String databaseName, String schemaName,
+            String tableName, String owner) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
-            dsl.execute(
-                    "alter table {0} owner to {1}",
-                    quotedName(schemaName, tableName),
-                    quotedName(owner)
-            );
+            dsl.execute("alter table {0} owner to {1}", quotedName(schemaName, tableName), quotedName(owner));
         }
     }
 
-    private void deleteTable(
-            ClusterConnection clusterConnection,
-            String databaseName,
-            String schemaName,
-            String tableName
-    ) {
+    private void deleteTable(ClusterConnection clusterConnection, String databaseName, String schemaName,
+            String tableName) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.dropTable(quotedName(schemaName, tableName)).execute();
         }
     }
 
-    private void assertThatPrivileges(
-            ClusterConnection clusterConnection,
-            Grant grant,
-            String objectName,
-            Set<Privilege> expectedPrivileges
-    ) {
+    private void assertThatPrivileges(ClusterConnection clusterConnection, Grant grant, String objectName,
+            Set<Privilege> expectedPrivileges) {
         var databaseName = grant.getSpec().getDatabase();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             var privileges = grantService.determineCurrentObjectPrivileges(dsl, grant.getSpec());
 
-            assertThat(privileges).containsEntry(
-                    objectName,
-                    expectedPrivileges
-            );
+            assertThat(privileges).containsEntry(objectName, expectedPrivileges);
         }
     }
 
-    private void assertThatNoPrivileges(
-            ClusterConnection clusterConnection,
-            Grant grant,
-            String objectName
-    ) {
+    private void assertThatNoPrivileges(ClusterConnection clusterConnection, Grant grant, String objectName) {
         var databaseName = grant.getSpec().getDatabase();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {

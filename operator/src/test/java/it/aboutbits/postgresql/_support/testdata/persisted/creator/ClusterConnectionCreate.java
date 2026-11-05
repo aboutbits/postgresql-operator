@@ -1,5 +1,9 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -13,10 +17,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 @Setter
 @Accessors(fluent = true, chain = true)
@@ -49,12 +49,8 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
     private @Nullable String withApplicationName;
 
-    public ClusterConnectionCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient,
-            Given.DBConnectionDetails dbConnectionDetails
-    ) {
+    public ClusterConnectionCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient,
+            Given.DBConnectionDetails dbConnectionDetails) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -88,8 +84,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
                 .withNamespace(namespace)
-                .build()
-        );
+                .build());
 
         var spec = new ClusterConnectionSpec();
 
@@ -105,23 +100,17 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         item.setSpec(spec);
 
         kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+                        .inNamespace(namespace)
+                        .resource(item)
+                        .serverSideApply();
 
         // Wait for the probe of the current generation: a re-apply with a new spec keeps the old status for a while,
         // and the dependent resources do not use the status of an older generation.
         //noinspection ConstantConditions
         return kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        clusterConnection -> clusterConnection != null
-                                && clusterConnection.getStatus() != null
-                                && clusterConnection.getStatus().getObservedGeneration() == clusterConnection.getMetadata().getGeneration(),
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(name)
+                               .waitUntilCondition(clusterConnection -> clusterConnection != null && clusterConnection.getStatus() != null && clusterConnection.getStatus().getObservedGeneration() == clusterConnection.getMetadata().getGeneration(), 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {
@@ -169,10 +158,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     }
 
     private String getDatabase() {
-        withDatabase = Objects.requireNonNullElse(
-                withDatabase,
-                "postgres"
-        );
+        withDatabase = Objects.requireNonNullElse(withDatabase, "postgres");
 
         return withDatabase;
     }
@@ -187,10 +173,10 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
         }
 
         return given.one()
-                .secretRef()
-                .withUsername(dbConnectionDetails.username())
-                .withPassword(dbConnectionDetails.password())
-                .returnFirst();
+                    .secretRef()
+                    .withUsername(dbConnectionDetails.username())
+                    .withPassword(dbConnectionDetails.password())
+                    .returnFirst();
     }
 
     private Map<String, String> getParameters() {

@@ -1,5 +1,9 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -14,10 +18,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 
@@ -54,11 +54,7 @@ public class GrantCreate extends TestDataCreator<Grant> {
     @Setter(AccessLevel.NONE)
     private List<Privilege> withPrivileges = new ArrayList<>();
 
-    public GrantCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public GrantCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -104,8 +100,7 @@ public class GrantCreate extends TestDataCreator<Grant> {
         item.setMetadata(new ObjectMetaBuilder()
                 .withName(name)
                 .withNamespace(namespace)
-                .build()
-        );
+                .build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
@@ -119,15 +114,11 @@ public class GrantCreate extends TestDataCreator<Grant> {
 
         spec.setObjectType(withObjectType);
 
-        if (withObjectType != GrantObjectType.DATABASE
-                || withSchema != null
-        ) {
+        if (withObjectType != GrantObjectType.DATABASE || withSchema != null) {
             spec.setSchema(getSchema());
         }
 
-        if ((withObjectType != GrantObjectType.DATABASE && withObjectType != GrantObjectType.SCHEMA)
-                || withObjects != null
-        ) {
+        if ((withObjectType != GrantObjectType.DATABASE && withObjectType != GrantObjectType.SCHEMA) || withObjects != null) {
             spec.setObjects(withObjects);
         }
 
@@ -136,19 +127,15 @@ public class GrantCreate extends TestDataCreator<Grant> {
         item.setSpec(spec);
 
         kubernetesClient.resources(Grant.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+                        .inNamespace(namespace)
+                        .resource(item)
+                        .serverSideApply();
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(Grant.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        grant -> grant != null && grant.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(name)
+                               .waitUntilCondition(grant -> grant != null && grant.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {
@@ -196,11 +183,11 @@ public class GrantCreate extends TestDataCreator<Grant> {
         }
 
         var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                        .database()
+                        .withClusterConnectionName(getClusterConnectionName())
+                        .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                        .withReclaimPolicy(DELETE)
+                        .returnFirst();
 
         withDatabase = item.getSpec().getName();
 
@@ -213,10 +200,10 @@ public class GrantCreate extends TestDataCreator<Grant> {
         }
 
         var item = given.one()
-                .role()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .returnFirst();
+                        .role()
+                        .withClusterConnectionName(getClusterConnectionName())
+                        .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                        .returnFirst();
 
         withRole = item.getSpec().getName();
 
@@ -231,22 +218,22 @@ public class GrantCreate extends TestDataCreator<Grant> {
         var database = getDatabase();
         if (database.isBlank()) {
             database = given.one()
-                    .database()
-                    .withClusterConnectionName(getClusterConnectionName())
-                    .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst()
-                    .getSpec()
-                    .getName();
+                            .database()
+                            .withClusterConnectionName(getClusterConnectionName())
+                            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                            .withReclaimPolicy(DELETE)
+                            .returnFirst()
+                            .getSpec()
+                            .getName();
         }
 
         var item = given.one()
-                .schema()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withDatabase(database)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+                        .schema()
+                        .withClusterConnectionName(getClusterConnectionName())
+                        .withClusterConnectionNamespace(withClusterConnectionNamespace)
+                        .withDatabase(database)
+                        .withReclaimPolicy(DELETE)
+                        .returnFirst();
 
         withSchema = item.getSpec().getName();
 

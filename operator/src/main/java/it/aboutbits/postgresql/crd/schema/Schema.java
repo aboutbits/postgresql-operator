@@ -14,32 +14,25 @@ import org.jspecify.annotations.NullMarked;
 @AdditionalPrinterColumn(
         name = "Name",
         jsonPath = ".status.name",
-        type = AdditionalPrinterColumn.Type.STRING
-)
+        type = AdditionalPrinterColumn.Type.STRING)
 @AdditionalPrinterColumn(
         name = "Phase",
         jsonPath = ".status.phase",
-        type = AdditionalPrinterColumn.Type.STRING
-)
+        type = AdditionalPrinterColumn.Type.STRING)
 @AdditionalPrinterColumn(
         name = "Message",
         jsonPath = ".status.message",
-        type = AdditionalPrinterColumn.Type.STRING
-)
+        type = AdditionalPrinterColumn.Type.STRING)
 @AdditionalPrinterColumn(
         name = "Since",
         jsonPath = ".status.lastPhaseTransitionTime",
-        type = AdditionalPrinterColumn.Type.DATE
-)
+        type = AdditionalPrinterColumn.Type.DATE)
 @AdditionalPrinterColumn(
         name = "Age",
         jsonPath = ".metadata.creationTimestamp",
-        type = AdditionalPrinterColumn.Type.DATE
-)
+        type = AdditionalPrinterColumn.Type.DATE)
 @NullMarked
-public class Schema
-        extends CustomResource<SchemaSpec, CRStatus>
-        implements Namespaced, Named {
+public class Schema extends CustomResource<SchemaSpec, CRStatus> implements Namespaced, Named {
     @Override
     public String getName() {
         return getSpec().getName();

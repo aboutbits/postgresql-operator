@@ -1,5 +1,8 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.generator.annotation.Required;
@@ -11,19 +14,14 @@ import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Getter
 @Setter
 @ValidationRule(
         value = "self.objectType == 'database' ? !has(self.schema) : (has(self.schema) && self.schema.trim().size() > 0)",
-        message = "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required."
-)
+        message = "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required.")
 @ValidationRule(
         value = "self.objectType in ['database', 'schema'] ? !has(self.objects) : has(self.objects)",
-        message = "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required."
-)
+        message = "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.")
 @NullMarked
 public class GrantSpec {
     @Required
@@ -31,39 +29,22 @@ public class GrantSpec {
 
     /// The database to grant privileges on for this role.
     @Required
-    @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Grant database is immutable. Changing it would require revoking permissions from the old database before granting them in the new one."
-    )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Grant database must not be empty."
-    )
+    @ValidationRule(value = "self == oldSelf", message = "The Grant database is immutable. Changing it would require revoking permissions from the old database before granting them in the new one.")
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Grant database must not be empty.")
     private String database = "";
 
     /// The name of the role to grant privileges on.
     @Required
-    @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Grant role is immutable. Changing it would require revoking permissions from the old role before granting them to the new one."
-    )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Grant role must not be empty."
-    )
+    @ValidationRule(value = "self == oldSelf", message = "The Grant role is immutable. Changing it would require revoking permissions from the old role before granting them to the new one.")
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Grant role must not be empty.")
     private String role = "";
 
-    /// The database schema to grant privileges on for this role (required except if objectType is "database")
+    /// The database schema to grant privileges on for this role (required
+    /// except if objectType is "database")
     @io.fabric8.generator.annotation.Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Grant schema is immutable. Changing it would require revoking permissions from the old schema before granting them to objects in the new schema."
-    )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Grant schema must not be empty."
-    )
+    @ValidationRule(value = "self == oldSelf", message = "The Grant schema is immutable. Changing it would require revoking permissions from the old schema before granting them to objects in the new schema.")
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Grant schema must not be empty.")
     private @Nullable String schema = null;
 
     /// The PostgreSQL object type to grant the privileges on.
@@ -75,10 +56,7 @@ public class GrantSpec {
     /// - `sequence`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
-    @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Grant objectType is immutable. Changing it would require revoking permissions and generating a completely different SQL statement."
-    )
+    @ValidationRule(value = "self == oldSelf", message = "The Grant objectType is immutable. Changing it would require revoking permissions and generating a completely different SQL statement.")
     private GrantObjectType objectType = GrantObjectType.DATABASE;
 
     /// The PostgreSQL objects to grant privileges on.
@@ -106,9 +84,6 @@ public class GrantSpec {
     /// - `maintain`
     @Required
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_VALUES)
-    @ValidationRule(
-            value = "self.size() > 0",
-            message = "The Grant privileges must not be empty. The Operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array."
-    )
+    @ValidationRule(value = "self.size() > 0", message = "The Grant privileges must not be empty. The Operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array.")
     private List<Privilege> privileges = new ArrayList<>();
 }

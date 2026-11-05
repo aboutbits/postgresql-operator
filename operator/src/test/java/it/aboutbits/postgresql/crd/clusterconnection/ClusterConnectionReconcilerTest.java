@@ -1,5 +1,14 @@
 package it.aboutbits.postgresql.crd.clusterconnection;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
@@ -20,15 +29,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -65,10 +65,10 @@ class ClusterConnectionReconcilerTest {
             fileRef.setPath("/mnt/secrets/db-credentials.json");
 
             assertThatThrownBy(() -> given.one()
-                    .clusterConnection()
-                    .withAdminSecretFileRef(fileRef)
-                    .returnFirst()
-            ).isInstanceOf(KubernetesClientException.class)
+                                          .clusterConnection()
+                                          .withAdminSecretFileRef(fileRef)
+                                          .returnFirst())
+                    .isInstanceOf(KubernetesClientException.class)
                     .hasMessageContaining("Exactly one of");
         }
 
@@ -76,10 +76,10 @@ class ClusterConnectionReconcilerTest {
         @DisplayName("when neither adminSecretRef nor adminSecretFileRef set, should reject")
         void whenNeitherSet_shouldReject() {
             assertThatThrownBy(() -> given.one()
-                    .clusterConnection()
-                    .withoutAdminSecret()
-                    .returnFirst()
-            ).isInstanceOf(KubernetesClientException.class)
+                                          .clusterConnection()
+                                          .withoutAdminSecret()
+                                          .returnFirst())
+                    .isInstanceOf(KubernetesClientException.class)
                     .hasMessageContaining("Exactly one of");
         }
 
@@ -90,12 +90,13 @@ class ClusterConnectionReconcilerTest {
             var fileRef = new FileRef();
             fileRef.setPath(blankOrEmptyString);
 
-            assertThatThrownBy(() -> given.one()
-                    .clusterConnection()
-                    .withoutAdminSecret()
-                    .withAdminSecretFileRef(fileRef)
-                    .returnFirst()
-            ).isInstanceOf(KubernetesClientException.class)
+            assertThatThrownBy(
+                            () -> given.one()
+                                       .clusterConnection()
+                                       .withoutAdminSecret()
+                                       .withAdminSecretFileRef(fileRef)
+                                       .returnFirst())
+                    .isInstanceOf(KubernetesClientException.class)
                     .hasMessageContaining("must not be empty");
         }
     }
@@ -111,9 +112,7 @@ class ClusterConnectionReconcilerTest {
 
         // then
         var dslAtomic = new AtomicReference<@Nullable DSLContext>();
-        assertThatNoException().isThrownBy(
-                () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
-        );
+        assertThatNoException().isThrownBy(() -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource)));
 
         var dsl = Objects.requireNonNull(dslAtomic.get());
 
@@ -122,11 +121,7 @@ class ClusterConnectionReconcilerTest {
         var expectedStatus = getInitialClusterConnectionStatus(customResource);
         expectedStatus.setMessage(version);
 
-        assertThatClusterConnectionHasExpectedStatus(
-                customResource,
-                expectedStatus,
-                OffsetDateTime.now(ZoneOffset.UTC)
-        );
+        assertThatClusterConnectionHasExpectedStatus(customResource, expectedStatus, OffsetDateTime.now(ZoneOffset.UTC));
     }
 
     @Test
@@ -135,15 +130,15 @@ class ClusterConnectionReconcilerTest {
         // given
         var credentialsFile = Files.createTempFile("db-credentials", ".json");
         try {
-            Files.writeString(
-                    credentialsFile,
+            Files.writeString(credentialsFile,
                     """
                     {"username": "%s", "password": "%s"}
-                    """.formatted(dbUsername, dbPassword)
-            );
+                    """
+                            .formatted(dbUsername, dbPassword));
 
             var fileRef = new FileRef();
-            fileRef.setPath(credentialsFile.toAbsolutePath().toString());
+            fileRef.setPath(credentialsFile.toAbsolutePath()
+                    .toString());
 
             // when
             var customResource = given.one()
@@ -155,9 +150,7 @@ class ClusterConnectionReconcilerTest {
 
             // then
             var dslAtomic = new AtomicReference<@Nullable DSLContext>();
-            assertThatNoException().isThrownBy(
-                    () -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource))
-            );
+            assertThatNoException().isThrownBy(() -> dslAtomic.set(postgreSQLContextFactory.getDSLContext(customResource)));
 
             var dsl = Objects.requireNonNull(dslAtomic.get());
 
@@ -166,11 +159,7 @@ class ClusterConnectionReconcilerTest {
             var expectedStatus = getInitialClusterConnectionStatus(customResource);
             expectedStatus.setMessage(version);
 
-            assertThatClusterConnectionHasExpectedStatus(
-                    customResource,
-                    expectedStatus,
-                    OffsetDateTime.now(ZoneOffset.UTC)
-            );
+            assertThatClusterConnectionHasExpectedStatus(customResource, expectedStatus, OffsetDateTime.now(ZoneOffset.UTC));
         } finally {
             Files.deleteIfExists(credentialsFile);
         }
@@ -193,7 +182,9 @@ class ClusterConnectionReconcilerTest {
 
         var erroredClusterConnection = applyClusterConnection(clusterConnection);
 
-        assertThat(erroredClusterConnection.getStatus().getPhase()).isEqualTo(CRPhase.ERROR);
+        assertThat(erroredClusterConnection.getStatus()
+                .getPhase())
+                .isEqualTo(CRPhase.ERROR);
 
         // when: the server is reachable again
         spec.setPort(port);
@@ -201,8 +192,12 @@ class ClusterConnectionReconcilerTest {
         var updatedClusterConnection = applyClusterConnection(clusterConnection);
 
         // then
-        assertThat(updatedClusterConnection.getStatus().getPhase()).isEqualTo(CRPhase.READY);
-        assertThat(updatedClusterConnection.getStatus().getMessage()).startsWith("PostgreSQL");
+        assertThat(updatedClusterConnection.getStatus()
+                .getPhase())
+                .isEqualTo(CRPhase.READY);
+        assertThat(updatedClusterConnection.getStatus()
+                .getMessage())
+                .startsWith("PostgreSQL");
     }
 
     private ClusterConnection applyClusterConnection(ClusterConnection clusterConnection) {
@@ -220,32 +215,18 @@ class ClusterConnectionReconcilerTest {
 
         //noinspection ConstantConditions
         return kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .withName(applied.getMetadata().getName())
-                .waitUntilCondition(
-                        c -> c.getStatus() != null && c.getStatus().getObservedGeneration() >= generation,
-                        5,
-                        TimeUnit.SECONDS
-                );
+                               .inNamespace(namespace)
+                               .withName(applied.getMetadata().getName())
+                               .waitUntilCondition(c -> c.getStatus() != null && c.getStatus().getObservedGeneration() >= generation, 5, TimeUnit.SECONDS);
     }
 
-    private static void assertThatClusterConnectionHasExpectedStatus(
-            ClusterConnection clusterConnection,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
+    private static void assertThatClusterConnectionHasExpectedStatus(ClusterConnection clusterConnection, CRStatus expectedStatus, OffsetDateTime now) {
         assertThat(clusterConnection)
                 .isNotNull()
                 .extracting(ClusterConnection::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isCloseTo(
-                            now,
-                            within(5, ChronoUnit.SECONDS)
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isCloseTo(
-                            now,
-                            within(5, ChronoUnit.SECONDS)
-                    );
+                    assertThat(status.getLastProbeTime()).isCloseTo(now, within(5, ChronoUnit.SECONDS));
+                    assertThat(status.getLastPhaseTransitionTime()).isCloseTo(now, within(5, ChronoUnit.SECONDS));
                 })
                 .usingRecursiveComparison()
                 .ignoringFields("lastProbeTime", "lastPhaseTransitionTime")
