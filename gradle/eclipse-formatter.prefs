@@ -1,0 +1,63 @@
+# Eclipse formatter settings for Spotless. A setting that is not in this file uses the Eclipse default.
+# Wrap policy values: 16 = wrap where necessary, 48 = one element per line, 80 = one element per line, but the first
+# element stays on the line of the call when it fits. Add 1 to force the wrap, also when the line is short enough.
+
+# Indent with 4 spaces, continuation indent 8 spaces, line limit 120 as in .editorconfig
+org.eclipse.jdt.core.formatter.tabulation.char=space
+org.eclipse.jdt.core.formatter.tabulation.size=4
+org.eclipse.jdt.core.formatter.indentation.size=4
+org.eclipse.jdt.core.formatter.continuation_indentation=2
+org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer=2
+org.eclipse.jdt.core.formatter.lineSplit=120
+
+# Keep the line breaks that the author made, the formatter only adds breaks
+org.eclipse.jdt.core.formatter.join_wrapped_lines=false
+
+# Wrap the inner expression first, so that a last argument (lambda or call) stays on the line of the outer call
+org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested=false
+
+# Leave comments as the author wrote them
+org.eclipse.jdt.core.formatter.comment.format_javadoc_comments=false
+org.eclipse.jdt.core.formatter.comment.format_markdown_comments=false
+org.eclipse.jdt.core.formatter.comment.format_block_comments=false
+org.eclipse.jdt.core.formatter.comment.format_line_comments=false
+org.eclipse.jdt.core.formatter.comment.format_header=false
+org.eclipse.jdt.core.formatter.comment.line_length=120
+
+# Call arguments: one per line, a single argument such as a lambda stays on the line of the call.
+# The parentheses stay where the author put them, as in `foo(bar -> baz(` or `log.info(` with `);` on its own line.
+org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation=80
+org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression=80
+org.eclipse.jdt.core.formatter.alignment_for_arguments_in_qualified_allocation_expression=80
+org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call=80
+org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant=80
+org.eclipse.jdt.core.formatter.parentheses_positions_in_method_invocation=preserve_positions
+org.eclipse.jdt.core.formatter.parentheses_positions_in_enum_constant_declaration=separate_lines_if_wrapped
+
+# Annotation arguments: wrap where necessary, the parentheses stay where the author put them
+org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation=16
+org.eclipse.jdt.core.formatter.parentheses_positions_in_annotation=preserve_positions
+
+# Method and constructor parameters: one per line, closing parenthesis on its own line
+org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration=48
+org.eclipse.jdt.core.formatter.alignment_for_parameters_in_constructor_declaration=48
+org.eclipse.jdt.core.formatter.parentheses_positions_in_method_delcaration=separate_lines_if_wrapped
+
+# A wrapped if or while condition keeps `) {` where the author put it
+org.eclipse.jdt.core.formatter.parentheses_positions_in_if_while_statement=preserve_positions
+
+# Records: 2 or more components are always one per line (48 + force 1), closing parenthesis on its own line
+org.eclipse.jdt.core.formatter.alignment_for_record_components=49
+org.eclipse.jdt.core.formatter.parentheses_positions_in_record_declaration=separate_lines_if_wrapped
+
+# Enum constants: always one per line (48 + force 1)
+org.eclipse.jdt.core.formatter.alignment_for_enum_constants=49
+
+# Type headers: wrap before `extends` and `implements` where necessary, and keep the author's breaks there
+org.eclipse.jdt.core.formatter.alignment_for_superclass_in_type_declaration=16
+org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_type_declaration=16
+org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_record_declaration=16
+org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_enum_declaration=16
+
+# Keep the indent of text blocks as the author wrote it (3 = preserve)
+org.eclipse.jdt.core.formatter.text_block_indentation=3
