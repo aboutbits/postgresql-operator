@@ -8,131 +8,113 @@ import it.aboutbits.postgresql.core.ReclaimPolicy;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.database.Database;
 import it.aboutbits.postgresql.crd.database.DatabaseSpec;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.concurrent.TimeUnit;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class DatabaseCreate extends TestDataCreator<Database> {
-    private final Given given;
+  private final Given given;
 
-    private final KubernetesClient kubernetesClient;
+  private final KubernetesClient kubernetesClient;
 
-    private @Nullable String withNamespace;
+  private @Nullable String withNamespace;
 
-    @Setter(AccessLevel.NONE)
-    private boolean withoutNamespace = false;
+  @Setter(AccessLevel.NONE)
+  private boolean withoutNamespace = false;
 
-    private @Nullable String withName;
+  private @Nullable String withName;
 
-    private @Nullable String withClusterConnectionName;
+  private @Nullable String withClusterConnectionName;
 
-    private @Nullable String withClusterConnectionNamespace;
+  private @Nullable String withClusterConnectionNamespace;
 
-    private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
+  private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
 
-    private @Nullable String withOwner;
+  private @Nullable String withOwner;
 
-    public DatabaseCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
-        super(numberOfItems);
-        this.given = given;
-        this.kubernetesClient = kubernetesClient;
+  public DatabaseCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
+    super(numberOfItems);
+    this.given = given;
+    this.kubernetesClient = kubernetesClient;
+  }
+
+  @SuppressWarnings("unused")
+  public DatabaseCreate withoutNamespace() {
+    withoutNamespace = true;
+    return this;
+  }
+
+  @Override
+  protected Database create(int index) {
+    var namespace = getNamespace();
+    var name = getName();
+
+    var item = new Database();
+
+    item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
+
+    var clusterRef = new ResourceRef();
+    clusterRef.setName(getClusterConnectionName());
+    clusterRef.setNamespace(withClusterConnectionNamespace);
+
+    var spec = new DatabaseSpec();
+
+    spec.setClusterRef(clusterRef);
+    spec.setName(name);
+    spec.setReclaimPolicy(withReclaimPolicy);
+    spec.setOwner(withOwner);
+
+    item.setSpec(spec);
+
+    kubernetesClient.resources(Database.class).inNamespace(namespace).resource(item).serverSideApply();
+
+    //noinspection ConstantConditions
+    return kubernetesClient
+        .resources(Database.class)
+        .inNamespace(namespace)
+        .withName(name)
+        .waitUntilCondition(db -> db != null && db.getStatus() != null, 5, TimeUnit.SECONDS);
+  }
+
+  private @Nullable String getNamespace() {
+    if (withoutNamespace) {
+      return null;
     }
 
-    @SuppressWarnings("unused")
-    public DatabaseCreate withoutNamespace() {
-        withoutNamespace = true;
-        return this;
+    if (withNamespace != null) {
+      return withNamespace;
     }
 
-    @Override
-    protected Database create(int index) {
-        var namespace = getNamespace();
-        var name = getName();
+    withNamespace = kubernetesClient.getNamespace();
 
-        var item = new Database();
+    return withNamespace;
+  }
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
-
-        var clusterRef = new ResourceRef();
-        clusterRef.setName(getClusterConnectionName());
-        clusterRef.setNamespace(withClusterConnectionNamespace);
-
-        var spec = new DatabaseSpec();
-
-        spec.setClusterRef(clusterRef);
-        spec.setName(name);
-        spec.setReclaimPolicy(withReclaimPolicy);
-        spec.setOwner(withOwner);
-
-        item.setSpec(spec);
-
-        kubernetesClient.resources(Database.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
-        //noinspection ConstantConditions
-        return kubernetesClient.resources(Database.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        db -> db != null && db.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+  private String getName() {
+    if (withName != null) {
+      return withName;
     }
 
-    private @Nullable String getNamespace() {
-        if (withoutNamespace) {
-            return null;
-        }
+    withName = randomKubernetesNameSuffix("test-database");
 
-        if (withNamespace != null) {
-            return withNamespace;
-        }
+    return withName;
+  }
 
-        withNamespace = kubernetesClient.getNamespace();
-
-        return withNamespace;
+  private String getClusterConnectionName() {
+    if (withClusterConnectionName != null) {
+      return withClusterConnectionName;
     }
 
-    private String getName() {
-        if (withName != null) {
-            return withName;
-        }
+    var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
 
-        withName = randomKubernetesNameSuffix("test-database");
+    withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
-        return withName;
-    }
-
-    private String getClusterConnectionName() {
-        if (withClusterConnectionName != null) {
-            return withClusterConnectionName;
-        }
-
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
-
-        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
-
-        return clusterConnection.getMetadata().getName();
-    }
+    return clusterConnection.getMetadata().getName();
+  }
 }

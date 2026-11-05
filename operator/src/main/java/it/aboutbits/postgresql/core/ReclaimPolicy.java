@@ -7,13 +7,13 @@ import org.jspecify.annotations.NullMarked;
 @RequiredArgsConstructor
 @NullMarked
 public enum ReclaimPolicy {
-    RETAIN("Retain"),
-    DELETE("Delete");
+  RETAIN("Retain"),
+  DELETE("Delete");
 
-    private final String policy;
+  private final String policy;
 
-    @JsonValue
-    public String toValue() {
-        return policy;
-    }
+  @JsonValue
+  public String toValue() {
+    return policy;
+  }
 }

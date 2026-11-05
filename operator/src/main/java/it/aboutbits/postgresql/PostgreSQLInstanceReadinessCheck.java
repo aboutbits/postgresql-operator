@@ -10,54 +10,41 @@ import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 import org.jspecify.annotations.NullMarked;
 
-/// MicroProfile readiness health check that verifies connectivity to all configured PostgreSQL instances.
-/// Each instance is probed with a lightweight operation, and the aggregated status is exposed.
+/// MicroProfile readiness health check that verifies connectivity to all configured PostgreSQL instances. Each instance
+/// is probed with a lightweight operation, and the aggregated status is exposed.
 @Readiness
 @RequiredArgsConstructor
 @NullMarked
 public class PostgreSQLInstanceReadinessCheck implements HealthCheck {
-    private final PostgreSQLContextFactory postgreSQLContextFactory;
+  private final PostgreSQLContextFactory postgreSQLContextFactory;
 
-    private final KubernetesClient kubernetesClient;
+  private final KubernetesClient kubernetesClient;
 
-    @Override
-    public HealthCheckResponse call() {
-        var builder = HealthCheckResponse.builder().name("PostgreSQL Instances");
+  @Override
+  public HealthCheckResponse call() {
+    var builder = HealthCheckResponse.builder().name("PostgreSQL Instances");
 
-        var connections = kubernetesClient.resources(ClusterConnection.class).list().getItems();
+    var connections = kubernetesClient.resources(ClusterConnection.class).list().getItems();
 
-        boolean allUp = connections.stream()
-                .map(connection -> checkInstance(
-                        connection,
-                        builder
-                ))
-                .reduce(true, Boolean::logicalAnd);
+    boolean allUp =
+        connections.stream().map(connection -> checkInstance(connection, builder)).reduce(true, Boolean::logicalAnd);
 
-        return builder.status(allUp).build();
+    return builder.status(allUp).build();
+  }
+
+  private boolean checkInstance(ClusterConnection clusterConnection, HealthCheckResponseBuilder builder) {
+    var name = clusterConnection.getMetadata().getName();
+
+    try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection)) {
+      var version = dsl.fetchSingle("select version()").into(String.class);
+
+      builder.withData(name, "UP (%s)".formatted(version));
+
+      return true;
+    } catch (RuntimeException _) {
+      builder.withData(name, "DOWN");
+
+      return false;
     }
-
-    private boolean checkInstance(
-            ClusterConnection clusterConnection,
-            HealthCheckResponseBuilder builder
-    ) {
-        var name = clusterConnection.getMetadata().getName();
-
-        try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection)) {
-            var version = dsl.fetchSingle("select version()").into(String.class);
-
-            builder.withData(
-                    name,
-                    "UP (%s)".formatted(version)
-            );
-
-            return true;
-        } catch (RuntimeException _) {
-            builder.withData(
-                    name,
-                    "DOWN"
-            );
-
-            return false;
-        }
-    }
+  }
 }

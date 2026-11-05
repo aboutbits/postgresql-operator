@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql.crd.grant;
 
+import static org.jooq.impl.DSL.quotedName;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
@@ -11,11 +13,6 @@ import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.Privilege;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,406 +21,290 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.jooq.impl.DSL.quotedName;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
+import org.jspecify.annotations.NullMarked;
 
 @Slf4j
 @RequiredArgsConstructor
 @NullMarked
-public class GrantReconciler
-        extends BaseReconciler<Grant, CRStatus>
-        implements Reconciler<Grant>, Cleaner<Grant> {
-    private final GrantService grantService;
+public class GrantReconciler extends BaseReconciler<Grant, CRStatus> implements Reconciler<Grant>, Cleaner<Grant> {
+  private final GrantService grantService;
 
-    private final KubernetesClient kubernetesClient;
-    private final PostgreSQLContextFactory contextFactory;
+  private final KubernetesClient kubernetesClient;
+  private final PostgreSQLContextFactory contextFactory;
 
-    @Override
-    public UpdateControl<Grant> reconcile(
-            Grant resource,
-            Context<Grant> context
-    ) {
-        var spec = resource.getSpec();
-        var status = initializeStatus(resource);
+  @Override
+  public UpdateControl<Grant> reconcile(Grant resource, Context<Grant> context) {
+    var spec = resource.getSpec();
+    var status = initializeStatus(resource);
 
-        var namespace = resource.getMetadata().getNamespace();
-        var name = resource.getMetadata().getName();
+    var namespace = resource.getMetadata().getNamespace();
+    var name = resource.getMetadata().getName();
 
-        log.info(
-                "Reconciling Grant [resource={}/{}, status.phase={}]",
-                namespace,
-                name,
-                status.getPhase()
-        );
+    log.info("Reconciling Grant [resource={}/{}, status.phase={}]", namespace, name, status.getPhase());
 
-        var clusterRef = spec.getClusterRef();
+    var clusterRef = spec.getClusterRef();
 
-        var clusterConnectionOptional = getReferencedClusterConnection(
-                kubernetesClient,
-                resource,
-                clusterRef
-        );
+    var clusterConnectionOptional = getReferencedClusterConnection(kubernetesClient, resource, clusterRef);
 
-        var objectType = spec.getObjectType();
-        var grantPrivileges = Set.copyOf(spec.getPrivileges());
-        var allowedPrivilegesForObjectType = objectType.privilegesSet();
+    var objectType = spec.getObjectType();
+    var grantPrivileges = Set.copyOf(spec.getPrivileges());
+    var allowedPrivilegesForObjectType = objectType.privilegesSet();
 
-        if (!allowedPrivilegesForObjectType.containsAll(grantPrivileges)) {
-            var invalid = new HashSet<>(grantPrivileges);
+    if (!allowedPrivilegesForObjectType.containsAll(grantPrivileges)) {
+      var invalid = new HashSet<>(grantPrivileges);
 
-            invalid.removeAll(allowedPrivilegesForObjectType);
+      invalid.removeAll(allowedPrivilegesForObjectType);
 
-            setErrorPhase(
-                    resource,
-                    status,
-                    "Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
-                            namespace,
-                            name,
-                            objectType,
-                            invalid,
-                            objectType.privileges()
-                    )
-            );
+      setErrorPhase(
+          resource,
+          status,
+          "Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]"
+              .formatted(namespace, name, objectType, invalid, objectType.privileges()));
 
-            return UpdateControl.patchStatus(resource);
-        }
-
-        if (clusterConnectionOptional.isEmpty()) {
-            status.updatePhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName()
-                    ));
-
-            return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(Duration.ofSeconds(60));
-        }
-
-        var database = spec.getDatabase();
-        var clusterConnection = clusterConnectionOptional.get();
-
-        UpdateControl<Grant> updateControl;
-
-        try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
-            // Run everything in a single transaction
-            updateControl = dsl.transactionResult(
-                    cfg -> reconcileInTransaction(
-                            cfg.dsl(),
-                            resource,
-                            status
-                    )
-            );
-        } catch (RuntimeException e) {
-            return handleError(
-                    resource,
-                    status,
-                    e
-            );
-        }
-
-        return updateControl;
+      return UpdateControl.patchStatus(resource);
     }
 
-    @Override
-    public DeleteControl cleanup(
-            Grant resource,
-            Context<Grant> context
-    ) {
-        var spec = resource.getSpec();
-        var status = initializeStatus(resource);
+    if (clusterConnectionOptional.isEmpty()) {
+      status
+          .updatePhase(CRPhase.PENDING)
+          .setMessage(
+              "The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]"
+                  .formatted(getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()), clusterRef.getName()));
 
-        var namespace = resource.getMetadata().getNamespace();
-        var name = resource.getMetadata().getName();
-
-        log.info(
-                "Deleting Grant [resource={}/{}, status.phase={}]",
-                namespace,
-                name,
-                status.getPhase()
-        );
-
-        if (status.getPhase() != CRPhase.DELETING) {
-            status.updatePhase(CRPhase.DELETING)
-                    .setMessage("Grant deletion in progress");
-
-            context.getClient().resource(resource).patchStatus();
-
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofMillis(100));
-        }
-
-        var clusterRef = spec.getClusterRef();
-
-        var clusterConnectionOptional = getReferencedClusterConnection(
-                kubernetesClient,
-                resource,
-                clusterRef
-        );
-
-        if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
-                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                    clusterRef.getName()
-            ));
-
-            context.getClient().resource(resource).patchStatus();
-
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofSeconds(60));
-        }
-
-        var database = spec.getDatabase();
-        var clusterConnection = clusterConnectionOptional.get();
-
-        try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
-            dsl.transaction(cfg -> {
-                var tx = cfg.dsl();
-
-                var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, spec);
-
-                for (var objectPrivileges : currentObjectPrivileges.entrySet()) {
-                    var object = objectPrivileges.getKey();
-                    var privileges = objectPrivileges.getValue();
-
-                    grantService.revoke(
-                            tx,
-                            spec,
-                            object,
-                            privileges
-                    );
-                }
-            });
-
-            return DeleteControl.defaultDelete();
-        } catch (RuntimeException e) {
-            log.error(
-                    "Failed to delete Grant [resource={}/{}, status.phase={}]",
-                    namespace,
-                    name,
-                    status.getPhase(),
-                    e
-            );
-
-            status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
-
-            context.getClient().resource(resource).patchStatus();
-
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofSeconds(60));
-        }
+      return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
     }
 
-    @Override
-    protected CRStatus newStatus() {
-        return new CRStatus();
+    var database = spec.getDatabase();
+    var clusterConnection = clusterConnectionOptional.get();
+
+    UpdateControl<Grant> updateControl;
+
+    try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
+      // Run everything in a single transaction
+      updateControl = dsl.transactionResult(cfg -> reconcileInTransaction(cfg.dsl(), resource, status));
+    } catch (RuntimeException e) {
+      return handleError(resource, status, e);
     }
 
-    @SuppressWarnings("java:S3776")
-    private UpdateControl<Grant> reconcileInTransaction(
-            DSLContext tx,
-            Grant resource,
-            CRStatus status
-    ) {
-        var namespace = resource.getMetadata().getNamespace();
-        var name = resource.getMetadata().getName();
+    return updateControl;
+  }
 
-        var spec = resource.getSpec();
+  @Override
+  public DeleteControl cleanup(Grant resource, Context<Grant> context) {
+    var spec = resource.getSpec();
+    var status = initializeStatus(resource);
 
-        var schema = spec.getSchema();
-        var objectType = spec.getObjectType();
+    var namespace = resource.getMetadata().getNamespace();
+    var name = resource.getMetadata().getName();
 
-        var expectedObjects = Set.copyOf(
-                Objects.requireNonNullElse(
-                        spec.getObjects(),
-                        Collections.emptySet()
-                )
-        );
-        var isAllMode = expectedObjects.isEmpty();
+    log.info("Deleting Grant [resource={}/{}, status.phase={}]", namespace, name, status.getPhase());
 
-        var expectedPrivileges = Set.copyOf(spec.getPrivileges());
+    if (status.getPhase() != CRPhase.DELETING) {
+      status.updatePhase(CRPhase.DELETING).setMessage("Grant deletion in progress");
 
-        int databaseMajorVersion = tx.connectionResult(connection ->
-                connection.getMetaData().getDatabaseMajorVersion()
-        );
+      context.getClient().resource(resource).patchStatus();
 
-        var unsupportedPrivileges = expectedPrivileges.stream()
-                .filter(privilege -> privilege.minimumPostgresVersion() != null
-                        && databaseMajorVersion < privilege.minimumPostgresVersion()
-                )
-                .collect(Collectors.toMap(
-                        Function.identity(),
-                        Privilege::minimumPostgresVersion
-                ));
+      return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofMillis(100));
+    }
 
-        if (!unsupportedPrivileges.isEmpty()) {
-            setErrorPhase(
-                    resource,
-                    status,
-                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
-                            databaseMajorVersion,
-                            unsupportedPrivileges,
-                            namespace,
-                            name
-                    )
-            );
+    var clusterRef = spec.getClusterRef();
 
-            return UpdateControl.patchStatus(resource);
-        }
+    var clusterConnectionOptional = getReferencedClusterConnection(kubernetesClient, resource, clusterRef);
+
+    if (clusterConnectionOptional.isEmpty()) {
+      status.setMessage(
+          "The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]"
+              .formatted(getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()), clusterRef.getName()));
+
+      context.getClient().resource(resource).patchStatus();
+
+      return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofSeconds(60));
+    }
+
+    var database = spec.getDatabase();
+    var clusterConnection = clusterConnectionOptional.get();
+
+    try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
+      dsl.transaction(cfg -> {
+        var tx = cfg.dsl();
 
         var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, spec);
-        var ownershipMap = grantService.determineObjectExistenceAndOwnership(tx, spec);
 
-        // Classify objects in a single pass
-        var missingObjects = new ArrayList<String>();
-        var ownedObjects = new ArrayList<String>();
-        var processObjects = new ArrayList<String>();
+        for (var objectPrivileges : currentObjectPrivileges.entrySet()) {
+          var object = objectPrivileges.getKey();
+          var privileges = objectPrivileges.getValue();
 
-        ownershipMap.forEach((object, isOwned) -> {
-            var qualifiedObject = tx.render(quotedName(schema, object));
-
-            if (isOwned == null) {
-                missingObjects.add(qualifiedObject);
-            } else if (isOwned) {
-                ownedObjects.add(qualifiedObject);
-            } else {
-                processObjects.add(object);
-            }
-        });
-
-        if (!missingObjects.isEmpty()) {
-            setErrorPhase(
-                    resource,
-                    status,
-                    "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n  • %s".formatted(
-                            objectType,
-                            namespace,
-                            name,
-                            String.join("\n  • ", missingObjects)
-                    )
-            );
-
-            return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(Duration.ofSeconds(60));
+          grantService.revoke(tx, spec, object, privileges);
         }
+      });
 
-        // Whether any grant or revoke statement changes a privilege, only used for the log
-        var updated = false;
+      return DeleteControl.defaultDelete();
+    } catch (RuntimeException e) {
+      log.error("Failed to delete Grant [resource={}/{}, status.phase={}]", namespace, name, status.getPhase(), e);
 
-        // 1. Reconcile objects explicitly listed in the Spec (processObjects).
-        // We know these are NOT owned (filtered above) and ARE in the spec.
-        for (var object : processObjects) {
-            var currentPrivileges = currentObjectPrivileges.getOrDefault(object, Set.of());
+      status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
 
-            // Calculate Revokes: Current - Expected
-            var privilegesToRevoke = new HashSet<>(currentPrivileges);
-            privilegesToRevoke.removeAll(expectedPrivileges);
+      context.getClient().resource(resource).patchStatus();
 
-            if (!privilegesToRevoke.isEmpty()) {
-                grantService.revoke(
-                        tx,
-                        spec,
-                        object,
-                        privilegesToRevoke
-                );
-
-                updated = true;
-            }
-
-            // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
-            // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't allow specifying objects there
-            if (!isAllMode
-                    || objectType == GrantObjectType.DATABASE
-                    || objectType == GrantObjectType.SCHEMA
-            ) {
-                // Calculate Grants: Expected - Current
-                var privilegesToGrant = new HashSet<>(expectedPrivileges);
-                privilegesToGrant.removeAll(currentPrivileges);
-
-                if (!privilegesToGrant.isEmpty()) {
-                    grantService.grant(
-                            tx,
-                            spec,
-                            object,
-                            privilegesToGrant
-                    );
-
-                    updated = true;
-                }
-            }
-        }
-
-        // 2. Bulk grant ("ALL" mode only)
-        if (isAllMode) {
-            var executed = grantService.grantOnAll(
-                    tx,
-                    spec,
-                    expectedPrivileges
-            );
-
-            // The bulk grant changes something only if a non-owned object misses an expected privilege
-            if (executed) {
-                updated |= processObjects.stream()
-                        .anyMatch(object -> !currentObjectPrivileges.getOrDefault(object, Set.of())
-                                .containsAll(expectedPrivileges)
-                        );
-            }
-        }
-
-        // 2. Revoke orphaned object privileges (Objects with privileges but not in Spec)
-        // We iterate current privileges and skip those we just processed.
-        // Any object currently having privileges but not listed in 'expectedObjects' is an orphan.
-        // Objects in 'expectedObjects' were either processed in Step 1 or skipped as 'owned'.
-        for (var entry : currentObjectPrivileges.entrySet()) {
-            var object = entry.getKey();
-
-            // If the role owns the object, we can skip it:
-            // - In "Explicit" mode: ownershipMap contains exactly the spec objects.
-            // - In "ALL" mode: ownershipMap contains ALL objects.
-            // Therefore, if it's in ownershipMap, it is NOT an orphan so we should not revoke anything
-            if (ownershipMap.containsKey(object)) {
-                continue;
-            }
-
-            var privilegesToRevoke = entry.getValue();
-            if (!privilegesToRevoke.isEmpty()) {
-                grantService.revoke(
-                        tx,
-                        spec,
-                        object,
-                        privilegesToRevoke
-                );
-
-                updated = true;
-            }
-        }
-
-        if (updated) {
-            log.info(
-                    "Updating Grant [resource={}/{}]",
-                    namespace,
-                    name
-            );
-        } else {
-            log.info(
-                    "Grant up-to-date [resource={}/{}]",
-                    namespace,
-                    name
-            );
-        }
-
-        String message = null;
-        if (!ownedObjects.isEmpty()) {
-            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s".formatted(
-                    objectType,
-                    namespace,
-                    name,
-                    String.join("\n  • ", ownedObjects)
-            );
-        }
-
-        status.updatePhase(CRPhase.READY)
-                .setMessage(message);
-
-        return UpdateControl.patchStatus(resource);
+      return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofSeconds(60));
     }
+  }
+
+  @Override
+  protected CRStatus newStatus() {
+    return new CRStatus();
+  }
+
+  @SuppressWarnings("java:S3776")
+  private UpdateControl<Grant> reconcileInTransaction(DSLContext tx, Grant resource, CRStatus status) {
+    var namespace = resource.getMetadata().getNamespace();
+    var name = resource.getMetadata().getName();
+
+    var spec = resource.getSpec();
+
+    var schema = spec.getSchema();
+    var objectType = spec.getObjectType();
+
+    var expectedObjects = Set.copyOf(Objects.requireNonNullElse(spec.getObjects(), Collections.emptySet()));
+    var isAllMode = expectedObjects.isEmpty();
+
+    var expectedPrivileges = Set.copyOf(spec.getPrivileges());
+
+    int databaseMajorVersion = tx.connectionResult(connection -> connection.getMetaData().getDatabaseMajorVersion());
+
+    var unsupportedPrivileges =
+        expectedPrivileges.stream()
+            .filter(privilege ->
+                privilege.minimumPostgresVersion() != null && databaseMajorVersion < privilege.minimumPostgresVersion())
+            .collect(Collectors.toMap(Function.identity(), Privilege::minimumPostgresVersion));
+
+    if (!unsupportedPrivileges.isEmpty()) {
+      setErrorPhase(
+          resource,
+          status,
+          "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]"
+              .formatted(databaseMajorVersion, unsupportedPrivileges, namespace, name));
+
+      return UpdateControl.patchStatus(resource);
+    }
+
+    var currentObjectPrivileges = grantService.determineCurrentObjectPrivileges(tx, spec);
+    var ownershipMap = grantService.determineObjectExistenceAndOwnership(tx, spec);
+
+    // Classify objects in a single pass
+    var missingObjects = new ArrayList<String>();
+    var ownedObjects = new ArrayList<String>();
+    var processObjects = new ArrayList<String>();
+
+    ownershipMap.forEach((object, isOwned) -> {
+      var qualifiedObject = tx.render(quotedName(schema, object));
+
+      if (isOwned == null) {
+        missingObjects.add(qualifiedObject);
+      } else if (isOwned) {
+        ownedObjects.add(qualifiedObject);
+      } else {
+        processObjects.add(object);
+      }
+    });
+
+    if (!missingObjects.isEmpty()) {
+      setErrorPhase(
+          resource,
+          status,
+          "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n  • %s"
+              .formatted(objectType, namespace, name, String.join("\n  • ", missingObjects)));
+
+      return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
+    }
+
+    // Whether any grant or revoke statement changes a privilege, only used for the log
+    var updated = false;
+
+    // 1. Reconcile objects explicitly listed in the Spec (processObjects).
+    // We know these are NOT owned (filtered above) and ARE in the spec.
+    for (var object : processObjects) {
+      var currentPrivileges = currentObjectPrivileges.getOrDefault(object, Set.of());
+
+      // Calculate Revokes: Current - Expected
+      var privilegesToRevoke = new HashSet<>(currentPrivileges);
+      privilegesToRevoke.removeAll(expectedPrivileges);
+
+      if (!privilegesToRevoke.isEmpty()) {
+        grantService.revoke(tx, spec, object, privilegesToRevoke);
+
+        updated = true;
+      }
+
+      // If we are not in the "ALL" mode, e.g. objects is an empty List, do explicit grants
+      // We need to exclude objectType's DATABASE and SCHEMA as the CRD doesn't allow specifying objects there
+      if (!isAllMode || objectType == GrantObjectType.DATABASE || objectType == GrantObjectType.SCHEMA) {
+        // Calculate Grants: Expected - Current
+        var privilegesToGrant = new HashSet<>(expectedPrivileges);
+        privilegesToGrant.removeAll(currentPrivileges);
+
+        if (!privilegesToGrant.isEmpty()) {
+          grantService.grant(tx, spec, object, privilegesToGrant);
+
+          updated = true;
+        }
+      }
+    }
+
+    // 2. Bulk grant ("ALL" mode only)
+    if (isAllMode) {
+      var executed = grantService.grantOnAll(tx, spec, expectedPrivileges);
+
+      // The bulk grant changes something only if a non-owned object misses an expected privilege
+      if (executed) {
+        updated |=
+            processObjects.stream()
+                .anyMatch(
+                    object -> !currentObjectPrivileges.getOrDefault(object, Set.of()).containsAll(expectedPrivileges));
+      }
+    }
+
+    // 2. Revoke orphaned object privileges (Objects with privileges but not in Spec)
+    // We iterate current privileges and skip those we just processed.
+    // Any object currently having privileges but not listed in 'expectedObjects' is an orphan.
+    // Objects in 'expectedObjects' were either processed in Step 1 or skipped as 'owned'.
+    for (var entry : currentObjectPrivileges.entrySet()) {
+      var object = entry.getKey();
+
+      // If the role owns the object, we can skip it:
+      // - In "Explicit" mode: ownershipMap contains exactly the spec objects.
+      // - In "ALL" mode: ownershipMap contains ALL objects.
+      // Therefore, if it's in ownershipMap, it is NOT an orphan so we should not revoke anything
+      if (ownershipMap.containsKey(object)) {
+        continue;
+      }
+
+      var privilegesToRevoke = entry.getValue();
+      if (!privilegesToRevoke.isEmpty()) {
+        grantService.revoke(tx, spec, object, privilegesToRevoke);
+
+        updated = true;
+      }
+    }
+
+    if (updated) {
+      log.info("Updating Grant [resource={}/{}]", namespace, name);
+    } else {
+      log.info("Grant up-to-date [resource={}/{}]", namespace, name);
+    }
+
+    String message = null;
+    if (!ownedObjects.isEmpty()) {
+      message =
+          "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s"
+              .formatted(objectType, namespace, name, String.join("\n  • ", ownedObjects));
+    }
+
+    status.updatePhase(CRPhase.READY).setMessage(message);
+
+    return UpdateControl.patchStatus(resource);
+  }
 }

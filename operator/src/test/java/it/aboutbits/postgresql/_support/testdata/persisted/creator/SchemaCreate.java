@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -8,156 +10,139 @@ import it.aboutbits.postgresql.core.ReclaimPolicy;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.schema.Schema;
 import it.aboutbits.postgresql.crd.schema.SchemaSpec;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.concurrent.TimeUnit;
-
-import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class SchemaCreate extends TestDataCreator<Schema> {
-    private final Given given;
+  private final Given given;
 
-    private final KubernetesClient kubernetesClient;
+  private final KubernetesClient kubernetesClient;
 
-    private @Nullable String withNamespace;
+  private @Nullable String withNamespace;
 
-    @Setter(AccessLevel.NONE)
-    private boolean withoutNamespace = false;
+  @Setter(AccessLevel.NONE)
+  private boolean withoutNamespace = false;
 
-    private @Nullable String withName;
+  private @Nullable String withName;
 
-    private @Nullable String withClusterConnectionName;
+  private @Nullable String withClusterConnectionName;
 
-    private @Nullable String withClusterConnectionNamespace;
+  private @Nullable String withClusterConnectionNamespace;
 
-    private @Nullable String withDatabase;
+  private @Nullable String withDatabase;
 
-    private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
+  private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
 
-    private @Nullable String withOwner;
+  private @Nullable String withOwner;
 
-    public SchemaCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
-        super(numberOfItems);
-        this.given = given;
-        this.kubernetesClient = kubernetesClient;
+  public SchemaCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
+    super(numberOfItems);
+    this.given = given;
+    this.kubernetesClient = kubernetesClient;
+  }
+
+  @SuppressWarnings("unused")
+  public SchemaCreate withoutNamespace() {
+    withoutNamespace = true;
+    return this;
+  }
+
+  @Override
+  protected Schema create(int index) {
+    var namespace = getNamespace();
+    var name = getName();
+
+    var item = new Schema();
+
+    item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
+
+    // We have to create the database first which also modifies the specified withClusterConnectionName so the
+    // connection points to the newly created DB
+    var database = getDatabase();
+
+    var clusterRef = new ResourceRef();
+    clusterRef.setName(getClusterConnectionName());
+    clusterRef.setNamespace(withClusterConnectionNamespace);
+
+    var spec = new SchemaSpec();
+
+    spec.setClusterRef(clusterRef);
+    spec.setDatabase(database);
+    spec.setName(name);
+    spec.setReclaimPolicy(withReclaimPolicy);
+    spec.setOwner(withOwner);
+
+    item.setSpec(spec);
+
+    kubernetesClient.resources(Schema.class).inNamespace(namespace).resource(item).serverSideApply();
+
+    //noinspection ConstantConditions
+    return kubernetesClient
+        .resources(Schema.class)
+        .inNamespace(namespace)
+        .withName(name)
+        .waitUntilCondition(db -> db != null && db.getStatus() != null, 5, TimeUnit.SECONDS);
+  }
+
+  private @Nullable String getNamespace() {
+    if (withoutNamespace) {
+      return null;
     }
 
-    @SuppressWarnings("unused")
-    public SchemaCreate withoutNamespace() {
-        withoutNamespace = true;
-        return this;
+    if (withNamespace != null) {
+      return withNamespace;
     }
 
-    @Override
-    protected Schema create(int index) {
-        var namespace = getNamespace();
-        var name = getName();
+    withNamespace = kubernetesClient.getNamespace();
 
-        var item = new Schema();
+    return withNamespace;
+  }
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
-
-        // We have to create the database first which also modifies the specified withClusterConnectionName so the connection points to the newly created DB
-        var database = getDatabase();
-
-        var clusterRef = new ResourceRef();
-        clusterRef.setName(getClusterConnectionName());
-        clusterRef.setNamespace(withClusterConnectionNamespace);
-
-        var spec = new SchemaSpec();
-
-        spec.setClusterRef(clusterRef);
-        spec.setDatabase(database);
-        spec.setName(name);
-        spec.setReclaimPolicy(withReclaimPolicy);
-        spec.setOwner(withOwner);
-
-        item.setSpec(spec);
-
-        kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
-        //noinspection ConstantConditions
-        return kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        db -> db != null && db.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+  private String getName() {
+    if (withName != null) {
+      return withName;
     }
 
-    private @Nullable String getNamespace() {
-        if (withoutNamespace) {
-            return null;
-        }
+    withName = randomKubernetesNameSuffix("test-schema");
 
-        if (withNamespace != null) {
-            return withNamespace;
-        }
+    return withName;
+  }
 
-        withNamespace = kubernetesClient.getNamespace();
-
-        return withNamespace;
+  private String getClusterConnectionName() {
+    if (withClusterConnectionName != null) {
+      return withClusterConnectionName;
     }
 
-    private String getName() {
-        if (withName != null) {
-            return withName;
-        }
+    var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
 
-        withName = randomKubernetesNameSuffix("test-schema");
+    withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
-        return withName;
+    return clusterConnection.getMetadata().getName();
+  }
+
+  private String getDatabase() {
+    if (withDatabase != null) {
+      return withDatabase;
     }
 
-    private String getClusterConnectionName() {
-        if (withClusterConnectionName != null) {
-            return withClusterConnectionName;
-        }
+    var item =
+        given
+            .one()
+            .database()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+    withDatabase = item.getSpec().getName();
 
-        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
-
-        return clusterConnection.getMetadata().getName();
-    }
-
-    private String getDatabase() {
-        if (withDatabase != null) {
-            return withDatabase;
-        }
-
-        var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
-
-        withDatabase = item.getSpec().getName();
-
-        return withDatabase;
-    }
+    return withDatabase;
+  }
 }

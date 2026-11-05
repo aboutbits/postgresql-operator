@@ -5,6 +5,6 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public interface Named {
-    @JsonIgnore
-    String getName();
+  @JsonIgnore
+  String getName();
 }

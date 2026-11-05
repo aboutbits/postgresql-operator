@@ -1,51 +1,43 @@
 package it.aboutbits.postgresql.core;
 
+import static org.jooq.impl.DSL.sql;
+
+import java.util.List;
 import org.jooq.QueryPart;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.List;
-
-import static org.jooq.impl.DSL.sql;
-
 @NullMarked
 public final class SQLUtil {
-    public static QueryPart concatenateQueryPartsWithSpaces(List<? extends QueryPart> parts) {
-        return concatenateQueryParts(parts, " ");
+  public static QueryPart concatenateQueryPartsWithSpaces(List<? extends QueryPart> parts) {
+    return concatenateQueryParts(parts, " ");
+  }
+
+  public static QueryPart concatenateQueryPartsWithComma(List<? extends QueryPart> parts) {
+    return concatenateQueryParts(parts, ", ");
+  }
+
+  /// Concatenate [QueryPart]s with the requested separator
+  private static QueryPart concatenateQueryParts(List<? extends QueryPart> items, String separator) {
+    var size = items.size();
+
+    if (items.isEmpty()) {
+      return sql("");
+    } else if (size == 1) {
+      return items.getFirst();
     }
 
-    public static QueryPart concatenateQueryPartsWithComma(List<? extends QueryPart> parts) {
-        return concatenateQueryParts(parts, ", ");
+    var template = new StringBuilder();
+
+    // Add the first item without a separator
+    template.append('{').append(0).append('}');
+
+    // Add the rest of the items with the leading separator
+    for (int i = 1; i < size; i++) {
+      template.append(separator).append('{').append(i).append('}');
     }
 
-    /// Concatenate [QueryPart]s with the requested separator
-    private static QueryPart concatenateQueryParts(
-            List<? extends QueryPart> items,
-            String separator
-    ) {
-        var size = items.size();
+    return sql(template.toString(), items.toArray(QueryPart[]::new));
+  }
 
-        if (items.isEmpty()) {
-            return sql("");
-        } else if (size == 1) {
-            return items.getFirst();
-        }
-
-        var template = new StringBuilder();
-
-        // Add the first item without a separator
-        template.append('{').append(0).append('}');
-
-        // Add the rest of the items with the leading separator
-        for (int i = 1; i < size; i++) {
-            template.append(separator).append('{').append(i).append('}');
-        }
-
-        return sql(
-                template.toString(),
-                items.toArray(QueryPart[]::new)
-        );
-    }
-
-    private SQLUtil() {
-    }
+  private SQLUtil() {}
 }

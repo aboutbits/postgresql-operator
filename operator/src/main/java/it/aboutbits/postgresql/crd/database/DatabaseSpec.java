@@ -13,27 +13,21 @@ import org.jspecify.annotations.Nullable;
 @Setter
 @NullMarked
 public class DatabaseSpec {
-    @Required
-    private ResourceRef clusterRef = new ResourceRef();
+  @Required private ResourceRef clusterRef = new ResourceRef();
 
-    @Required
-    @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Database name is immutable. Allowing to rename the Database name using 'alter database <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
-    )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Database name must not be empty."
-    )
-    private String name = "";
+  @Required
+  @ValidationRule(
+      value = "self == oldSelf",
+      message =
+          "The Database name is immutable. Allowing to rename the Database name using 'alter database <old_name> rename to <new_name>' would add unwanted side-effects to the Operator.")
+  @ValidationRule(value = "self.trim().size() > 0", message = "The Database name must not be empty.")
+  private String name = "";
 
-    /// Whether the database should be retained or deleted when the [Database] CR instance is deleted.
-    @io.fabric8.generator.annotation.Nullable
-    private ReclaimPolicy reclaimPolicy = ReclaimPolicy.RETAIN;
+  /// Whether the database should be retained or deleted when the [Database] CR instance is deleted.
+  @io.fabric8.generator.annotation.Nullable private ReclaimPolicy reclaimPolicy = ReclaimPolicy.RETAIN;
 
-    /// The owner of the database.
-    /// If not specified, the database will be owned by the logged-in admin user specified in the clusterRef -> ClusterConnection#adminSecretRef CR instance.
-    /// If removed later, the database keeps its current owner.
-    @io.fabric8.generator.annotation.Nullable
-    private @Nullable String owner = null;
+  /// The owner of the database. If not specified, the database will be owned by the logged-in admin user specified in
+  /// the clusterRef -> ClusterConnection#adminSecretRef CR instance. If removed later, the database keeps its current
+  /// owner.
+  @io.fabric8.generator.annotation.Nullable private @Nullable String owner = null;
 }

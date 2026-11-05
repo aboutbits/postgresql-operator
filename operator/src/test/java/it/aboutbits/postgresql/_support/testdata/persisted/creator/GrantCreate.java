@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -9,247 +11,232 @@ import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.grant.Grant;
 import it.aboutbits.postgresql.crd.grant.GrantObjectType;
 import it.aboutbits.postgresql.crd.grant.GrantSpec;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class GrantCreate extends TestDataCreator<Grant> {
-    private final Given given;
+  private final Given given;
 
-    private final KubernetesClient kubernetesClient;
+  private final KubernetesClient kubernetesClient;
 
-    private @Nullable String withNamespace;
+  private @Nullable String withNamespace;
 
-    @Setter(AccessLevel.NONE)
-    private boolean withoutNamespace = false;
+  @Setter(AccessLevel.NONE)
+  private boolean withoutNamespace = false;
 
-    private @Nullable String withName;
+  private @Nullable String withName;
 
-    private @Nullable String withClusterConnectionName;
+  private @Nullable String withClusterConnectionName;
 
-    private @Nullable String withClusterConnectionNamespace;
+  private @Nullable String withClusterConnectionNamespace;
 
-    private @Nullable String withDatabase;
+  private @Nullable String withDatabase;
 
-    private @Nullable String withRole;
+  private @Nullable String withRole;
 
-    private @Nullable String withSchema;
+  private @Nullable String withSchema;
 
-    private GrantObjectType withObjectType = GrantObjectType.DATABASE;
+  private GrantObjectType withObjectType = GrantObjectType.DATABASE;
 
-    @Setter(AccessLevel.NONE)
-    private @Nullable List<String> withObjects = null;
+  @Setter(AccessLevel.NONE)
+  private @Nullable List<String> withObjects = null;
 
-    @Setter(AccessLevel.NONE)
-    private List<Privilege> withPrivileges = new ArrayList<>();
+  @Setter(AccessLevel.NONE)
+  private List<Privilege> withPrivileges = new ArrayList<>();
 
-    public GrantCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
-        super(numberOfItems);
-        this.given = given;
-        this.kubernetesClient = kubernetesClient;
+  public GrantCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
+    super(numberOfItems);
+    this.given = given;
+    this.kubernetesClient = kubernetesClient;
+  }
+
+  @SuppressWarnings("unused")
+  public GrantCreate withObjects(List<String> objects) {
+    this.withObjects = objects;
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public GrantCreate withObjects(String... objects) {
+    this.withObjects = List.of(objects);
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public GrantCreate withPrivileges(List<Privilege> privileges) {
+    this.withPrivileges = privileges;
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public GrantCreate withPrivileges(Privilege... privileges) {
+    this.withPrivileges = List.of(privileges);
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public GrantCreate withoutNamespace() {
+    withoutNamespace = true;
+    return this;
+  }
+
+  @Override
+  protected Grant create(int index) {
+    var namespace = getNamespace();
+    var name = getName();
+
+    var item = new Grant();
+
+    item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
+
+    var clusterRef = new ResourceRef();
+    clusterRef.setName(getClusterConnectionName());
+    clusterRef.setNamespace(withClusterConnectionNamespace);
+
+    var spec = new GrantSpec();
+
+    spec.setClusterRef(clusterRef);
+    spec.setDatabase(getDatabase());
+    spec.setRole(getRole());
+
+    spec.setObjectType(withObjectType);
+
+    if (withObjectType != GrantObjectType.DATABASE || withSchema != null) {
+      spec.setSchema(getSchema());
     }
 
-    @SuppressWarnings("unused")
-    public GrantCreate withObjects(List<String> objects) {
-        this.withObjects = objects;
-        return this;
+    if ((withObjectType != GrantObjectType.DATABASE && withObjectType != GrantObjectType.SCHEMA)
+        || withObjects != null) {
+      spec.setObjects(withObjects);
     }
 
-    @SuppressWarnings("unused")
-    public GrantCreate withObjects(String... objects) {
-        this.withObjects = List.of(objects);
-        return this;
+    spec.setPrivileges(withPrivileges);
+
+    item.setSpec(spec);
+
+    kubernetesClient.resources(Grant.class).inNamespace(namespace).resource(item).serverSideApply();
+
+    //noinspection ConstantConditions
+    return kubernetesClient
+        .resources(Grant.class)
+        .inNamespace(namespace)
+        .withName(name)
+        .waitUntilCondition(grant -> grant != null && grant.getStatus() != null, 5, TimeUnit.SECONDS);
+  }
+
+  private @Nullable String getNamespace() {
+    if (withoutNamespace) {
+      return null;
     }
 
-    @SuppressWarnings("unused")
-    public GrantCreate withPrivileges(List<Privilege> privileges) {
-        this.withPrivileges = privileges;
-        return this;
+    if (withNamespace != null) {
+      return withNamespace;
     }
 
-    @SuppressWarnings("unused")
-    public GrantCreate withPrivileges(Privilege... privileges) {
-        this.withPrivileges = List.of(privileges);
-        return this;
+    withNamespace = kubernetesClient.getNamespace();
+
+    return withNamespace;
+  }
+
+  private String getName() {
+    if (withName != null) {
+      return withName;
     }
 
-    @SuppressWarnings("unused")
-    public GrantCreate withoutNamespace() {
-        withoutNamespace = true;
-        return this;
+    withName = randomKubernetesNameSuffix("test-grant");
+
+    return withName;
+  }
+
+  private String getClusterConnectionName() {
+    if (withClusterConnectionName != null) {
+      return withClusterConnectionName;
     }
 
-    @Override
-    protected Grant create(int index) {
-        var namespace = getNamespace();
-        var name = getName();
+    var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
 
-        var item = new Grant();
+    withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
+    return clusterConnection.getMetadata().getName();
+  }
 
-        var clusterRef = new ResourceRef();
-        clusterRef.setName(getClusterConnectionName());
-        clusterRef.setNamespace(withClusterConnectionNamespace);
-
-        var spec = new GrantSpec();
-
-        spec.setClusterRef(clusterRef);
-        spec.setDatabase(getDatabase());
-        spec.setRole(getRole());
-
-        spec.setObjectType(withObjectType);
-
-        if (withObjectType != GrantObjectType.DATABASE
-                || withSchema != null
-        ) {
-            spec.setSchema(getSchema());
-        }
-
-        if ((withObjectType != GrantObjectType.DATABASE && withObjectType != GrantObjectType.SCHEMA)
-                || withObjects != null
-        ) {
-            spec.setObjects(withObjects);
-        }
-
-        spec.setPrivileges(withPrivileges);
-
-        item.setSpec(spec);
-
-        kubernetesClient.resources(Grant.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
-        //noinspection ConstantConditions
-        return kubernetesClient.resources(Grant.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        grant -> grant != null && grant.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+  private String getDatabase() {
+    if (withDatabase != null) {
+      return withDatabase;
     }
 
-    private @Nullable String getNamespace() {
-        if (withoutNamespace) {
-            return null;
-        }
+    var item =
+        given
+            .one()
+            .database()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
-        if (withNamespace != null) {
-            return withNamespace;
-        }
+    withDatabase = item.getSpec().getName();
 
-        withNamespace = kubernetesClient.getNamespace();
+    return withDatabase;
+  }
 
-        return withNamespace;
+  private String getRole() {
+    if (withRole != null) {
+      return withRole;
     }
 
-    private String getName() {
-        if (withName != null) {
-            return withName;
-        }
+    var item =
+        given
+            .one()
+            .role()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .returnFirst();
 
-        withName = randomKubernetesNameSuffix("test-grant");
+    withRole = item.getSpec().getName();
 
-        return withName;
+    return withRole;
+  }
+
+  private String getSchema() {
+    if (withSchema != null) {
+      return withSchema;
     }
 
-    private String getClusterConnectionName() {
-        if (withClusterConnectionName != null) {
-            return withClusterConnectionName;
-        }
-
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
-
-        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
-
-        return clusterConnection.getMetadata().getName();
+    var database = getDatabase();
+    if (database.isBlank()) {
+      database =
+          given
+              .one()
+              .database()
+              .withClusterConnectionName(getClusterConnectionName())
+              .withClusterConnectionNamespace(withClusterConnectionNamespace)
+              .withReclaimPolicy(DELETE)
+              .returnFirst()
+              .getSpec()
+              .getName();
     }
 
-    private String getDatabase() {
-        if (withDatabase != null) {
-            return withDatabase;
-        }
+    var item =
+        given
+            .one()
+            .schema()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withDatabase(database)
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
-        var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+    withSchema = item.getSpec().getName();
 
-        withDatabase = item.getSpec().getName();
-
-        return withDatabase;
-    }
-
-    private String getRole() {
-        if (withRole != null) {
-            return withRole;
-        }
-
-        var item = given.one()
-                .role()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .returnFirst();
-
-        withRole = item.getSpec().getName();
-
-        return withRole;
-    }
-
-    private String getSchema() {
-        if (withSchema != null) {
-            return withSchema;
-        }
-
-        var database = getDatabase();
-        if (database.isBlank()) {
-            database = given.one()
-                    .database()
-                    .withClusterConnectionName(getClusterConnectionName())
-                    .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                    .withReclaimPolicy(DELETE)
-                    .returnFirst()
-                    .getSpec()
-                    .getName();
-        }
-
-        var item = given.one()
-                .schema()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withDatabase(database)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
-
-        withSchema = item.getSpec().getName();
-
-        return withSchema;
-    }
+    return withSchema;
+  }
 }

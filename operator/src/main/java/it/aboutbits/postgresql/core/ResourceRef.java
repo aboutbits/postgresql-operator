@@ -16,11 +16,10 @@ import org.jspecify.annotations.Nullable;
 ///
 /// ### Namespace resolution
 ///
-/// The [#namespace] field is **nullable**. When it is `null` (or omitted
-/// in the CR manifest), the operator resolves the target resource in the
-/// **same namespace as the CR that contains the reference**. This convention
-/// keeps single-namespace deployments simple — users only need to set
-/// `namespace` when referring to a resource in a *different* namespace.
+/// The [#namespace] field is **nullable**. When it is `null` (or omitted in the CR manifest), the operator resolves the
+/// target resource in the **same namespace as the CR that contains the reference**. This convention keeps
+/// single-namespace deployments simple — users only need to set `namespace` when referring to a resource in a
+/// *different* namespace.
 ///
 /// | `namespace` value | Resolved namespace                                  |
 /// |-------------------|-----------------------------------------------------|
@@ -31,17 +30,14 @@ import org.jspecify.annotations.Nullable;
 @SchemaCustomizer(KubernetesNameCustomizer.class)
 @NullMarked
 public class ResourceRef {
-    /// The namespace of the referenced Kubernetes resource.
-    /// If `null`, defaults to the namespace of the CR that defines this reference.
-    @io.fabric8.generator.annotation.Nullable
-    @Max(63)
-    private @Nullable String namespace;
+  /// The namespace of the referenced Kubernetes resource. If `null`, defaults to the namespace of the CR that defines
+  /// this reference.
+  @io.fabric8.generator.annotation.Nullable
+  @Max(63)
+  private @Nullable String namespace;
 
-    @Required
-    @Max(63)
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The name must not be empty."
-    )
-    private String name = "";
+  @Required
+  @Max(63)
+  @ValidationRule(value = "self.trim().size() > 0", message = "The name must not be empty.")
+  private String name = "";
 }

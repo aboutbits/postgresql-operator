@@ -8,161 +8,141 @@ import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.concurrent.TimeUnit;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class RoleCreate extends TestDataCreator<Role> {
-    private final Given given;
+  private final Given given;
 
-    private final KubernetesClient kubernetesClient;
+  private final KubernetesClient kubernetesClient;
 
-    private @Nullable String withNamespace;
+  private @Nullable String withNamespace;
 
-    @Setter(AccessLevel.NONE)
-    private boolean withoutNamespace = false;
+  @Setter(AccessLevel.NONE)
+  private boolean withoutNamespace = false;
 
-    private @Nullable String withName;
+  private @Nullable String withName;
 
-    private @Nullable String withComment;
+  private @Nullable String withComment;
 
-    private @Nullable String withClusterConnectionName;
+  private @Nullable String withClusterConnectionName;
 
-    private @Nullable String withClusterConnectionNamespace;
+  private @Nullable String withClusterConnectionNamespace;
 
-    private @Nullable ResourceRef withPasswordSecretRef;
+  private @Nullable ResourceRef withPasswordSecretRef;
 
-    private RoleSpec.@Nullable Flags withFlags;
+  private RoleSpec.@Nullable Flags withFlags;
 
-    private @Nullable PasswordEncryption withPasswordEncryption;
+  private @Nullable PasswordEncryption withPasswordEncryption;
 
-    public RoleCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
-        super(numberOfItems);
-        this.given = given;
-        this.kubernetesClient = kubernetesClient;
+  public RoleCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
+    super(numberOfItems);
+    this.given = given;
+    this.kubernetesClient = kubernetesClient;
+  }
+
+  @SuppressWarnings("unused")
+  public RoleCreate withLogin(boolean login) {
+    if (!login) {
+      withPasswordSecretRef = null;
+      return this;
     }
 
-    @SuppressWarnings("unused")
-    public RoleCreate withLogin(boolean login) {
-        if (!login) {
-            withPasswordSecretRef = null;
-            return this;
-        }
-
-        if (withPasswordSecretRef != null) {
-            return this;
-        }
-
-        withPasswordSecretRef = given.one()
-                .secretRef()
-                .returnFirst();
-
-        return this;
+    if (withPasswordSecretRef != null) {
+      return this;
     }
 
-    @SuppressWarnings("unused")
-    public RoleCreate withoutNamespace() {
-        withoutNamespace = true;
-        return this;
+    withPasswordSecretRef = given.one().secretRef().returnFirst();
+
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public RoleCreate withoutNamespace() {
+    withoutNamespace = true;
+    return this;
+  }
+
+  @Override
+  protected Role create(int index) {
+    var namespace = getNamespace();
+    var name = getName();
+
+    var item = new Role();
+
+    item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
+
+    var clusterRef = new ResourceRef();
+    clusterRef.setName(getClusterConnectionName());
+    clusterRef.setNamespace(withClusterConnectionNamespace);
+
+    var spec = new RoleSpec();
+
+    spec.setClusterRef(clusterRef);
+    spec.setName(name);
+    spec.setComment(withComment);
+    spec.setPasswordSecretRef(withPasswordSecretRef);
+
+    if (withFlags != null) {
+      spec.setFlags(withFlags);
     }
 
-    @Override
-    protected Role create(int index) {
-        var namespace = getNamespace();
-        var name = getName();
-
-        var item = new Role();
-
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
-
-        var clusterRef = new ResourceRef();
-        clusterRef.setName(getClusterConnectionName());
-        clusterRef.setNamespace(withClusterConnectionNamespace);
-
-        var spec = new RoleSpec();
-
-        spec.setClusterRef(clusterRef);
-        spec.setName(name);
-        spec.setComment(withComment);
-        spec.setPasswordSecretRef(withPasswordSecretRef);
-
-        if (withFlags != null) {
-            spec.setFlags(withFlags);
-        }
-
-        if (withPasswordEncryption != null) {
-            spec.setPasswordEncryption(withPasswordEncryption);
-        }
-
-        item.setSpec(spec);
-
-        kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
-        //noinspection ConstantConditions
-        return kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        role -> role != null && role.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+    if (withPasswordEncryption != null) {
+      spec.setPasswordEncryption(withPasswordEncryption);
     }
 
-    private @Nullable String getNamespace() {
-        if (withoutNamespace) {
-            return null;
-        }
+    item.setSpec(spec);
 
-        if (withNamespace != null) {
-            return withNamespace;
-        }
+    kubernetesClient.resources(Role.class).inNamespace(namespace).resource(item).serverSideApply();
 
-        withNamespace = kubernetesClient.getNamespace();
+    //noinspection ConstantConditions
+    return kubernetesClient
+        .resources(Role.class)
+        .inNamespace(namespace)
+        .withName(name)
+        .waitUntilCondition(role -> role != null && role.getStatus() != null, 5, TimeUnit.SECONDS);
+  }
 
-        return withNamespace;
+  private @Nullable String getNamespace() {
+    if (withoutNamespace) {
+      return null;
     }
 
-    private String getName() {
-        if (withName != null) {
-            return withName;
-        }
-
-        withName = randomKubernetesNameSuffix("test-role");
-
-        return withName;
+    if (withNamespace != null) {
+      return withNamespace;
     }
 
-    private String getClusterConnectionName() {
-        if (withClusterConnectionName != null) {
-            return withClusterConnectionName;
-        }
+    withNamespace = kubernetesClient.getNamespace();
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+    return withNamespace;
+  }
 
-        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
-
-        return clusterConnection.getMetadata().getName();
+  private String getName() {
+    if (withName != null) {
+      return withName;
     }
+
+    withName = randomKubernetesNameSuffix("test-role");
+
+    return withName;
+  }
+
+  private String getClusterConnectionName() {
+    if (withClusterConnectionName != null) {
+      return withClusterConnectionName;
+    }
+
+    var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
+
+    withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
+
+    return clusterConnection.getMetadata().getName();
+  }
 }

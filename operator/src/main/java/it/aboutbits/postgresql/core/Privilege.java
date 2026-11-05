@@ -1,6 +1,7 @@
 package it.aboutbits.postgresql.core;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Locale;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -8,37 +9,33 @@ import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Locale;
-
 /// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
 @NullMarked
 public enum Privilege {
-    SELECT(null),
-    INSERT(null),
-    UPDATE(null),
-    DELETE(null),
-    TRUNCATE(null),
-    REFERENCES(null),
-    TRIGGER(null),
-    CREATE(null),
-    CONNECT(null),
-    TEMPORARY(null),
-    USAGE(null),
-    MAINTAIN(17);
+  SELECT(null),
+  INSERT(null),
+  UPDATE(null),
+  DELETE(null),
+  TRUNCATE(null),
+  REFERENCES(null),
+  TRIGGER(null),
+  CREATE(null),
+  CONNECT(null),
+  TEMPORARY(null),
+  USAGE(null),
+  MAINTAIN(17);
 
-    private final @Nullable Integer minimumPostgresVersion;
+  private final @Nullable Integer minimumPostgresVersion;
 
-    @JsonValue
-    public String toValue() {
-        return name().toLowerCase(Locale.ROOT);
-    }
+  @JsonValue
+  public String toValue() {
+    return name().toLowerCase(Locale.ROOT);
+  }
 
-    public org.jooq.Privilege privilege() {
-        return DSL.privilege(
-                name().toLowerCase(Locale.ROOT)
-        );
-    }
+  public org.jooq.Privilege privilege() {
+    return DSL.privilege(name().toLowerCase(Locale.ROOT));
+  }
 }

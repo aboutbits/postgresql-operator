@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -9,233 +11,220 @@ import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilege;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeSpec;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
-    private final Given given;
+  private final Given given;
 
-    private final KubernetesClient kubernetesClient;
+  private final KubernetesClient kubernetesClient;
 
-    private @Nullable String withNamespace;
+  private @Nullable String withNamespace;
 
-    @Setter(AccessLevel.NONE)
-    private boolean withoutNamespace = false;
+  @Setter(AccessLevel.NONE)
+  private boolean withoutNamespace = false;
 
-    private @Nullable String withName;
+  private @Nullable String withName;
 
-    private @Nullable String withClusterConnectionName;
+  private @Nullable String withClusterConnectionName;
 
-    private @Nullable String withClusterConnectionNamespace;
+  private @Nullable String withClusterConnectionNamespace;
 
-    private @Nullable String withDatabase;
+  private @Nullable String withDatabase;
 
-    private @Nullable String withRole;
+  private @Nullable String withRole;
 
-    private @Nullable String withOwner;
+  private @Nullable String withOwner;
 
-    private @Nullable String withSchema;
+  private @Nullable String withSchema;
 
-    private DefaultPrivilegeObjectType withObjectType = DefaultPrivilegeObjectType.SCHEMA;
+  private DefaultPrivilegeObjectType withObjectType = DefaultPrivilegeObjectType.SCHEMA;
 
-    @Setter(AccessLevel.NONE)
-    private List<Privilege> withPrivileges = new ArrayList<>();
+  @Setter(AccessLevel.NONE)
+  private List<Privilege> withPrivileges = new ArrayList<>();
 
-    public DefaultPrivilegeCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
-        super(numberOfItems);
-        this.given = given;
-        this.kubernetesClient = kubernetesClient;
+  public DefaultPrivilegeCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
+    super(numberOfItems);
+    this.given = given;
+    this.kubernetesClient = kubernetesClient;
+  }
+
+  @SuppressWarnings("unused")
+  public DefaultPrivilegeCreate withPrivileges(List<Privilege> privileges) {
+    this.withPrivileges = privileges;
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public DefaultPrivilegeCreate withPrivileges(Privilege... privileges) {
+    this.withPrivileges = List.of(privileges);
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  public DefaultPrivilegeCreate withoutNamespace() {
+    withoutNamespace = true;
+    return this;
+  }
+
+  @Override
+  protected DefaultPrivilege create(int index) {
+    var namespace = getNamespace();
+    var name = getName();
+
+    var item = new DefaultPrivilege();
+
+    item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
+
+    var clusterRef = new ResourceRef();
+    clusterRef.setName(getClusterConnectionName());
+    clusterRef.setNamespace(withClusterConnectionNamespace);
+
+    var spec = new DefaultPrivilegeSpec();
+
+    spec.setClusterRef(clusterRef);
+    spec.setDatabase(getDatabase());
+    spec.setRole(getRole());
+    spec.setOwner(getOwner());
+
+    spec.setObjectType(withObjectType);
+
+    if (withObjectType != DefaultPrivilegeObjectType.SCHEMA || withSchema != null) {
+      spec.setSchema(getSchema());
     }
 
-    @SuppressWarnings("unused")
-    public DefaultPrivilegeCreate withPrivileges(List<Privilege> privileges) {
-        this.withPrivileges = privileges;
-        return this;
+    spec.setPrivileges(withPrivileges);
+
+    item.setSpec(spec);
+
+    kubernetesClient.resources(DefaultPrivilege.class).inNamespace(namespace).resource(item).serverSideApply();
+
+    //noinspection ConstantConditions
+    return kubernetesClient
+        .resources(DefaultPrivilege.class)
+        .inNamespace(namespace)
+        .withName(name)
+        .waitUntilCondition(
+            defaultPrivilege -> defaultPrivilege != null && defaultPrivilege.getStatus() != null, 5, TimeUnit.SECONDS);
+  }
+
+  private @Nullable String getNamespace() {
+    if (withoutNamespace) {
+      return null;
     }
 
-    @SuppressWarnings("unused")
-    public DefaultPrivilegeCreate withPrivileges(Privilege... privileges) {
-        this.withPrivileges = List.of(privileges);
-        return this;
+    if (withNamespace != null) {
+      return withNamespace;
     }
 
-    @SuppressWarnings("unused")
-    public DefaultPrivilegeCreate withoutNamespace() {
-        withoutNamespace = true;
-        return this;
+    withNamespace = kubernetesClient.getNamespace();
+
+    return withNamespace;
+  }
+
+  private String getName() {
+    if (withName != null) {
+      return withName;
     }
 
-    @Override
-    protected DefaultPrivilege create(int index) {
-        var namespace = getNamespace();
-        var name = getName();
+    withName = randomKubernetesNameSuffix("test-default-privilege");
 
-        var item = new DefaultPrivilege();
+    return withName;
+  }
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
-
-        var clusterRef = new ResourceRef();
-        clusterRef.setName(getClusterConnectionName());
-        clusterRef.setNamespace(withClusterConnectionNamespace);
-
-        var spec = new DefaultPrivilegeSpec();
-
-        spec.setClusterRef(clusterRef);
-        spec.setDatabase(getDatabase());
-        spec.setRole(getRole());
-        spec.setOwner(getOwner());
-
-        spec.setObjectType(withObjectType);
-
-        if (withObjectType != DefaultPrivilegeObjectType.SCHEMA
-                || withSchema != null
-        ) {
-            spec.setSchema(getSchema());
-        }
-
-        spec.setPrivileges(withPrivileges);
-
-        item.setSpec(spec);
-
-        kubernetesClient.resources(DefaultPrivilege.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
-        //noinspection ConstantConditions
-        return kubernetesClient.resources(DefaultPrivilege.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        defaultPrivilege -> defaultPrivilege != null && defaultPrivilege.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+  private String getClusterConnectionName() {
+    if (withClusterConnectionName != null) {
+      return withClusterConnectionName;
     }
 
-    private @Nullable String getNamespace() {
-        if (withoutNamespace) {
-            return null;
-        }
+    var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
 
-        if (withNamespace != null) {
-            return withNamespace;
-        }
+    withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
-        withNamespace = kubernetesClient.getNamespace();
+    return clusterConnection.getMetadata().getName();
+  }
 
-        return withNamespace;
+  private String getDatabase() {
+    if (withDatabase != null) {
+      return withDatabase;
     }
 
-    private String getName() {
-        if (withName != null) {
-            return withName;
-        }
+    var item =
+        given
+            .one()
+            .database()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
-        withName = randomKubernetesNameSuffix("test-default-privilege");
+    withDatabase = item.getSpec().getName();
 
-        return withName;
+    return withDatabase;
+  }
+
+  private String getRole() {
+    if (withRole != null) {
+      return withRole;
     }
 
-    private String getClusterConnectionName() {
-        if (withClusterConnectionName != null) {
-            return withClusterConnectionName;
-        }
+    var item =
+        given
+            .one()
+            .role()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .returnFirst();
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+    withRole = item.getSpec().getName();
 
-        withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
+    return withRole;
+  }
 
-        return clusterConnection.getMetadata().getName();
+  private String getOwner() {
+    if (withOwner != null) {
+      return withOwner;
     }
 
-    private String getDatabase() {
-        if (withDatabase != null) {
-            return withDatabase;
-        }
+    var item =
+        given
+            .one()
+            .role()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .returnFirst();
 
-        var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+    withOwner = item.getSpec().getName();
 
-        withDatabase = item.getSpec().getName();
+    return withOwner;
+  }
 
-        return withDatabase;
+  private String getSchema() {
+    if (withSchema != null) {
+      return withSchema;
     }
 
-    private String getRole() {
-        if (withRole != null) {
-            return withRole;
-        }
+    var item =
+        given
+            .one()
+            .schema()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withDatabase(getDatabase())
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
-        var item = given.one()
-                .role()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .returnFirst();
+    withSchema = item.getSpec().getName();
 
-        withRole = item.getSpec().getName();
-
-        return withRole;
-    }
-
-    private String getOwner() {
-        if (withOwner != null) {
-            return withOwner;
-        }
-
-        var item = given.one()
-                .role()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .returnFirst();
-
-        withOwner = item.getSpec().getName();
-
-        return withOwner;
-    }
-
-    private String getSchema() {
-        if (withSchema != null) {
-            return withSchema;
-        }
-
-        var item = given.one()
-                .schema()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withDatabase(getDatabase())
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
-
-        withSchema = item.getSpec().getName();
-
-        return withSchema;
-    }
+    return withSchema;
+  }
 }
