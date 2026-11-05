@@ -217,7 +217,8 @@ class ClusterConnectionReconcilerTest {
     }
 
     private static void assertThatClusterConnectionHasExpectedStatus(
-            ClusterConnection clusterConnection, CRStatus expectedStatus, OffsetDateTime now) {
+            ClusterConnection clusterConnection, CRStatus expectedStatus, OffsetDateTime now
+    ) {
         assertThat(clusterConnection)
                 .isNotNull()
                 .extracting(ClusterConnection::getStatus)

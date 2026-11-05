@@ -77,7 +77,8 @@ class PasswordFingerprintServiceTest {
 
         @Test
         @DisplayName(
-                "When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change")
+                "When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change"
+        )
         void whenSecretLost_shouldCreateNewKey() {
             // given
             var fingerprint = newService().fingerprint("password", PasswordEncryption.SCRAM_SHA_256);

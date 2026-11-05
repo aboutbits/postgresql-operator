@@ -21,11 +21,13 @@ import org.jspecify.annotations.NullMarked;
 @AdditionalPrinterColumn(
         name = "Since",
         jsonPath = ".status.lastPhaseTransitionTime",
-        type = AdditionalPrinterColumn.Type.DATE)
+        type = AdditionalPrinterColumn.Type.DATE
+)
 @AdditionalPrinterColumn(
         name = "Age",
         jsonPath = ".metadata.creationTimestamp",
-        type = AdditionalPrinterColumn.Type.DATE)
+        type = AdditionalPrinterColumn.Type.DATE
+)
 @NullMarked
 public class DefaultPrivilege extends CustomResource<DefaultPrivilegeSpec, CRStatus> implements Namespaced, Named {
     @Override

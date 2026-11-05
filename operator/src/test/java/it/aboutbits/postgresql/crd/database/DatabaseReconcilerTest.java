@@ -70,7 +70,8 @@ class DatabaseReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY")
+            "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY"
+    )
     void upToDateDatabase_afterPendingClusterConnection_setsReady() {
         // given: a reconciled Database
         var clusterConnection =
@@ -153,7 +154,8 @@ class DatabaseReconcilerTest {
     }
 
     private static void assertThatDatabaseHasExpectedStatus(
-            Database database, CRStatus expectedStatus, OffsetDateTime now) {
+            Database database, CRStatus expectedStatus, OffsetDateTime now
+    ) {
         assertThat(database)
                 .isNotNull()
                 .extracting(Database::getStatus)

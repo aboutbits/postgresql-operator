@@ -24,7 +24,8 @@ import java.util.Map;
 @SchemaCustomizer(value = HostCustomizer.class, input = "host")
 @ValidationRule(
         value = "has(self.adminSecretRef) != has(self.adminSecretFileRef)",
-        message = "Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided")
+        message = "Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided"
+)
 @NullMarked
 public class ClusterConnectionSpec {
     @Required
@@ -40,9 +41,12 @@ public class ClusterConnectionSpec {
     @ValidationRule(value = "self.trim().size() > 0", message = "The ClusterConnection database must not be empty.")
     private String database = "postgres";
 
-    @io.fabric8.generator.annotation.Nullable private @Nullable ResourceRef adminSecretRef;
+    @io.fabric8.generator.annotation.Nullable
+    private @Nullable ResourceRef adminSecretRef;
 
-    @io.fabric8.generator.annotation.Nullable private @Nullable FileRef adminSecretFileRef;
+    @io.fabric8.generator.annotation.Nullable
+    private @Nullable FileRef adminSecretFileRef;
 
-    @io.fabric8.generator.annotation.Nullable private Map<String, String> parameters = new HashMap<>();
+    @io.fabric8.generator.annotation.Nullable
+    private Map<String, String> parameters = new HashMap<>();
 }

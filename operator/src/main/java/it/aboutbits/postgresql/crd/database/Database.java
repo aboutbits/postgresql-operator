@@ -19,11 +19,13 @@ import org.jspecify.annotations.NullMarked;
 @AdditionalPrinterColumn(
         name = "Since",
         jsonPath = ".status.lastPhaseTransitionTime",
-        type = AdditionalPrinterColumn.Type.DATE)
+        type = AdditionalPrinterColumn.Type.DATE
+)
 @AdditionalPrinterColumn(
         name = "Age",
         jsonPath = ".metadata.creationTimestamp",
-        type = AdditionalPrinterColumn.Type.DATE)
+        type = AdditionalPrinterColumn.Type.DATE
+)
 @NullMarked
 public class Database extends CustomResource<DatabaseSpec, CRStatus> implements Namespaced, Named {
     @Override

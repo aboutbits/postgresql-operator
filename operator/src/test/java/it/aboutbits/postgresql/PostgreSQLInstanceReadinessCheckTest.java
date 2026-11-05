@@ -25,7 +25,8 @@ import java.util.Objects;
 class PostgreSQLInstanceReadinessCheckTest {
     private final Given given;
 
-    @Readiness private final PostgreSQLInstanceReadinessCheck readinessCheck;
+    @Readiness
+    private final PostgreSQLInstanceReadinessCheck readinessCheck;
 
     private final KubernetesClient kubernetesClient;
 

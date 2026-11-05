@@ -304,9 +304,11 @@ class GrantReconcilerTest {
             @EnabledIfConfig(
                     named = "test.postgresql-major-version",
                     matches = "15|16",
-                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege")
+                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
+            )
             @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege")
+                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
+            )
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given
                 var clusterConnectionMain = given.one().clusterConnection().returnFirst();
@@ -1130,14 +1132,16 @@ class GrantReconcilerTest {
     }
 
     private void createTable(
-            ClusterConnection clusterConnection, String databaseName, String schemaName, String tableName) {
+            ClusterConnection clusterConnection, String databaseName, String schemaName, String tableName
+    ) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.createTable(quotedName(schemaName, tableName)).column("id", SQLDataType.INTEGER).execute();
         }
     }
 
     private void createTableWithSerial(
-            ClusterConnection clusterConnection, String databaseName, String schemaName, String tableName) {
+            ClusterConnection clusterConnection, String databaseName, String schemaName, String tableName
+    ) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.createTable(quotedName(schemaName, tableName))
                     .column("id", SQLDataType.BIGINT.generatedByDefaultAsIdentity())
@@ -1150,21 +1154,24 @@ class GrantReconcilerTest {
             String databaseName,
             String schemaName,
             String tableName,
-            String owner) {
+            String owner
+    ) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.execute("alter table {0} owner to {1}", quotedName(schemaName, tableName), quotedName(owner));
         }
     }
 
     private void deleteTable(
-            ClusterConnection clusterConnection, String databaseName, String schemaName, String tableName) {
+            ClusterConnection clusterConnection, String databaseName, String schemaName, String tableName
+    ) {
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {
             dsl.dropTable(quotedName(schemaName, tableName)).execute();
         }
     }
 
     private void assertThatPrivileges(
-            ClusterConnection clusterConnection, Grant grant, String objectName, Set<Privilege> expectedPrivileges) {
+            ClusterConnection clusterConnection, Grant grant, String objectName, Set<Privilege> expectedPrivileges
+    ) {
         var databaseName = grant.getSpec().getDatabase();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {

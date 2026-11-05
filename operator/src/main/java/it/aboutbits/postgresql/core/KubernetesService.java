@@ -76,7 +76,8 @@ public final class KubernetesService {
     }
 
     public Credentials getSecretRefCredentials(
-            KubernetesClient kubernetesClient, ResourceRef secretRef, String defaultNamespace) {
+            KubernetesClient kubernetesClient, ResourceRef secretRef, String defaultNamespace
+    ) {
         var secretNamespace = getSecretNamespace(secretRef, defaultNamespace);
 
         var secretName = secretRef.getName();
@@ -103,10 +104,9 @@ public final class KubernetesService {
         }
 
         var usernameBase64 = data.get(SECRET_DATA_BASIC_AUTH_USERNAME_KEY);
-        var username =
-                usernameBase64 == null
-                        ? null
-                        : new String(Base64.getDecoder().decode(usernameBase64), Charset.defaultCharset());
+        var username = usernameBase64 == null
+                ? null
+                : new String(Base64.getDecoder().decode(usernameBase64), Charset.defaultCharset());
 
         var passwordBase64 = data.get(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY);
         if (passwordBase64 == null) {

@@ -24,21 +24,25 @@ import java.util.List;
         value =
                 "self.objectType == 'database' ? !has(self.schema) : (has(self.schema) && self.schema.trim().size() > 0)",
         message =
-                "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required.")
+                "The Grant schema must be not set if objectType is 'database', for all other objectType's it is required."
+)
 @ValidationRule(
         value = "self.objectType in ['database', 'schema'] ? !has(self.objects) : has(self.objects)",
         message =
-                "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.")
+                "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required."
+)
 @NullMarked
 public class GrantSpec {
-    @Required private ResourceRef clusterRef = new ResourceRef();
+    @Required
+    private ResourceRef clusterRef = new ResourceRef();
 
     /// The database to grant privileges on for this role.
     @Required
     @ValidationRule(
             value = "self == oldSelf",
             message =
-                    "The Grant database is immutable. Changing it would require revoking permissions from the old database before granting them in the new one.")
+                    "The Grant database is immutable. Changing it would require revoking permissions from the old database before granting them in the new one."
+    )
     @ValidationRule(value = "self.trim().size() > 0", message = "The Grant database must not be empty.")
     private String database = "";
 
@@ -47,7 +51,8 @@ public class GrantSpec {
     @ValidationRule(
             value = "self == oldSelf",
             message =
-                    "The Grant role is immutable. Changing it would require revoking permissions from the old role before granting them to the new one.")
+                    "The Grant role is immutable. Changing it would require revoking permissions from the old role before granting them to the new one."
+    )
     @ValidationRule(value = "self.trim().size() > 0", message = "The Grant role must not be empty.")
     private String role = "";
 
@@ -57,7 +62,8 @@ public class GrantSpec {
     @ValidationRule(
             value = "self == oldSelf",
             message =
-                    "The Grant schema is immutable. Changing it would require revoking permissions from the old schema before granting them to objects in the new schema.")
+                    "The Grant schema is immutable. Changing it would require revoking permissions from the old schema before granting them to objects in the new schema."
+    )
     @ValidationRule(value = "self.trim().size() > 0", message = "The Grant schema must not be empty.")
     private @Nullable String schema = null;
 
@@ -73,7 +79,8 @@ public class GrantSpec {
     @ValidationRule(
             value = "self == oldSelf",
             message =
-                    "The Grant objectType is immutable. Changing it would require revoking permissions and generating a completely different SQL statement.")
+                    "The Grant objectType is immutable. Changing it would require revoking permissions and generating a completely different SQL statement."
+    )
     private GrantObjectType objectType = GrantObjectType.DATABASE;
 
     /// The PostgreSQL objects to grant privileges on. As these are quoted, case-sensitivity is very important. In
@@ -103,6 +110,7 @@ public class GrantSpec {
     @ValidationRule(
             value = "self.size() > 0",
             message =
-                    "The Grant privileges must not be empty. The Operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array.")
+                    "The Grant privileges must not be empty. The Operator currently does not support revoking all privileges from existing roles (e.g. public user) by specifying an empty array."
+    )
     private List<Privilege> privileges = new ArrayList<>();
 }

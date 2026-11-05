@@ -61,16 +61,16 @@ public class KubernetesNameCustomizer implements SchemaCustomizer.Customizer {
 
     @Override
     public JSONSchemaProps apply(
-            JSONSchemaProps jsonSchemaProps, String input, KubernetesSerialization kubernetesSerialization) {
+            JSONSchemaProps jsonSchemaProps, String input, KubernetesSerialization kubernetesSerialization
+    ) {
         var properties = jsonSchemaProps.getProperties();
         if (properties == null) {
             return jsonSchemaProps;
         }
 
-        var targetFields =
-                input.isBlank()
-                        ? Set.<String>of()
-                        : Arrays.stream(input.split(",")).map(String::trim).collect(Collectors.toSet());
+        var targetFields = input.isBlank()
+                ? Set.<String>of()
+                : Arrays.stream(input.split(",")).map(String::trim).collect(Collectors.toSet());
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();

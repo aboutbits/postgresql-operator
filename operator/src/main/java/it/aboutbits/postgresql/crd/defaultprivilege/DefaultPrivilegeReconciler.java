@@ -165,7 +165,8 @@ public class DefaultPrivilegeReconciler extends BaseReconciler<DefaultPrivilege,
 
     @SuppressWarnings("java:S3776")
     private UpdateControl<DefaultPrivilege> reconcileInTransaction(
-            DSLContext tx, DefaultPrivilege resource, CRStatus status) {
+            DSLContext tx, DefaultPrivilege resource, CRStatus status
+    ) {
         var spec = resource.getSpec();
 
         var namespace = resource.getMetadata().getNamespace();

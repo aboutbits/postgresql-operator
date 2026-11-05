@@ -61,7 +61,8 @@ class HelmTest {
             KubernetesClient kubernetesClient,
             @ConfigProperty(name = "quarkus.helm.name") String chartName,
             @ConfigProperty(name = "quarkus.kubernetes.name") String kubernetesName,
-            @ConfigProperty(name = "quarkus.helm.values-root-alias", defaultValue = "app") String rootValuesAlias) {
+            @ConfigProperty(name = "quarkus.helm.values-root-alias", defaultValue = "app") String rootValuesAlias
+    ) {
         this.kubernetesClient = kubernetesClient;
         this.chartName = chartName;
         this.kubernetesName = kubernetesName;

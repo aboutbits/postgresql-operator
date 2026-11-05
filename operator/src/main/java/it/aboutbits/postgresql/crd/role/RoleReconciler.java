@@ -43,7 +43,8 @@ import java.util.stream.Collectors;
             // `create` for the password fingerprint key Secret is granted by a namespaced Role in the operator
             // namespace,
             // see `quarkus.kubernetes.rbac` in application.yml. It does not belong in this ClusterRole.
-            verbs = {"get", "list", "watch"})
+            verbs = {"get", "list", "watch"}
+    )
 })
 @RequiredArgsConstructor
 @NullMarked
@@ -94,23 +95,22 @@ public class RoleReconciler extends BaseReconciler<Role, RoleStatus> implements 
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
             // Read the Secret inside the try block, so that a missing or invalid Secret sets the phase to ERROR
-            var password =
-                    passwordSecretRef != null
-                            ? kubernetesService
-                                    .getSecretRefCredentials(kubernetesClient, passwordSecretRef, namespace)
-                                    .password()
-                            : null;
+            var password = passwordSecretRef != null
+                    ? kubernetesService
+                            .getSecretRefCredentials(kubernetesClient, passwordSecretRef, namespace)
+                            .password()
+                    : null;
             var passwordEncryption = spec.getPasswordEncryption();
 
             // The password hash in pg_authid is readable by superusers only.
             // Managed PostgreSQL services of cloud providers do not grant that,
             // so the operator tracks a keyed fingerprint of the applied password in the status.
-            var expectedFingerprint =
-                    password != null ? passwordFingerprintService.fingerprint(password, passwordEncryption) : null;
-            var serverPassword =
-                    password != null
-                            ? postgreSQLAuthenticationService.toServerPassword(password, passwordEncryption)
-                            : null;
+            var expectedFingerprint = password != null
+                    ? passwordFingerprintService.fingerprint(password, passwordEncryption)
+                    : null;
+            var serverPassword = password != null
+                    ? postgreSQLAuthenticationService.toServerPassword(password, passwordEncryption)
+                    : null;
 
             // Run everything in a single transaction
             updateControl =
@@ -229,7 +229,8 @@ public class RoleReconciler extends BaseReconciler<Role, RoleStatus> implements 
             Role resource,
             RoleStatus status,
             @Nullable String expectedFingerprint,
-            @Nullable String serverPassword) {
+            @Nullable String serverPassword
+    ) {
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
 

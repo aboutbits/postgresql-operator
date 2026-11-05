@@ -78,7 +78,8 @@ public final class RoleService {
             RoleSpec.Flags currentFlags,
             boolean currentCanLogin,
             boolean changePassword,
-            @Nullable String password) {
+            @Nullable String password
+    ) {
         buildAlterRole(spec.getName(), spec.getFlags(), currentFlags, currentCanLogin, changePassword, password)
                 .ifPresent(tx::execute);
     }
@@ -175,7 +176,8 @@ public final class RoleService {
     }
 
     public void reconcileRoleMembership(
-            DSLContext tx, RoleSpec spec, RoleSpec.Flags expectedFlags, RoleSpec.Flags currentFlags) {
+            DSLContext tx, RoleSpec spec, RoleSpec.Flags expectedFlags, RoleSpec.Flags currentFlags
+    ) {
         var roleName = spec.getName();
 
         // ROLE IN
@@ -297,7 +299,8 @@ public final class RoleService {
             RoleSpec.Flags currentFlags,
             boolean currentCanLogin,
             boolean changePassword,
-            @Nullable String password) {
+            @Nullable String password
+    ) {
         var options = new ArrayList<QueryPart>();
         var loginExpected = password != null;
 
@@ -362,7 +365,8 @@ public final class RoleService {
     }
 
     private static void addFlagIfChanged(
-            List<QueryPart> options, boolean expected, boolean current, RoleFlag enabled, RoleFlag disabled) {
+            List<QueryPart> options, boolean expected, boolean current, RoleFlag enabled, RoleFlag disabled
+    ) {
         if (expected == current) {
             return;
         }

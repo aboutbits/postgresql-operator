@@ -49,7 +49,8 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     /// Returns empty when the ClusterConnection does not exist, is not READY, or is READY for an older generation.
     /// Callers treat this as "not yet", not "broken", and try again after 60 seconds.
     public Optional<ClusterConnection> getReferencedClusterConnection(
-            KubernetesClient kubernetesClient, CR resource, ResourceRef clusterRef) {
+            KubernetesClient kubernetesClient, CR resource, ResourceRef clusterRef
+    ) {
         var connectionName = clusterRef.getName();
         var connectionNamespace = getResourceNamespaceOrOwn(resource, clusterRef.getNamespace());
 

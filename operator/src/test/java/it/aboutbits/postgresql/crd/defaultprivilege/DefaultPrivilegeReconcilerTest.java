@@ -304,9 +304,11 @@ class DefaultPrivilegeReconcilerTest {
             @EnabledIfConfig(
                     named = "test.postgresql-major-version",
                     matches = "15|16",
-                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege")
+                    disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
+            )
             @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege")
+                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
+            )
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given
                 var clusterConnectionMain = given.one().clusterConnection().returnFirst();
@@ -634,7 +636,8 @@ class DefaultPrivilegeReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY")
+            "When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY"
+    )
     void upToDateDefaultPrivilege_afterPendingClusterConnection_setsReady() {
         // given: a reconciled DefaultPrivilege
         var clusterConnectionMain = given.one().clusterConnection().returnFirst();
@@ -688,7 +691,8 @@ class DefaultPrivilegeReconcilerTest {
     }
 
     private DefaultPrivilege applyDefaultPrivilege(
-            DefaultPrivilege defaultPrivilege, Predicate<DefaultPrivilege> condition) {
+            DefaultPrivilege defaultPrivilege, Predicate<DefaultPrivilege> condition
+    ) {
         var namespace = kubernetesClient.getNamespace();
 
         defaultPrivilege.getMetadata().setManagedFields(null);
@@ -709,7 +713,8 @@ class DefaultPrivilegeReconcilerTest {
     }
 
     private static void assertThatDefaultPrivilegeHasStatus(
-            DefaultPrivilege defaultPrivilege, CRStatus expectedStatus, OffsetDateTime now) {
+            DefaultPrivilege defaultPrivilege, CRStatus expectedStatus, OffsetDateTime now
+    ) {
         assertThat(defaultPrivilege)
                 .isNotNull()
                 .extracting(DefaultPrivilege::getStatus)
@@ -723,7 +728,8 @@ class DefaultPrivilegeReconcilerTest {
     }
 
     private void assertThatDefaultPrivileges(
-            ClusterConnection clusterConnection, DefaultPrivilege defaultPrivilege, Set<Privilege> expectedPrivileges) {
+            ClusterConnection clusterConnection, DefaultPrivilege defaultPrivilege, Set<Privilege> expectedPrivileges
+    ) {
         var databaseName = defaultPrivilege.getSpec().getDatabase();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection, databaseName)) {

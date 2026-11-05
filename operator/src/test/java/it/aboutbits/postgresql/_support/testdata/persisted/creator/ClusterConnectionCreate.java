@@ -56,7 +56,8 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             int numberOfItems,
             Given given,
             KubernetesClient kubernetesClient,
-            Given.DBConnectionDetails dbConnectionDetails) {
+            Given.DBConnectionDetails dbConnectionDetails
+    ) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
