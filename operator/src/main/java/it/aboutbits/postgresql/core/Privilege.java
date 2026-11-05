@@ -7,7 +7,6 @@ import lombok.experimental.Accessors;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.util.Locale;
 
 /// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
@@ -28,8 +27,8 @@ public enum Privilege {
     TEMPORARY(null),
     USAGE(null),
     MAINTAIN(17);
-
-    private final @Nullable Integer minimumPostgresVersion;
+    @Nullable
+    private final Integer minimumPostgresVersion;
 
     @JsonValue
     public String toValue() {
@@ -37,8 +36,6 @@ public enum Privilege {
     }
 
     public org.jooq.Privilege privilege() {
-        return DSL.privilege(
-                name().toLowerCase(Locale.ROOT)
-        );
+        return DSL.privilege(name().toLowerCase(Locale.ROOT));
     }
 }

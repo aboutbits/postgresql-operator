@@ -13,7 +13,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -23,31 +22,28 @@ import java.util.concurrent.TimeUnit;
 @NullMarked
 public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> {
     private final Given given;
-
     private final KubernetesClient kubernetesClient;
     private final Given.DBConnectionDetails dbConnectionDetails;
-
-    private @Nullable String withNamespace;
-
+    @Nullable
+    private String withNamespace;
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
-
-    private @Nullable String withName;
-
-    private @Nullable String withHost;
-
-    private @Nullable Integer withPort;
-
-    private @Nullable String withDatabase;
-
-    private @Nullable ResourceRef withAdminSecretRef;
-
-    private @Nullable FileRef withAdminSecretFileRef;
-
+    @Nullable
+    private String withName;
+    @Nullable
+    private String withHost;
+    @Nullable
+    private Integer withPort;
+    @Nullable
+    private String withDatabase;
+    @Nullable
+    private ResourceRef withAdminSecretRef;
+    @Nullable
+    private FileRef withAdminSecretFileRef;
     @Setter(AccessLevel.NONE)
     private boolean withoutAdminSecret = false;
-
-    private @Nullable String withApplicationName;
+    @Nullable
+    private String withApplicationName;
 
     public ClusterConnectionCreate(
             int numberOfItems,
@@ -85,11 +81,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
         var item = new ClusterConnection();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
+        item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
 
         var spec = new ClusterConnectionSpec();
 
@@ -104,24 +96,23 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
+        kubernetesClient.resources(ClusterConnection.class).inNamespace(namespace).resource(item).serverSideApply();
         // Wait for the probe of the current generation: a re-apply with a new spec keeps the old status for a while,
         // and the dependent resources do not use the status of an older generation.
         //noinspection ConstantConditions
-        return kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        clusterConnection -> clusterConnection != null
-                                && clusterConnection.getStatus() != null
-                                && clusterConnection.getStatus().getObservedGeneration() == clusterConnection.getMetadata().getGeneration(),
-                        5,
-                        TimeUnit.SECONDS
-                );
+        return kubernetesClient
+            .resources(ClusterConnection.class)
+            .inNamespace(namespace)
+            .withName(name)
+            .waitUntilCondition(
+                    clusterConnection -> clusterConnection != null
+                    && clusterConnection.getStatus() != null
+                    && clusterConnection.getStatus().getObservedGeneration() == clusterConnection
+                        .getMetadata()
+                        .getGeneration(),
+                    5,
+                    TimeUnit.SECONDS
+            );
     }
 
     private @Nullable String getNamespace() {
@@ -169,10 +160,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     }
 
     private String getDatabase() {
-        withDatabase = Objects.requireNonNullElse(
-                withDatabase,
-                "postgres"
-        );
+        withDatabase = Objects.requireNonNullElse(withDatabase, "postgres");
 
         return withDatabase;
     }
@@ -186,11 +174,12 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             return withAdminSecretRef;
         }
 
-        return given.one()
-                .secretRef()
-                .withUsername(dbConnectionDetails.username())
-                .withPassword(dbConnectionDetails.password())
-                .returnFirst();
+        return given
+            .one()
+            .secretRef()
+            .withUsername(dbConnectionDetails.username())
+            .withPassword(dbConnectionDetails.password())
+            .returnFirst();
     }
 
     private Map<String, String> getParameters() {

@@ -13,7 +13,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.util.concurrent.TimeUnit;
 
 @Setter
@@ -21,29 +20,22 @@ import java.util.concurrent.TimeUnit;
 @NullMarked
 public class DatabaseCreate extends TestDataCreator<Database> {
     private final Given given;
-
     private final KubernetesClient kubernetesClient;
-
-    private @Nullable String withNamespace;
-
+    @Nullable
+    private String withNamespace;
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
-
-    private @Nullable String withName;
-
-    private @Nullable String withClusterConnectionName;
-
-    private @Nullable String withClusterConnectionNamespace;
-
+    @Nullable
+    private String withName;
+    @Nullable
+    private String withClusterConnectionName;
+    @Nullable
+    private String withClusterConnectionNamespace;
     private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
+    @Nullable
+    private String withOwner;
 
-    private @Nullable String withOwner;
-
-    public DatabaseCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public DatabaseCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -62,11 +54,7 @@ public class DatabaseCreate extends TestDataCreator<Database> {
 
         var item = new Database();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
+        item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
@@ -81,20 +69,13 @@ public class DatabaseCreate extends TestDataCreator<Database> {
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(Database.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
+        kubernetesClient.resources(Database.class).inNamespace(namespace).resource(item).serverSideApply();
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Database.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        db -> db != null && db.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+        return kubernetesClient
+            .resources(Database.class)
+            .inNamespace(namespace)
+            .withName(name)
+            .waitUntilCondition(db -> db != null && db.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {
@@ -126,10 +107,11 @@ public class DatabaseCreate extends TestDataCreator<Database> {
             return withClusterConnectionName;
         }
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+        var clusterConnection = given
+            .one()
+            .clusterConnection()
+            .withName("%s-conn".formatted(getName()))
+            .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 

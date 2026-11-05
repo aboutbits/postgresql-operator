@@ -14,27 +14,19 @@ import org.jspecify.annotations.NullMarked;
 @Slf4j
 @RequiredArgsConstructor
 @NullMarked
-public class ClusterConnectionReconciler
-        extends BaseReconciler<ClusterConnection, CRStatus>
-        implements Reconciler<ClusterConnection> {
+public class ClusterConnectionReconciler extends BaseReconciler<ClusterConnection, CRStatus>
+        implements Reconciler<ClusterConnection>
+{
     private final PostgreSQLContextFactory contextFactory;
 
     @Override
-    public UpdateControl<ClusterConnection> reconcile(
-            ClusterConnection resource,
-            Context<ClusterConnection> context
-    ) {
+    public UpdateControl<ClusterConnection> reconcile(ClusterConnection resource, Context<ClusterConnection> context) {
         var status = initializeStatus(resource);
 
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
 
-        log.info(
-                "Reconciling ClusterConnection [resource={}/{}, status.phase={}]",
-                namespace,
-                name,
-                status.getPhase()
-        );
+        log.info("Reconciling ClusterConnection [resource={}/{}, status.phase={}]", namespace, name, status.getPhase());
 
         try (var dsl = contextFactory.getDSLContext(resource)) {
             var version = dsl.fetchSingle("select version()").into(String.class);
@@ -43,11 +35,7 @@ public class ClusterConnectionReconciler
 
             return UpdateControl.patchStatus(resource);
         } catch (RuntimeException e) {
-            return handleError(
-                    resource,
-                    status,
-                    e
-            );
+            return handleError(resource, status, e);
         }
     }
 

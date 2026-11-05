@@ -7,7 +7,6 @@ import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -21,7 +20,6 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
 
     public S initializeStatus(CR resource) {
         var status = resource.getStatus();
-
         //noinspection ConstantConditions
         if (status == null) {
             status = newStatus();
@@ -35,10 +33,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         return status;
     }
 
-    public String getResourceNamespaceOrOwn(
-            CR resource,
-            @Nullable String resourceNamespace
-    ) {
+    public String getResourceNamespaceOrOwn(CR resource, @Nullable String resourceNamespace) {
         if (resourceNamespace != null) {
             return resourceNamespace;
         }
@@ -56,11 +51,11 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         var connectionName = clusterRef.getName();
         var connectionNamespace = getResourceNamespaceOrOwn(resource, clusterRef.getNamespace());
 
-        var clusterConnection = kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(connectionNamespace)
-                .withName(connectionName)
-                .get();
-
+        var clusterConnection = kubernetesClient
+            .resources(ClusterConnection.class)
+            .inNamespace(connectionNamespace)
+            .withName(connectionName)
+            .get();
         //noinspection ConstantConditions
         if (clusterConnection == null) {
             log.error(
@@ -73,7 +68,6 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         }
 
         var status = clusterConnection.getStatus();
-
         // No status yet means the connection has not been probed yet.
         //noinspection ConstantConditions
         if (status == null) {
@@ -99,11 +93,11 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
 
             return Optional.empty();
         }
-
         // READY of an older generation says nothing about the current spec.
         if (status.getObservedGeneration() != clusterConnection.getMetadata().getGeneration()) {
             log.warn(
-                    "The specified ClusterConnection changed and has not been probed again yet [resource={}/{}, status.observedGeneration={}, metadata.generation={}]",
+                    "The specified ClusterConnection changed and has not been probed again yet [resource={}/{},"
+                    + " status.observedGeneration={}, metadata.generation={}]",
                     connectionNamespace,
                     connectionName,
                     status.getObservedGeneration(),
@@ -117,11 +111,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     }
 
     /// Sets the phase to [CRPhase#ERROR] for a failure without an exception, and logs the message.
-    public void setErrorPhase(
-            CR resource,
-            S status,
-            String message
-    ) {
+    public void setErrorPhase(CR resource, S status, String message) {
         log.warn(
                 "Failed to reconcile {} [resource={}/{}, message={}]",
                 resource.getKind(),
@@ -130,15 +120,10 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                 message
         );
 
-        status.updatePhase(CRPhase.ERROR)
-                .setMessage(message);
+        status.updatePhase(CRPhase.ERROR).setMessage(message);
     }
 
-    public <E extends Exception> UpdateControl<CR> handleError(
-            CR resource,
-            S status,
-            E exception
-    ) {
+    public <E extends Exception> UpdateControl<CR> handleError(CR resource, S status, E exception) {
         log.error(
                 "Failed to reconcile {} [resource={}/{}]",
                 resource.getKind(),
@@ -147,10 +132,8 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                 exception
         );
 
-        status.updatePhase(CRPhase.ERROR)
-                .setMessage(exception.getMessage());
+        status.updatePhase(CRPhase.ERROR).setMessage(exception.getMessage());
 
-        return UpdateControl.patchStatus(resource)
-                .rescheduleAfter(Duration.ofSeconds(60));
+        return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
     }
 }

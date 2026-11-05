@@ -16,7 +16,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +26,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -37,24 +35,11 @@ import static org.awaitility.Awaitility.await;
 @NullMarked
 class HelmTest {
     private static final String ENV_VAR_KUBECONFIG = "KUBECONFIG";
-
     /// The Pod and Container list fields that the chart exposes as free-form Helm values.
-    private static final List<String> LIST_VALUES = List.of(
-            "imagePullSecrets",
-            "volumes",
-            "volumeMounts"
-    );
-
+    private static final List<String> LIST_VALUES = List.of("imagePullSecrets", "volumes", "volumeMounts");
     private static final String CRD_GROUP = "postgresql.aboutbits.it";
-    private static final List<String> CRD_NAMES = List.of(
-            "clusterconnection",
-            "database",
-            "schema",
-            "role",
-            "grant",
-            "defaultprivilege"
-    );
-
+    private static final List<String> CRD_NAMES =
+            List.of("clusterconnection", "database", "schema", "role", "grant", "defaultprivilege");
     private final String chartName;
     /// Dekorate uses this value for the Deployment name and for the container name.
     private final String kubernetesName;
@@ -80,11 +65,13 @@ class HelmTest {
         var chartPath = chartPath();
 
         assertThat(chartPath)
-                .withFailMessage("Helm chart not found at %s. Ensure that the chart is generated before running this test.", chartPath)
-                .exists();
+            .withFailMessage(
+                    "Helm chart not found at %s. Ensure that the chart is generated before running this test.",
+                    chartPath
+            )
+            .exists();
 
         var serialization = kubernetesClient.getKubernetesSerialization();
-
         // 1. Verify files exist and contain expected data
         // ./Chart.yaml
         var chartMetadata = serialization.unmarshal(
@@ -94,7 +81,6 @@ class HelmTest {
         );
 
         assertThat(chartMetadata.get("name")).isEqualTo(chartName);
-
         // ./values.yaml
         var values = serialization.unmarshal(
                 Files.newInputStream(chartPath.resolve("values.yaml")),
@@ -103,59 +89,49 @@ class HelmTest {
         );
 
         assertThat(values).containsKey(rootValuesAlias);
-
         // Safe: Jackson reads the nested YAML mapping of the chart values as a Map<String, Object>
         @SuppressWarnings("unchecked")
         var appValues = (Map<String, Object>) values.get(rootValuesAlias);
 
         Objects.requireNonNull(appValues, "appValues should not be null");
         assertThat(appValues.get("image")).isNotNull();
-
         // The list values must default to a real empty list, not to `- {}`.
         // `operator/src/main/helm/values.yaml` provides these defaults.
         for (var listValue : LIST_VALUES) {
             assertThat(appValues.get(listValue))
-                    .withFailMessage("app.%s should default to an empty list, but was %s", listValue, appValues.get(listValue))
-                    .isEqualTo(List.of());
+                .withFailMessage(
+                        "app.%s should default to an empty list, but was %s",
+                        listValue,
+                        appValues.get(listValue)
+                )
+                .isEqualTo(List.of());
         }
 
         assertThat(chartPath.resolve("LICENSE")).exists();
         assertThat(chartPath.resolve("README.md")).exists();
         assertThat(chartPath.resolve("values.schema.json")).exists();
-
         // ./values.schema.json
         // The type must be declared for every list value, otherwise the generated schema
         // falls back to `string` and `helm install` rejects a list.
-        var valuesSchema = serialization.unmarshal(
-                Files.newInputStream(chartPath.resolve("values.schema.json")),
-                JsonNode.class
-        );
+        var valuesSchema =
+                serialization.unmarshal(Files.newInputStream(chartPath.resolve("values.schema.json")), JsonNode.class);
 
         for (var listValue : LIST_VALUES) {
-            var schemaProperty = valuesSchema.at("/properties/%s/properties/%s".formatted(
-                    rootValuesAlias,
-                    listValue
-            ));
+            var schemaProperty = valuesSchema.at("/properties/%s/properties/%s".formatted(rootValuesAlias, listValue));
 
             assertThat(schemaProperty.path("type").asText())
-                    .withFailMessage("app.%s should be typed as an array in values.schema.json", listValue)
-                    .isEqualTo("array");
-
+                .withFailMessage("app.%s should be typed as an array in values.schema.json", listValue)
+                .isEqualTo("array");
             // A value that `src/main/helm/values.yaml` provides loses the description of its
             // `quarkus.helm.values` entry, so the description has to come from the schema.
             assertThat(schemaProperty.path("description").asText())
-                    .withFailMessage("app.%s should have a description in values.schema.json", listValue)
-                    .isNotBlank();
+                .withFailMessage("app.%s should have a description in values.schema.json", listValue)
+                .isNotBlank();
         }
-
         // ./crds/
         for (var crdName : CRD_NAMES) {
-            assertThat(chartPath.resolve("crds/%ss.%s-v1.yml".formatted(
-                    crdName,
-                    CRD_GROUP
-            ))).exists();
+            assertThat(chartPath.resolve("crds/%ss.%s-v1.yml".formatted(crdName, CRD_GROUP))).exists();
         }
-
         // ./templates/
         assertThat(chartPath.resolve("templates/clusterrole.yaml")).exists();
         assertThat(chartPath.resolve("templates/clusterrolebinding.yaml")).exists();
@@ -166,21 +142,17 @@ class HelmTest {
         assertThat(chartPath.resolve("templates/service.yaml")).exists();
         assertThat(chartPath.resolve("templates/serviceaccount.yaml")).exists();
         assertThat(chartPath.resolve("templates/validating-clusterrolebinding.yaml")).exists();
-
         // The indent of each expression has to match the depth of its field in the Deployment.
         // A wrong `nindent` produces invalid YAML as soon as a user sets the value.
         assertThat(chartPath.resolve("templates/deployment.yaml"))
-                .content()
-                .contains("imagePullSecrets: {{- toYaml (.Values.app.imagePullSecrets | default list) | nindent 8 }}")
-                .contains("volumes: {{- toYaml (.Values.app.volumes | default list) | nindent 8 }}")
-                .contains("volumeMounts: {{- toYaml (.Values.app.volumeMounts | default list) | nindent 12 }}");
+            .content()
+            .contains("imagePullSecrets: {{- toYaml (.Values.app.imagePullSecrets | default list) | nindent 8 }}")
+            .contains("volumes: {{- toYaml (.Values.app.volumes | default list) | nindent 8 }}")
+            .contains("volumeMounts: {{- toYaml (.Values.app.volumeMounts | default list) | nindent 12 }}");
 
         for (var crdName : CRD_NAMES) {
-            assertThat(chartPath.resolve("templates/%sreconciler-crd-role-binding.yaml".formatted(
-                    crdName
-            ))).exists();
+            assertThat(chartPath.resolve("templates/%sreconciler-crd-role-binding.yaml".formatted(crdName))).exists();
         }
-
         // 2. Prepare a temporary KubeConfig for the 'helm' CLI
         // This ensures 'helm' uses the same Kubernetes cluster as the test environment (e.g., provided by DevServices).
         var kubeConfigPath = createTempKubeConfig();
@@ -193,91 +165,83 @@ class HelmTest {
                 int exitCode;
             };
             var installOutput = new StringBuilder();
-
             // The test-mode operator already applied the CRDs with the field manager `fabric8-kubernetes-client`.
             // Helm 4 installs CRDs with server-side apply, which conflicts with that field manager on `.spec.versions`.
             // Helm 3 skipped a CRD that already existed, so `--skip-crds` keeps that behavior on both versions.
-            ProcessBuilder.newBuilder(
-                            "helm",
-                            "install", releaseName, chartPath.toAbsolutePath().toString(),
-                            "--skip-crds",
-                            "--set", rootValuesAlias + ".image=postgresql-operator:test"
-                    ).environment(Map.of(
-                            ENV_VAR_KUBECONFIG,
-                            kubeConfigPath.toAbsolutePath().toString()
-                    ))
-                    .exitCodeChecker(ec -> {
-                        holder.exitCode = ec;
-                        return true;
-                    })
-                    .error().redirect()
-                    .output()
-                    .consumeLinesWith(65536, line -> installOutput.append(line).append(System.lineSeparator()))
-                    .run();
+            ProcessBuilder
+                .newBuilder(
+                        "helm",
+                        "install",
+                        releaseName,
+                        chartPath.toAbsolutePath().toString(),
+                        "--skip-crds",
+                        "--set",
+                        rootValuesAlias + ".image=postgresql-operator:test"
+                )
+                .environment(Map.of(ENV_VAR_KUBECONFIG, kubeConfigPath.toAbsolutePath().toString()))
+                .exitCodeChecker(ec -> {
+                    holder.exitCode = ec;
+                    return true;
+                })
+                .error()
+                .redirect()
+                .output()
+                .consumeLinesWith(65536, line -> installOutput.append(line).append(System.lineSeparator()))
+                .run();
 
             var installExitCode = holder.exitCode;
-            assertThat(installExitCode)
-                    .withFailMessage("Helm install failed with output:\n" + installOutput)
-                    .isZero();
+            assertThat(installExitCode).withFailMessage("Helm install failed with output:\n" + installOutput).isZero();
 
             try {
                 // 4. Verify that the deployment is created in Kubernetes
-                await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-                    var deployment = kubernetesClient.apps().deployments().withName(chartName).get();
+                await()
+                    .atMost(Duration.ofSeconds(10))
+                    .untilAsserted(() -> {
+                        var deployment = kubernetesClient.apps().deployments().withName(chartName).get();
 
-                    assertThat(deployment).isNotNull();
-
-                    // Helm sets labels based on the release name
-                    assertThat(deployment.getMetadata())
+                        assertThat(deployment).isNotNull();
+                        // Helm sets labels based on the release name
+                        assertThat(deployment.getMetadata())
                             .isNotNull()
                             .satisfies(metadata -> assertThat(metadata.getLabels())
-                                    .containsAllEntriesOf(Map.of(
-                                            "app.kubernetes.io/name", releaseName,
-                                            "app.kubernetes.io/managed-by", "Helm"
-                                    ))
-                            );
+                                .containsAllEntriesOf(Map.of(
+                                        "app.kubernetes.io/name",
+                                        releaseName,
+                                        "app.kubernetes.io/managed-by",
+                                        "Helm"
+                                )));
 
-                    assertThat(deployment.getSpec())
+                        assertThat(deployment.getSpec())
                             .isNotNull()
                             .satisfies(spec -> {
                                 var podSpec = spec.getTemplate().getSpec();
 
                                 assertThat(podSpec.getImagePullSecrets()).isEmpty();
                                 assertThat(podSpec.getVolumes()).isEmpty();
-
                                 // The baseline `kubernetes.yml` names the container, so Dekorate must
                                 // not add a second one.
                                 assertThat(podSpec.getContainers())
-                                        .singleElement()
-                                        .satisfies(container -> {
-                                            assertThat(container.getName()).isEqualTo(kubernetesName);
-                                            assertThat(container.getVolumeMounts()).isEmpty();
-                                        });
+                                    .singleElement()
+                                    .satisfies(container -> {
+                                        assertThat(container.getName()).isEqualTo(kubernetesName);
+                                        assertThat(container.getVolumeMounts()).isEmpty();
+                                    });
                             });
 
-                    var selector = deployment.getSpec().getSelector();
+                        var selector = deployment.getSpec().getSelector();
 
-                    var pods = kubernetesClient.pods()
-                            .withLabelSelector(selector)
-                            .list()
-                            .getItems();
+                        var pods = kubernetesClient.pods().withLabelSelector(selector).list().getItems();
 
-                    assertThat(pods).isNotEmpty();
-                });
+                        assertThat(pods).isNotEmpty();
+                    });
             } finally {
                 // 5. Cleanup the created resources using 'helm uninstall'
-                ProcessBuilder.newBuilder(
-                                "helm",
-                                "uninstall", releaseName
-                        ).environment(Map.of(
-                                ENV_VAR_KUBECONFIG,
-                                kubeConfigPath.toAbsolutePath().toString()
-                        ))
-                        .error().consumeLinesWith(
-                                8192,
-                                log::error
-                        )
-                        .run();
+                ProcessBuilder
+                    .newBuilder("helm", "uninstall", releaseName)
+                    .environment(Map.of(ENV_VAR_KUBECONFIG, kubeConfigPath.toAbsolutePath().toString()))
+                    .error()
+                    .consumeLinesWith(8192, log::error)
+                    .run();
             }
         } finally {
             Files.deleteIfExists(kubeConfigPath);
@@ -291,8 +255,11 @@ class HelmTest {
         var chartPath = chartPath();
 
         assertThat(chartPath)
-                .withFailMessage("Helm chart not found at %s. Ensure that the chart is generated before running this test.", chartPath)
-                .exists();
+            .withFailMessage(
+                    "Helm chart not found at %s. Ensure that the chart is generated before running this test.",
+                    chartPath
+            )
+            .exists();
 
         var valuesPath = createTempValuesWithVolumes();
 
@@ -302,77 +269,74 @@ class HelmTest {
                 int exitCode;
             };
             var renderedOutput = new StringBuilder();
-
             // when
-            ProcessBuilder.newBuilder(
-                            "helm",
-                            "template", "volumes-render-test", chartPath.toAbsolutePath().toString(),
-                            "--values", valuesPath.toAbsolutePath().toString()
-                    )
-                    .exitCodeChecker(ec -> {
-                        holder.exitCode = ec;
-                        return true;
-                    })
-                    .error().consumeLinesWith(8192, log::error)
-                    .output()
-                    .consumeLinesWith(65536, line -> renderedOutput.append(line).append(System.lineSeparator()))
-                    .run();
-
+            ProcessBuilder
+                .newBuilder(
+                        "helm",
+                        "template",
+                        "volumes-render-test",
+                        chartPath.toAbsolutePath().toString(),
+                        "--values",
+                        valuesPath.toAbsolutePath().toString()
+                )
+                .exitCodeChecker(ec -> {
+                    holder.exitCode = ec;
+                    return true;
+                })
+                .error()
+                .consumeLinesWith(8192, log::error)
+                .output()
+                .consumeLinesWith(65536, line -> renderedOutput.append(line).append(System.lineSeparator()))
+                .run();
             // then
-            assertThat(holder.exitCode)
-                    .withFailMessage("Helm template failed, see the logged error output")
-                    .isZero();
+            assertThat(holder.exitCode).withFailMessage("Helm template failed, see the logged error output").isZero();
 
-            var deployments = kubernetesClient.load(new ByteArrayInputStream(
-                            renderedOutput.toString().getBytes(StandardCharsets.UTF_8)
-                    ))
-                    .items()
-                    .stream()
-                    .filter(Deployment.class::isInstance)
-                    .map(Deployment.class::cast)
-                    .toList();
+            var deployments = kubernetesClient
+                .load(new ByteArrayInputStream(renderedOutput.toString().getBytes(StandardCharsets.UTF_8)))
+                .items()
+                .stream()
+                .filter(Deployment.class::isInstance)
+                .map(Deployment.class::cast)
+                .toList();
 
             assertThat(deployments)
-                    .withFailMessage("The rendered chart must contain exactly one Deployment:%n%s", renderedOutput)
-                    .hasSize(1);
+                .withFailMessage("The rendered chart must contain exactly one Deployment:%n%s", renderedOutput)
+                .hasSize(1);
 
             var deployment = deployments.getFirst();
-
             // The baseline `kubernetes.yml` must name the Deployment `quarkus.kubernetes.name`.
             // Dekorate keeps a different name as a second Deployment.
             assertThat(deployment.getMetadata().getName()).isEqualTo(kubernetesName);
 
             var podSpec = deployment.getSpec().getTemplate().getSpec();
 
-            assertThat(podSpec.getVolumes())
-                    .extracting(Volume::getName)
-                    .containsExactly("db-credentials", "aws-secrets");
-
+            assertThat(podSpec.getVolumes()).extracting(Volume::getName).containsExactly(
+                    "db-credentials",
+                    "aws-secrets"
+            );
             // A Secrets Store CSI volume is the case that `adminSecretFileRef` was added for.
             assertThat(podSpec.getVolumes())
-                    .filteredOn(volume -> Objects.equals(volume.getName(), "aws-secrets"))
-                    .singleElement()
-                    .satisfies(volume -> assertThat(volume.getCsi())
-                            .isNotNull()
-                            .satisfies(csi -> {
-                                assertThat(csi.getDriver()).isEqualTo("secrets-store.csi.k8s.io");
-                                assertThat(csi.getVolumeAttributes())
-                                        .containsEntry("secretProviderClass", "db-credentials");
-                            })
-                    );
+                .filteredOn(volume -> Objects.equals(volume.getName(), "aws-secrets"))
+                .singleElement()
+                .satisfies(volume -> assertThat(volume.getCsi())
+                    .isNotNull()
+                    .satisfies(csi -> {
+                        assertThat(csi.getDriver()).isEqualTo("secrets-store.csi.k8s.io");
+                        assertThat(csi.getVolumeAttributes()).containsEntry("secretProviderClass", "db-credentials");
+                    }));
 
             assertThat(podSpec.getImagePullSecrets())
-                    .extracting(LocalObjectReference::getName)
-                    .containsExactly("my-registry-secret");
+                .extracting(LocalObjectReference::getName)
+                .containsExactly("my-registry-secret");
 
             assertThat(podSpec.getContainers())
-                    .singleElement()
-                    .satisfies(container -> {
-                        assertThat(container.getName()).isEqualTo(kubernetesName);
-                        assertThat(container.getVolumeMounts())
-                                .extracting(VolumeMount::getMountPath)
-                                .containsExactly("/mnt/secrets", "/mnt/aws");
-                    });
+                .singleElement()
+                .satisfies(container -> {
+                    assertThat(container.getName()).isEqualTo(kubernetesName);
+                    assertThat(container.getVolumeMounts())
+                        .extracting(VolumeMount::getMountPath)
+                        .containsExactly("/mnt/secrets", "/mnt/aws");
+                });
         } finally {
             Files.deleteIfExists(valuesPath);
         }
@@ -421,30 +385,30 @@ class HelmTest {
         var clientConfig = kubernetesClient.getConfiguration();
 
         var kubeConfig = new ConfigBuilder()
-                .addNewCluster()
-                .withName("dev-cluster")
-                .withNewCluster()
-                .withServer(clientConfig.getMasterUrl())
-                .withCertificateAuthorityData(clientConfig.getCaCertData())
-                .endCluster()
-                .endCluster()
-                .addNewUser()
-                .withName("dev-user")
-                .withNewUser()
-                .withClientCertificateData(clientConfig.getClientCertData())
-                .withClientKeyData(clientConfig.getClientKeyData())
-                .endUser()
-                .endUser()
-                .addNewContext()
-                .withName("dev-context")
-                .withNewContext()
-                .withCluster("dev-cluster")
-                .withUser("dev-user")
-                .withNamespace(clientConfig.getNamespace())
-                .endContext()
-                .endContext()
-                .withCurrentContext("dev-context")
-                .build();
+            .addNewCluster()
+            .withName("dev-cluster")
+            .withNewCluster()
+            .withServer(clientConfig.getMasterUrl())
+            .withCertificateAuthorityData(clientConfig.getCaCertData())
+            .endCluster()
+            .endCluster()
+            .addNewUser()
+            .withName("dev-user")
+            .withNewUser()
+            .withClientCertificateData(clientConfig.getClientCertData())
+            .withClientKeyData(clientConfig.getClientKeyData())
+            .endUser()
+            .endUser()
+            .addNewContext()
+            .withName("dev-context")
+            .withNewContext()
+            .withCluster("dev-cluster")
+            .withUser("dev-user")
+            .withNamespace(clientConfig.getNamespace())
+            .endContext()
+            .endContext()
+            .withCurrentContext("dev-context")
+            .build();
 
         var path = Files.createTempFile("kubeconfig-helm-test-", ".yaml");
 

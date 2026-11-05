@@ -4,7 +4,6 @@ import com.ongres.scram.common.StringPreparation;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -14,7 +13,6 @@ import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
-
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 
 /// Test helper that verifies a cleartext password against the verifier stored in `pg_authid`.
@@ -27,28 +25,20 @@ public final class PostgreSQLPasswordVerifier {
     private static final String MD5 = "MD5";
 
     /// The verifier as stored in `pg_authid.rolpassword`.
-    public static @Nullable String storedVerifier(
-            DSLContext superuserDsl,
-            String roleName
-    ) {
+    public static @Nullable String storedVerifier(DSLContext superuserDsl, String roleName) {
         return superuserDsl
-                .select(PG_AUTHID.ROLPASSWORD)
-                .from(PG_AUTHID)
-                .where(PG_AUTHID.ROLNAME.eq(roleName))
-                .fetchSingle(PG_AUTHID.ROLPASSWORD);
+            .select(PG_AUTHID.ROLPASSWORD)
+            .from(PG_AUTHID)
+            .where(PG_AUTHID.ROLNAME.eq(roleName))
+            .fetchSingle(PG_AUTHID.ROLPASSWORD);
     }
 
-    public static boolean passwordMatches(
-            DSLContext superuserDsl,
-            String roleName,
-            String expectedPassword
-    ) {
+    public static boolean passwordMatches(DSLContext superuserDsl, String roleName, String expectedPassword) {
         var currentPasswordVerifier = storedVerifier(superuserDsl, roleName);
 
         if (currentPasswordVerifier == null || currentPasswordVerifier.isBlank()) {
             return false;
         }
-
         // PostgreSQL stores either:
         // - SCRAM verifier: SCRAM-SHA-256$<iterations>:<saltB64>$<storedKeyB64>:<serverKeyB64>
         // - or legacy md5: md5<md5(password + username)>
@@ -63,13 +53,8 @@ public final class PostgreSQLPasswordVerifier {
         return false;
     }
 
-    private static boolean verifyScramSha256(
-            String postgresVerifier,
-            String cleartextPassword
-    ) {
-        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(
-                cleartextPassword.toCharArray()
-        );
+    private static boolean verifyScramSha256(String postgresVerifier, String cleartextPassword) {
+        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(cleartextPassword.toCharArray());
 
         var afterPrefix = postgresVerifier.substring(SCRAM_SHA_256_PREFIX.length());
         var dollar = afterPrefix.indexOf('$');
@@ -84,9 +69,10 @@ public final class PostgreSQLPasswordVerifier {
 
         try {
             var secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-            var saltedPassword = secretKeyFactory.generateSecret(
-                    new PBEKeySpec(preparedPassword, salt, iterations, 32 * 8)
-            ).getEncoded();
+            var saltedPassword =
+                    secretKeyFactory
+                .generateSecret(new PBEKeySpec(preparedPassword, salt, iterations, 32 * 8))
+                .getEncoded();
 
             var mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(saltedPassword, "HmacSHA256"));
@@ -100,11 +86,7 @@ public final class PostgreSQLPasswordVerifier {
         }
     }
 
-    private static boolean verifyMd5(
-            String postgresMd5,
-            String expectedPassword,
-            String username
-    ) {
+    private static boolean verifyMd5(String postgresMd5, String expectedPassword, String username) {
         try {
             var currentDigest = HexFormat.of().parseHex(postgresMd5, 3, postgresMd5.length());
 

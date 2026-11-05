@@ -8,9 +8,7 @@ import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
-
 import java.util.Set;
-
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.ACLEXPLODE;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_DEFAULT_ACL;
 import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType.SCHEMA;
@@ -26,7 +24,6 @@ import static org.jooq.impl.DSL.val;
 @NullMarked
 public class DefaultPrivilegeService {
     private static final DataType<Long> OID_DATA_TYPE = SQLDataType.BIGINT;
-
     // language=SQL
     private static final String ROLE_OID_SQL = "{0}::regrole";
     // language=SQL
@@ -37,16 +34,12 @@ public class DefaultPrivilegeService {
     /// @param tx   The [DSLContext] for database operations.
     /// @param spec The [DefaultPrivilegeSpec] containing the specification details.
     /// @return A set of [Privilege] as values.
-    public Set<Privilege> determineCurrentDefaultPrivileges(
-            DSLContext tx,
-            DefaultPrivilegeSpec spec
-    ) {
+    public Set<Privilege> determineCurrentDefaultPrivileges(DSLContext tx, DefaultPrivilegeSpec spec) {
         var owner = spec.getOwner();
         var role = spec.getRole();
         var schema = spec.getSchema();
 
         var objectType = spec.getObjectType();
-
         /*
          * select
          *   --d.defaclnamespace::regnamespace, -- Only for debugging
@@ -62,47 +55,29 @@ public class DefaultPrivilegeService {
          *   and a.grantee = '<role_name>'::regrole
          */
         var currentObjectPrivileges = tx
-                .select(ACLEXPLODE.PRIVILEGE_TYPE)
-                .from(PG_DEFAULT_ACL)
-                .crossJoin(Routines.aclexplode(PG_DEFAULT_ACL.DEFACLACL))
-                .where(
-                        PG_DEFAULT_ACL.DEFACLROLE.eq(field(
-                                ROLE_OID_SQL,
-                                OID_DATA_TYPE,
-                                val(owner)
-                        )),
-                        PG_DEFAULT_ACL.DEFACLOBJTYPE.eq(objectType.objectTypeChar()),
-                        objectType == SCHEMA
-                                ? noCondition()
-                                : PG_DEFAULT_ACL.DEFACLNAMESPACE.eq(field(
-                                        NAMESPACE_OID_SQL,
-                                        OID_DATA_TYPE,
-                                        val(schema)
-                                )),
-                        ACLEXPLODE.GRANTEE.eq(field(
-                                ROLE_OID_SQL,
-                                OID_DATA_TYPE,
-                                val(role)
-                        ))
-                )
-                .fetch(r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class));
+            .select(ACLEXPLODE.PRIVILEGE_TYPE)
+            .from(PG_DEFAULT_ACL)
+            .crossJoin(Routines.aclexplode(PG_DEFAULT_ACL.DEFACLACL))
+            .where(
+                    PG_DEFAULT_ACL.DEFACLROLE.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(owner))),
+                    PG_DEFAULT_ACL.DEFACLOBJTYPE.eq(objectType.objectTypeChar()),
+                    objectType == SCHEMA
+                    ? noCondition()
+                    : PG_DEFAULT_ACL.DEFACLNAMESPACE.eq(field(NAMESPACE_OID_SQL, OID_DATA_TYPE, val(schema))),
+                    ACLEXPLODE.GRANTEE.eq(field(ROLE_OID_SQL, OID_DATA_TYPE, val(role)))
+            )
+            .fetch(r -> r.get(ACLEXPLODE.PRIVILEGE_TYPE, Privilege.class));
 
         return Set.copyOf(currentObjectPrivileges);
     }
 
-    public void grant(
-            DSLContext tx,
-            DefaultPrivilegeSpec spec,
-            Set<Privilege> privilegesToGrant
-    ) {
+    public void grant(DSLContext tx, DefaultPrivilegeSpec spec, Set<Privilege> privilegesToGrant) {
         var owner = role(spec.getOwner());
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
         var schema = quotedName(spec.getSchema());
 
-        var privileges = privilegesToGrant.stream()
-                .map(Privilege::privilege)
-                .toList();
+        var privileges = privilegesToGrant.stream().map(Privilege::privilege).toList();
 
         var statement = query(
                 "alter default privileges for role {0}{1} grant {2} on {3}s to {4}",
@@ -116,19 +91,13 @@ public class DefaultPrivilegeService {
         tx.execute(statement);
     }
 
-    public void revoke(
-            DSLContext tx,
-            DefaultPrivilegeSpec spec,
-            Set<Privilege> privilegesToRevoke
-    ) {
+    public void revoke(DSLContext tx, DefaultPrivilegeSpec spec, Set<Privilege> privilegesToRevoke) {
         var owner = role(spec.getOwner());
         var role = role(spec.getRole());
         var objectType = spec.getObjectType();
         var schema = quotedName(spec.getSchema());
 
-        var privileges = privilegesToRevoke.stream()
-                .map(Privilege::privilege)
-                .toList();
+        var privileges = privilegesToRevoke.stream().map(Privilege::privilege).toList();
 
         var statement = query(
                 "alter default privileges for role {0}{1} revoke {2} on {3}s from {4}",

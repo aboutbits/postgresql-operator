@@ -2,7 +2,6 @@ package it.aboutbits.postgresql._support.valuesource;
 
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.params.provider.ValueSource;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

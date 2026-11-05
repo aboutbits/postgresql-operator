@@ -6,7 +6,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -19,22 +18,21 @@ import java.time.ZoneOffset;
 @NullMarked
 public class CRStatus {
     /// The Custom Resource name (may differ from `metadata.name`).
-    private @Nullable String name = null;
-
+    @Nullable
+    private String name = null;
     /// Current lifecycle phase of the CR.
     @Setter(AccessLevel.NONE)
     private CRPhase phase = CRPhase.PENDING;
-
     /// Human-readable message providing details about the current state.
-    private @Nullable String message = null;
-
+    @Nullable
+    private String message = null;
     /// Last time the condition was probed/updated.
-    private @Nullable OffsetDateTime lastProbeTime = null;
-
+    @Nullable
+    private OffsetDateTime lastProbeTime = null;
     /// Last time the condition transitioned from one status to another.
     @Setter(AccessLevel.NONE)
-    private @Nullable OffsetDateTime lastPhaseTransitionTime = null;
-
+    @Nullable
+    private OffsetDateTime lastPhaseTransitionTime = null;
     /// Observed resource generation that the controller acted upon.
     private long observedGeneration = 0;
 

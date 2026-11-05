@@ -19,5 +19,6 @@ public class RoleStatus extends CRStatus {
     /// which managed PostgreSQL services of cloud providers do not grant. It therefore compares the referenced
     /// Secret against this fingerprint to detect a password change. The HMAC key is private to the
     /// operator, so a reader of this status learns nothing about the password.
-    private @Nullable String passwordFingerprint = null;
+    @Nullable
+    private String passwordFingerprint = null;
 }

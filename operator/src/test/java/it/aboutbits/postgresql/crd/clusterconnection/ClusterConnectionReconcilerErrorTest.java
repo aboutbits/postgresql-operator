@@ -12,9 +12,7 @@ import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import java.util.Collections;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -27,9 +25,7 @@ class ClusterConnectionReconcilerErrorTest {
     @SuppressWarnings("NullAway.Init")
     @InjectMock
     PostgreSQLContextFactory contextFactory;
-
     private final ClusterConnectionReconciler reconciler;
-
     private ClusterConnection resource;
     private Context<ClusterConnection> context;
 
@@ -39,7 +35,6 @@ class ClusterConnectionReconcilerErrorTest {
 
         var metadata = new ObjectMeta();
         metadata.setGeneration(1L);
-
         // We mock the spec to ensure getName() works safely without throwing NPE,
         // as the custom getName() implementation in ClusterConnection relies on spec fields.
         var spec = mock(ClusterConnectionSpec.class);
@@ -61,21 +56,15 @@ class ClusterConnectionReconcilerErrorTest {
         // given
         var errorMessage = "Connection refused to database";
 
-        when(contextFactory.getDSLContext(resource)).thenThrow(
-                new RuntimeException(errorMessage)
-        );
-
+        when(contextFactory.getDSLContext(resource)).thenThrow(new RuntimeException(errorMessage));
         // when
         var updateControl = reconciler.reconcile(resource, context);
-
         // then
         assertThat(updateControl.getResource())
-                .isPresent()
-                .get()
-                .extracting(ClusterConnection::getStatus)
-                .satisfies(status ->
-                        assertThat(status.getMessage()).contains(errorMessage)
-                );
+            .isPresent()
+            .get()
+            .extracting(ClusterConnection::getStatus)
+            .satisfies(status -> assertThat(status.getMessage()).contains(errorMessage));
     }
 
     @Test
@@ -85,24 +74,16 @@ class ClusterConnectionReconcilerErrorTest {
         var errorMessage = "Query execution failed";
         var dslContext = mock(CloseableDSLContext.class);
 
-        when(contextFactory.getDSLContext(resource)).thenReturn(
-                dslContext
-        );
+        when(contextFactory.getDSLContext(resource)).thenReturn(dslContext);
 
-        when(dslContext.fetchSingle(anyString())).thenThrow(
-                new DataAccessException(errorMessage)
-        );
-
+        when(dslContext.fetchSingle(anyString())).thenThrow(new DataAccessException(errorMessage));
         // when
         var updateControl = reconciler.reconcile(resource, context);
-
         // then
         assertThat(updateControl.getResource())
-                .isPresent()
-                .get()
-                .extracting(ClusterConnection::getStatus)
-                .satisfies(status ->
-                        assertThat(status.getMessage()).contains(errorMessage)
-                );
+            .isPresent()
+            .get()
+            .extracting(ClusterConnection::getStatus)
+            .satisfies(status -> assertThat(status.getMessage()).contains(errorMessage));
     }
 }

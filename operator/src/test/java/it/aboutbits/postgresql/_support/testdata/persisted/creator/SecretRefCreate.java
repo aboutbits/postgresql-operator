@@ -9,7 +9,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_USERNAME_KEY;
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_AUTH;
@@ -19,28 +18,22 @@ import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_A
 @NullMarked
 public class SecretRefCreate extends TestDataCreator<ResourceRef> {
     private final KubernetesClient kubernetesClient;
-
-    private @Nullable String withNamespace;
-
+    @Nullable
+    private String withNamespace;
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
-
-    private @Nullable String withName;
-
-    private @Nullable String withUsername;
-
+    @Nullable
+    private String withName;
+    @Nullable
+    private String withUsername;
     @Setter(AccessLevel.NONE)
     private boolean withoutUsername = false;
-
-    private @Nullable String withPassword;
-
+    @Nullable
+    private String withPassword;
     @Setter(AccessLevel.NONE)
     private boolean withoutPassword = false;
 
-    public SecretRefCreate(
-            int numberOfItems,
-            KubernetesClient kubernetesClient
-    ) {
+    public SecretRefCreate(int numberOfItems, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.kubernetesClient = kubernetesClient;
     }
@@ -69,19 +62,16 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
         var name = getName();
 
         var secret = new SecretBuilder()
-                .withNewMetadata()
-                .withNamespace(namespace)
-                .withName(name)
-                .endMetadata()
-                .withType(SECRET_TYPE_BASIC_AUTH)
-                .addToStringData(SECRET_DATA_BASIC_AUTH_USERNAME_KEY, getUsername())
-                .addToStringData(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY, getPassword())
-                .build();
+            .withNewMetadata()
+            .withNamespace(namespace)
+            .withName(name)
+            .endMetadata()
+            .withType(SECRET_TYPE_BASIC_AUTH)
+            .addToStringData(SECRET_DATA_BASIC_AUTH_USERNAME_KEY, getUsername())
+            .addToStringData(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY, getPassword())
+            .build();
 
-        kubernetesClient.secrets()
-                .inNamespace(namespace)
-                .resource(secret)
-                .serverSideApply();
+        kubernetesClient.secrets().inNamespace(namespace).resource(secret).serverSideApply();
 
         var secretRef = new ResourceRef();
         secretRef.setName(name);

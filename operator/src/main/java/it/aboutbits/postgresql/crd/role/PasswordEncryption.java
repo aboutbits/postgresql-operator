@@ -11,12 +11,10 @@ public enum PasswordEncryption {
     /// The operator computes a SCRAM-SHA-256 verifier and sends only the verifier.
     /// The cleartext password never reaches the server or its statement log.
     SCRAM_SHA_256("scram-sha-256"),
-
     /// The operator sends the cleartext password.
     /// The server hashes it according to its `password_encryption` setting.
     /// Use this for clients that only support MD5 authentication.
     SERVER("server");
-
     private final String value;
 
     @JsonValue

@@ -9,7 +9,6 @@ import org.jspecify.annotations.NullMarked;
 public enum ReclaimPolicy {
     RETAIN("Retain"),
     DELETE("Delete");
-
     private final String policy;
 
     @JsonValue

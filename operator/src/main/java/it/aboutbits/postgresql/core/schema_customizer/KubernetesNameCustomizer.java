@@ -4,7 +4,6 @@ import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
 import org.jspecify.annotations.NullMarked;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
@@ -73,15 +72,12 @@ public class KubernetesNameCustomizer implements SchemaCustomizer.Customizer {
 
         var targetFields = input.isBlank()
                 ? Set.<String>of()
-                : Arrays.stream(input.split(","))
-                        .map(String::trim)
-                        .collect(Collectors.toSet());
+                : Arrays.stream(input.split(",")).map(String::trim).collect(Collectors.toSet());
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();
             if (Objects.equals(prop.getType(), "string")
-                    && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))
-            ) {
+                    && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))) {
                 prop.setPattern(KUBERNETES_NAME_PATTERN);
             }
         }

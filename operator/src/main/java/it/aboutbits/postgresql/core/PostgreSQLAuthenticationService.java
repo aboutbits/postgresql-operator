@@ -4,7 +4,6 @@ import com.ongres.scram.common.StringPreparation;
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.NullMarked;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -27,10 +26,8 @@ import java.util.Locale;
 @NullMarked
 public final class PostgreSQLAuthenticationService {
     public static final String SCRAM_SHA_256_PREFIX = "SCRAM-SHA-256$";
-
     /// PostgreSQL's default for `scram_iterations`.
     public static final int SCRAM_SHA_256_ITERATIONS = 4096;
-
     private static final String MD5 = "MD5";
     private static final int MD5_VERIFIER_LENGTH = 3 + 32;
     private static final String SHA_256 = "SHA-256";
@@ -38,17 +35,13 @@ public final class PostgreSQLAuthenticationService {
     private static final String PBKDF2_WITH_HMAC_SHA256 = "PBKDF2WithHmacSHA256";
     private static final int SCRAM_SALT_LENGTH_BYTES = 16;
     private static final int SCRAM_KEY_LENGTH_BYTES = 32;
-
     private final SecureRandom secureRandom = new SecureRandom();
 
     /// Convert the password from the Secret into the literal to send to PostgreSQL.
     ///
     /// A value that already is an MD5 or SCRAM-SHA-256 verifier is forwarded unchanged, so users keep
     /// full control over the stored hash.
-    public String toServerPassword(
-            String password,
-            PasswordEncryption passwordEncryption
-    ) {
+    public String toServerPassword(String password, PasswordEncryption passwordEncryption) {
         if (passwordEncryption == PasswordEncryption.SERVER || isEncrypted(password)) {
             return password;
         }
@@ -67,9 +60,7 @@ public final class PostgreSQLAuthenticationService {
     /// as described in RFC 5802 and RFC 7677 and used by PostgreSQL since version 10.
     public String scramSha256Verifier(String cleartextPassword) {
         // Prepare the cleartext password with SASLprep, as PostgreSQL does
-        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(
-                cleartextPassword.toCharArray()
-        );
+        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(cleartextPassword.toCharArray());
 
         var salt = new byte[SCRAM_SALT_LENGTH_BYTES];
         secureRandom.nextBytes(salt);
@@ -91,13 +82,14 @@ public final class PostgreSQLAuthenticationService {
 
             var encoder = Base64.getEncoder();
 
-            return "%s%d:%s$%s:%s".formatted(
-                    SCRAM_SHA_256_PREFIX,
-                    SCRAM_SHA_256_ITERATIONS,
-                    encoder.encodeToString(salt),
-                    encoder.encodeToString(storedKey),
-                    encoder.encodeToString(serverKey)
-            );
+            return "%s%d:%s$%s:%s"
+                .formatted(
+                        SCRAM_SHA_256_PREFIX,
+                        SCRAM_SHA_256_ITERATIONS,
+                        encoder.encodeToString(salt),
+                        encoder.encodeToString(storedKey),
+                        encoder.encodeToString(serverKey)
+                );
         } finally {
             Arrays.fill(preparedPassword, '\0');
             if (saltedPassword != null) {
@@ -122,23 +114,14 @@ public final class PostgreSQLAuthenticationService {
         }
 
         try {
-            HexFormat.of().parseHex(
-                    password.toLowerCase(Locale.ROOT),
-                    3,
-                    password.length()
-            );
+            HexFormat.of().parseHex(password.toLowerCase(Locale.ROOT), 3, password.length());
             return true;
         } catch (IllegalArgumentException _) {
             return false;
         }
     }
 
-    private static byte[] pbkdf2HmacSha256(
-            char[] password,
-            byte[] salt,
-            int iterations,
-            int keyLenBytes
-    ) {
+    private static byte[] pbkdf2HmacSha256(char[] password, byte[] salt, int iterations, int keyLenBytes) {
         try {
             var secretKeyFactory = SecretKeyFactory.getInstance(PBKDF2_WITH_HMAC_SHA256);
             var spec = new PBEKeySpec(password, salt, iterations, keyLenBytes * 8);

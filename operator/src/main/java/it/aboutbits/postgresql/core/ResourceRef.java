@@ -35,13 +35,10 @@ public class ResourceRef {
     /// If `null`, defaults to the namespace of the CR that defines this reference.
     @io.fabric8.generator.annotation.Nullable
     @Max(63)
-    private @Nullable String namespace;
-
+    @Nullable
+    private String namespace;
     @Required
     @Max(63)
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The name must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The name must not be empty.")
     private String name = "";
 }

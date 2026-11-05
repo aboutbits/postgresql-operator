@@ -11,21 +11,9 @@ import org.jspecify.annotations.NullMarked;
 
 @Version("v1")
 @Group("postgresql.aboutbits.it")
-@AdditionalPrinterColumn(
-        name = "Name",
-        jsonPath = ".status.name",
-        type = AdditionalPrinterColumn.Type.STRING
-)
-@AdditionalPrinterColumn(
-        name = "Phase",
-        jsonPath = ".status.phase",
-        type = AdditionalPrinterColumn.Type.STRING
-)
-@AdditionalPrinterColumn(
-        name = "Message",
-        jsonPath = ".status.message",
-        type = AdditionalPrinterColumn.Type.STRING
-)
+@AdditionalPrinterColumn(name = "Name", jsonPath = ".status.name", type = AdditionalPrinterColumn.Type.STRING)
+@AdditionalPrinterColumn(name = "Phase", jsonPath = ".status.phase", type = AdditionalPrinterColumn.Type.STRING)
+@AdditionalPrinterColumn(name = "Message", jsonPath = ".status.message", type = AdditionalPrinterColumn.Type.STRING)
 @AdditionalPrinterColumn(
         name = "Since",
         jsonPath = ".status.lastPhaseTransitionTime",
@@ -37,9 +25,7 @@ import org.jspecify.annotations.NullMarked;
         type = AdditionalPrinterColumn.Type.DATE
 )
 @NullMarked
-public class Role
-        extends CustomResource<RoleSpec, RoleStatus>
-        implements Namespaced, Named {
+public class Role extends CustomResource<RoleSpec, RoleStatus> implements Namespaced, Named {
     @Override
     @JsonIgnore
     public String getName() {

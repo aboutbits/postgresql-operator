@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,30 +25,21 @@ import java.util.Map;
 @NullMarked
 public class ClusterConnectionSpec {
     @Required
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The ClusterConnection host must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The ClusterConnection host must not be empty.")
     private String host = "";
-
     @Required
     @Min(1)
     @Max(65535)
     private int port = -1;
-
     @Required
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The ClusterConnection database must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The ClusterConnection database must not be empty.")
     private String database = "postgres";
-
     @io.fabric8.generator.annotation.Nullable
-    private @Nullable ResourceRef adminSecretRef;
-
+    @Nullable
+    private ResourceRef adminSecretRef;
     @io.fabric8.generator.annotation.Nullable
-    private @Nullable FileRef adminSecretFileRef;
-
+    @Nullable
+    private FileRef adminSecretFileRef;
     @io.fabric8.generator.annotation.Nullable
     private Map<String, String> parameters = new HashMap<>();
 }

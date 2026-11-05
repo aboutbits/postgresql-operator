@@ -6,11 +6,9 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.jooq.Keyword;
 import org.jspecify.annotations.NullMarked;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
 import static it.aboutbits.postgresql.core.Privilege.CONNECT;
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.DELETE;
@@ -30,48 +28,16 @@ import static org.jooq.impl.DSL.keyword;
 @Accessors(fluent = true)
 @NullMarked
 public enum GrantObjectType {
-    DATABASE(
-            List.of(
-                    CREATE,
-                    CONNECT,
-                    TEMPORARY
-            )
-    ),
-    SCHEMA(
-            List.of(
-                    USAGE,
-                    CREATE
-            )
-    ),
-    TABLE(
-            List.of(
-                    SELECT,
-                    INSERT,
-                    UPDATE,
-                    DELETE,
-                    TRUNCATE,
-                    REFERENCES,
-                    TRIGGER,
-                    MAINTAIN
-            )
-    ),
-    SEQUENCE(
-            List.of(
-                    USAGE,
-                    SELECT,
-                    UPDATE
-            )
-    );
-
+    DATABASE(List.of(CREATE, CONNECT, TEMPORARY)),
+    SCHEMA(List.of(USAGE, CREATE)),
+    TABLE(List.of(SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN)),
+    SEQUENCE(List.of(USAGE, SELECT, UPDATE));
     @SuppressWarnings("ImmutableEnumChecker")
     private final List<Privilege> privileges;
-
     @SuppressWarnings("ImmutableEnumChecker")
     private final Set<Privilege> privilegesSet;
 
-    GrantObjectType(
-            List<Privilege> privileges
-    ) {
+    GrantObjectType(List<Privilege> privileges) {
         this.privileges = privileges;
         this.privilegesSet = Set.copyOf(privileges);
     }
@@ -82,8 +48,6 @@ public enum GrantObjectType {
     }
 
     public Keyword objectType() {
-        return keyword(
-                name().toLowerCase(Locale.ROOT)
-        );
+        return keyword(name().toLowerCase(Locale.ROOT));
     }
 }

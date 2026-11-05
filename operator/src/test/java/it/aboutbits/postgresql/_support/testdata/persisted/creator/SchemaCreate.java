@@ -13,9 +13,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
 import java.util.concurrent.TimeUnit;
-
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 
 @Setter
@@ -23,31 +21,24 @@ import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
 @NullMarked
 public class SchemaCreate extends TestDataCreator<Schema> {
     private final Given given;
-
     private final KubernetesClient kubernetesClient;
-
-    private @Nullable String withNamespace;
-
+    @Nullable
+    private String withNamespace;
     @Setter(AccessLevel.NONE)
     private boolean withoutNamespace = false;
-
-    private @Nullable String withName;
-
-    private @Nullable String withClusterConnectionName;
-
-    private @Nullable String withClusterConnectionNamespace;
-
-    private @Nullable String withDatabase;
-
+    @Nullable
+    private String withName;
+    @Nullable
+    private String withClusterConnectionName;
+    @Nullable
+    private String withClusterConnectionNamespace;
+    @Nullable
+    private String withDatabase;
     private ReclaimPolicy withReclaimPolicy = ReclaimPolicy.RETAIN;
+    @Nullable
+    private String withOwner;
 
-    private @Nullable String withOwner;
-
-    public SchemaCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public SchemaCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -66,12 +57,7 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
         var item = new Schema();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
-
+        item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
         // We have to create the database first which also modifies the specified withClusterConnectionName so the connection points to the newly created DB
         var database = getDatabase();
 
@@ -89,20 +75,13 @@ public class SchemaCreate extends TestDataCreator<Schema> {
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
-
+        kubernetesClient.resources(Schema.class).inNamespace(namespace).resource(item).serverSideApply();
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Schema.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        db -> db != null && db.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+        return kubernetesClient
+            .resources(Schema.class)
+            .inNamespace(namespace)
+            .withName(name)
+            .waitUntilCondition(db -> db != null && db.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {
@@ -134,10 +113,11 @@ public class SchemaCreate extends TestDataCreator<Schema> {
             return withClusterConnectionName;
         }
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+        var clusterConnection = given
+            .one()
+            .clusterConnection()
+            .withName("%s-conn".formatted(getName()))
+            .returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
@@ -149,12 +129,13 @@ public class SchemaCreate extends TestDataCreator<Schema> {
             return withDatabase;
         }
 
-        var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+        var item = given
+            .one()
+            .database()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
         withDatabase = item.getSpec().getName();
 
