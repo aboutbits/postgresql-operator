@@ -1,6 +1,9 @@
 [versions]
 # Axion Release Plugin #
 axionReleasePlugin = "1.21.4"
+# Spotless #
+spotlessPlugin = "8.11.0"
+googleJavaFormat = "2.0.0"
 
 ## Libraries ##
 jooq = "3.21.9"
@@ -25,6 +28,11 @@ axionReleasePlugin = { id = "pl.allegro.tech.build.axion-release", version.ref =
 # https://github.com/tbroyer/gradle-errorprone-plugin
 # https://mvnrepository.com/artifact/net.ltgt.errorprone/net.ltgt.errorprone.gradle.plugin
 errorPronePlugin = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
+
+# https://github.com/diffplug/spotless/tree/main/plugin-gradle
+# https://plugins.gradle.org/plugin/com.diffplug.spotless
+# The formatter version is googleJavaFormat, see https://github.com/google/google-java-format
+spotlessPlugin = { id = "com.diffplug.spotless", version.ref = "spotlessPlugin" }
 
 # https://www.jooq.org/doc/latest/manual/code-generation/codegen-execution/codegen-gradle/
 # https://github.com/jOOQ/jOOQ/tree/main/jOOQ-codegen-gradle
