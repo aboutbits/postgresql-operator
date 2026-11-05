@@ -8,20 +8,20 @@ import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> {
+
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
@@ -50,10 +50,10 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     private @Nullable String withApplicationName;
 
     public ClusterConnectionCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient,
-            Given.DBConnectionDetails dbConnectionDetails
+        int numberOfItems,
+        Given given,
+        KubernetesClient kubernetesClient,
+        Given.DBConnectionDetails dbConnectionDetails
     ) {
         super(numberOfItems);
         this.given = given;
@@ -85,11 +85,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
         var item = new ClusterConnection();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
+        item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
 
         var spec = new ClusterConnectionSpec();
 
@@ -104,24 +100,24 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+        kubernetesClient.resources(ClusterConnection.class).inNamespace(namespace).resource(item).serverSideApply();
 
         // Wait for the probe of the current generation: a re-apply with a new spec keeps the old status for a while,
         // and the dependent resources do not use the status of an older generation.
         //noinspection ConstantConditions
-        return kubernetesClient.resources(ClusterConnection.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        clusterConnection -> clusterConnection != null
-                                && clusterConnection.getStatus() != null
-                                && clusterConnection.getStatus().getObservedGeneration() == clusterConnection.getMetadata().getGeneration(),
-                        5,
-                        TimeUnit.SECONDS
-                );
+        return kubernetesClient
+            .resources(ClusterConnection.class)
+            .inNamespace(namespace)
+            .withName(name)
+            .waitUntilCondition(
+                clusterConnection ->
+                    clusterConnection != null &&
+                    clusterConnection.getStatus() != null &&
+                    clusterConnection.getStatus().getObservedGeneration() ==
+                        clusterConnection.getMetadata().getGeneration(),
+                5,
+                TimeUnit.SECONDS
+            );
     }
 
     private @Nullable String getNamespace() {
@@ -169,10 +165,7 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
     }
 
     private String getDatabase() {
-        withDatabase = Objects.requireNonNullElse(
-                withDatabase,
-                "postgres"
-        );
+        withDatabase = Objects.requireNonNullElse(withDatabase, "postgres");
 
         return withDatabase;
     }
@@ -186,11 +179,12 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
             return withAdminSecretRef;
         }
 
-        return given.one()
-                .secretRef()
-                .withUsername(dbConnectionDetails.username())
-                .withPassword(dbConnectionDetails.password())
-                .returnFirst();
+        return given
+            .one()
+            .secretRef()
+            .withUsername(dbConnectionDetails.username())
+            .withPassword(dbConnectionDetails.password())
+            .returnFirst();
     }
 
     private Map<String, String> getParameters() {

@@ -3,12 +3,6 @@ package it.aboutbits.postgresql.core;
 import com.ongres.scram.common.StringPreparation;
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import jakarta.inject.Singleton;
-import org.jspecify.annotations.NullMarked;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -16,6 +10,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
+import javax.crypto.Mac;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.jspecify.annotations.NullMarked;
 
 /// Builds the password literal that the operator sends to PostgreSQL in `CREATE ROLE` and `ALTER ROLE`.
 ///
@@ -26,6 +25,7 @@ import java.util.Locale;
 @Singleton
 @NullMarked
 public final class PostgreSQLAuthenticationService {
+
     public static final String SCRAM_SHA_256_PREFIX = "SCRAM-SHA-256$";
 
     /// PostgreSQL's default for `scram_iterations`.
@@ -45,10 +45,7 @@ public final class PostgreSQLAuthenticationService {
     ///
     /// A value that already is an MD5 or SCRAM-SHA-256 verifier is forwarded unchanged, so users keep
     /// full control over the stored hash.
-    public String toServerPassword(
-            String password,
-            PasswordEncryption passwordEncryption
-    ) {
+    public String toServerPassword(String password, PasswordEncryption passwordEncryption) {
         if (passwordEncryption == PasswordEncryption.SERVER || isEncrypted(password)) {
             return password;
         }
@@ -67,9 +64,7 @@ public final class PostgreSQLAuthenticationService {
     /// as described in RFC 5802 and RFC 7677 and used by PostgreSQL since version 10.
     public String scramSha256Verifier(String cleartextPassword) {
         // Prepare the cleartext password with SASLprep, as PostgreSQL does
-        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(
-                cleartextPassword.toCharArray()
-        );
+        var preparedPassword = StringPreparation.POSTGRESQL_PREPARATION.normalize(cleartextPassword.toCharArray());
 
         var salt = new byte[SCRAM_SALT_LENGTH_BYTES];
         secureRandom.nextBytes(salt);
@@ -92,11 +87,11 @@ public final class PostgreSQLAuthenticationService {
             var encoder = Base64.getEncoder();
 
             return "%s%d:%s$%s:%s".formatted(
-                    SCRAM_SHA_256_PREFIX,
-                    SCRAM_SHA_256_ITERATIONS,
-                    encoder.encodeToString(salt),
-                    encoder.encodeToString(storedKey),
-                    encoder.encodeToString(serverKey)
+                SCRAM_SHA_256_PREFIX,
+                SCRAM_SHA_256_ITERATIONS,
+                encoder.encodeToString(salt),
+                encoder.encodeToString(storedKey),
+                encoder.encodeToString(serverKey)
             );
         } finally {
             Arrays.fill(preparedPassword, '\0');
@@ -122,23 +117,14 @@ public final class PostgreSQLAuthenticationService {
         }
 
         try {
-            HexFormat.of().parseHex(
-                    password.toLowerCase(Locale.ROOT),
-                    3,
-                    password.length()
-            );
+            HexFormat.of().parseHex(password.toLowerCase(Locale.ROOT), 3, password.length());
             return true;
         } catch (IllegalArgumentException _) {
             return false;
         }
     }
 
-    private static byte[] pbkdf2HmacSha256(
-            char[] password,
-            byte[] salt,
-            int iterations,
-            int keyLenBytes
-    ) {
+    private static byte[] pbkdf2HmacSha256(char[] password, byte[] salt, int iterations, int keyLenBytes) {
         try {
             var secretKeyFactory = SecretKeyFactory.getInstance(PBKDF2_WITH_HMAC_SHA256);
             var spec = new PBEKeySpec(password, salt, iterations, keyLenBytes * 8);

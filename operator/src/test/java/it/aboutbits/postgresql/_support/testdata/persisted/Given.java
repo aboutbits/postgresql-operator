@@ -9,17 +9,17 @@ import it.aboutbits.postgresql._support.testdata.persisted.creator.RoleCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SchemaCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SecretRefCreate;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.net.URI;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
 
-import java.net.URI;
-
 @ApplicationScoped
 @RequiredArgsConstructor
 @NullMarked
 public class Given {
+
     private final KubernetesClient kubernetesClient;
 
     @ConfigProperty(name = "quarkus.datasource.devservices.username")
@@ -32,11 +32,7 @@ public class Given {
     private final String jdbcUrl;
 
     DBConnectionDetails dbConnectionDetails() {
-        return new DBConnectionDetails(
-                parsePortFromJdbcUrl(jdbcUrl),
-                username,
-                password
-        );
+        return new DBConnectionDetails(parsePortFromJdbcUrl(jdbcUrl), username, password);
     }
 
     public One one() {
@@ -48,12 +44,14 @@ public class Given {
     }
 
     public class One extends Item {
+
         One(Given given) {
             super(1, given);
         }
     }
 
     public class Many extends Item {
+
         Many(int numberOfItems, Given given) {
             super(numberOfItems, given);
         }
@@ -61,6 +59,7 @@ public class Given {
 
     @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
     public abstract class Item {
+
         private final int numberOfItems;
         private final Given given;
 
@@ -70,74 +69,39 @@ public class Given {
         }
 
         public SecretRefCreate secretRef() {
-            return new SecretRefCreate(
-                    numberOfItems,
-                    kubernetesClient
-            );
+            return new SecretRefCreate(numberOfItems, kubernetesClient);
         }
 
         public ClusterConnectionCreate clusterConnection() {
-            return new ClusterConnectionCreate(
-                    numberOfItems,
-                    given,
-                    kubernetesClient,
-                    dbConnectionDetails()
-            );
+            return new ClusterConnectionCreate(numberOfItems, given, kubernetesClient, dbConnectionDetails());
         }
 
         public RoleCreate role() {
-            return new RoleCreate(
-                    numberOfItems,
-                    given,
-                    kubernetesClient
-            );
+            return new RoleCreate(numberOfItems, given, kubernetesClient);
         }
 
         public DatabaseCreate database() {
-            return new DatabaseCreate(
-                    numberOfItems,
-                    given,
-                    kubernetesClient
-            );
+            return new DatabaseCreate(numberOfItems, given, kubernetesClient);
         }
 
         public SchemaCreate schema() {
-            return new SchemaCreate(
-                    numberOfItems,
-                    given,
-                    kubernetesClient
-            );
+            return new SchemaCreate(numberOfItems, given, kubernetesClient);
         }
 
         public GrantCreate grant() {
-            return new GrantCreate(
-                    numberOfItems,
-                    given,
-                    kubernetesClient
-            );
+            return new GrantCreate(numberOfItems, given, kubernetesClient);
         }
 
         public DefaultPrivilegeCreate defaultPrivilege() {
-            return new DefaultPrivilegeCreate(
-                    numberOfItems,
-                    given,
-                    kubernetesClient
-            );
+            return new DefaultPrivilegeCreate(numberOfItems, given, kubernetesClient);
         }
     }
 
-    public record DBConnectionDetails(
-            int port,
-            String username,
-            String password
-    ) {
-    }
+    public record DBConnectionDetails(int port, String username, String password) {}
 
     private static int parsePortFromJdbcUrl(String url) {
         // Typical format: jdbc:postgresql://localhost:5432/db
         // We strip "jdbc:" so URI.create can handle the "postgresql://..." part
-        return URI.create(
-                url.replace("jdbc:", "")
-        ).getPort();
+        return URI.create(url.replace("jdbc:", "")).getPort();
     }
 }

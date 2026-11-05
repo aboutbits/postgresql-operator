@@ -13,18 +13,16 @@ import org.jspecify.annotations.Nullable;
 @Setter
 @NullMarked
 public class DatabaseSpec {
+
     @Required
     private ResourceRef clusterRef = new ResourceRef();
 
     @Required
     @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Database name is immutable. Allowing to rename the Database name using 'alter database <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
+        value = "self == oldSelf",
+        message = "The Database name is immutable. Allowing to rename the Database name using 'alter database <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
     )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Database name must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Database name must not be empty.")
     private String name = "";
 
     /// Whether the database should be retained or deleted when the [Database] CR instance is deleted.

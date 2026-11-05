@@ -8,18 +8,18 @@ import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.concurrent.TimeUnit;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class RoleCreate extends TestDataCreator<Role> {
+
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
@@ -43,11 +43,7 @@ public class RoleCreate extends TestDataCreator<Role> {
 
     private @Nullable PasswordEncryption withPasswordEncryption;
 
-    public RoleCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public RoleCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -64,9 +60,7 @@ public class RoleCreate extends TestDataCreator<Role> {
             return this;
         }
 
-        withPasswordSecretRef = given.one()
-                .secretRef()
-                .returnFirst();
+        withPasswordSecretRef = given.one().secretRef().returnFirst();
 
         return this;
     }
@@ -84,11 +78,7 @@ public class RoleCreate extends TestDataCreator<Role> {
 
         var item = new Role();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
+        item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
@@ -111,20 +101,14 @@ public class RoleCreate extends TestDataCreator<Role> {
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+        kubernetesClient.resources(Role.class).inNamespace(namespace).resource(item).serverSideApply();
 
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Role.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        role -> role != null && role.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+        return kubernetesClient
+            .resources(Role.class)
+            .inNamespace(namespace)
+            .withName(name)
+            .waitUntilCondition(role -> role != null && role.getStatus() != null, 5, TimeUnit.SECONDS);
     }
 
     private @Nullable String getNamespace() {
@@ -156,10 +140,7 @@ public class RoleCreate extends TestDataCreator<Role> {
             return withClusterConnectionName;
         }
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+        var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 

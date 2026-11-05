@@ -11,60 +11,48 @@ import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.ReclaimPolicy;
+import java.time.Duration;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 
-import java.time.Duration;
-import java.util.Objects;
-
 @Slf4j
 @RequiredArgsConstructor
 @NullMarked
-public class SchemaReconciler
-        extends BaseReconciler<Schema, CRStatus>
-        implements Reconciler<Schema>, Cleaner<Schema> {
+public class SchemaReconciler extends BaseReconciler<Schema, CRStatus> implements Reconciler<Schema>, Cleaner<Schema> {
+
     private final SchemaService schemaService;
 
     private final KubernetesClient kubernetesClient;
     private final PostgreSQLContextFactory contextFactory;
 
     @Override
-    public UpdateControl<Schema> reconcile(
-            Schema resource,
-            Context<Schema> context
-    ) {
+    public UpdateControl<Schema> reconcile(Schema resource, Context<Schema> context) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
 
-        log.info(
-                "Reconciling Schema [resource={}/{}, status.phase={}]",
-                namespace,
-                name,
-                status.getPhase()
-        );
+        log.info("Reconciling Schema [resource={}/{}, status.phase={}]", namespace, name, status.getPhase());
 
         var clusterRef = spec.getClusterRef();
 
-        var clusterConnectionOptional = getReferencedClusterConnection(
-                kubernetesClient,
-                resource,
-                clusterRef
-        );
+        var clusterConnectionOptional = getReferencedClusterConnection(kubernetesClient, resource, clusterRef);
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.updatePhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName()
-                    ));
+            status
+                .updatePhase(CRPhase.PENDING)
+                .setMessage(
+                    "The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
+                        getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                        clusterRef.getName()
+                    )
+                );
 
-            return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(Duration.ofSeconds(60));
+            return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var database = spec.getDatabase();
@@ -74,29 +62,16 @@ public class SchemaReconciler
 
         try (var dsl = contextFactory.getDSLContext(clusterConnection, database)) {
             // Run everything in a single transaction
-            updateControl = dsl.transactionResult(
-                    cfg -> reconcileInTransaction(
-                            cfg.dsl(),
-                            resource,
-                            status
-                    )
-            );
+            updateControl = dsl.transactionResult(cfg -> reconcileInTransaction(cfg.dsl(), resource, status));
         } catch (RuntimeException e) {
-            return handleError(
-                    resource,
-                    status,
-                    e
-            );
+            return handleError(resource, status, e);
         }
 
         return updateControl;
     }
 
     @Override
-    public DeleteControl cleanup(
-            Schema resource,
-            Context<Schema> context
-    ) {
+    public DeleteControl cleanup(Schema resource, Context<Schema> context) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
@@ -104,12 +79,12 @@ public class SchemaReconciler
         var name = resource.getMetadata().getName();
 
         log.info(
-                "{}ing Schema [resource={}/{}, spec.name={}, status.phase={}]",
-                spec.getReclaimPolicy().toValue(),
-                namespace,
-                name,
-                spec.getName(),
-                status.getPhase()
+            "{}ing Schema [resource={}/{}, spec.name={}, status.phase={}]",
+            spec.getReclaimPolicy().toValue(),
+            namespace,
+            name,
+            spec.getName(),
+            status.getPhase()
         );
 
         if (status.getPhase() != CRPhase.DELETING) {
@@ -121,8 +96,7 @@ public class SchemaReconciler
 
             context.getClient().resource(resource).patchStatus();
 
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofMillis(100));
+            return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofMillis(100));
         }
 
         // We do not actually delete the schema if the reclaimPolicy is set to RETAIN, we only delete the CR instance
@@ -132,22 +106,19 @@ public class SchemaReconciler
 
         var clusterRef = spec.getClusterRef();
 
-        var clusterConnectionOptional = getReferencedClusterConnection(
-                kubernetesClient,
-                resource,
-                clusterRef
-        );
+        var clusterConnectionOptional = getReferencedClusterConnection(kubernetesClient, resource, clusterRef);
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
+            status.setMessage(
+                "The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
                     getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
                     clusterRef.getName()
-            ));
+                )
+            );
 
             context.getClient().resource(resource).patchStatus();
 
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofSeconds(60));
+            return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var database = spec.getDatabase();
@@ -159,21 +130,20 @@ public class SchemaReconciler
             return DeleteControl.defaultDelete();
         } catch (RuntimeException e) {
             log.error(
-                    "Failed to delete Schema [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
-                            namespace,
-                            name,
-                            spec.getName(),
-                            status.getPhase()
-                    ),
-                    e
+                "Failed to delete Schema [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
+                    namespace,
+                    name,
+                    spec.getName(),
+                    status.getPhase()
+                ),
+                e
             );
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
 
             context.getClient().resource(resource).patchStatus();
 
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofSeconds(60));
+            return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 
@@ -182,11 +152,7 @@ public class SchemaReconciler
         return new CRStatus();
     }
 
-    private UpdateControl<Schema> reconcileInTransaction(
-            DSLContext tx,
-            Schema resource,
-            CRStatus status
-    ) {
+    private UpdateControl<Schema> reconcileInTransaction(DSLContext tx, Schema resource, CRStatus status) {
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
 
@@ -194,19 +160,11 @@ public class SchemaReconciler
 
         // Create and return the schema if it doesn't exist yet
         if (!schemaService.schemaExists(tx, spec)) {
-            log.info(
-                    "Creating Schema [resource={}/{}]",
-                    namespace,
-                    name
-            );
+            log.info("Creating Schema [resource={}/{}]", namespace, name);
 
-            schemaService.createSchema(
-                    tx,
-                    spec
-            );
+            schemaService.createSchema(tx, spec);
 
-            status.updatePhase(CRPhase.READY)
-                    .setMessage(null);
+            status.updatePhase(CRPhase.READY).setMessage(null);
 
             return UpdateControl.patchStatus(resource);
         }
@@ -216,31 +174,20 @@ public class SchemaReconciler
 
         // Without an owner in the spec, the schema keeps its current owner
         if (expectedOwner == null || Objects.equals(currentOwner, expectedOwner)) {
-            log.info(
-                    "Schema up-to-date [resource={}/{}]",
-                    namespace,
-                    name
-            );
+            log.info("Schema up-to-date [resource={}/{}]", namespace, name);
 
-            status.updatePhase(CRPhase.READY)
-                    .setMessage(null);
+            status.updatePhase(CRPhase.READY).setMessage(null);
 
             return UpdateControl.patchStatus(resource);
         }
 
-        log.info(
-                "Changing Schema owner [resource={}/{}]",
-                namespace,
-                name
-        );
+        log.info("Changing Schema owner [resource={}/{}]", namespace, name);
 
         schemaService.changeSchemaOwner(tx, spec);
 
-        status.updatePhase(CRPhase.READY)
-                .setMessage("Schema owner changed [previousOwner=%s, newOwner=%s]".formatted(
-                        currentOwner,
-                        expectedOwner
-                ));
+        status
+            .updatePhase(CRPhase.READY)
+            .setMessage("Schema owner changed [previousOwner=%s, newOwner=%s]".formatted(currentOwner, expectedOwner));
 
         return UpdateControl.patchStatus(resource);
     }

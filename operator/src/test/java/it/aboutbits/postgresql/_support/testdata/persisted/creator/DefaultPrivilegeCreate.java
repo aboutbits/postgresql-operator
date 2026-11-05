@@ -1,5 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -9,22 +11,20 @@ import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilege;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeSpec;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-
 @Setter
 @Accessors(fluent = true, chain = true)
 @NullMarked
 public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
+
     private final Given given;
 
     private final KubernetesClient kubernetesClient;
@@ -53,11 +53,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
     @Setter(AccessLevel.NONE)
     private List<Privilege> withPrivileges = new ArrayList<>();
 
-    public DefaultPrivilegeCreate(
-            int numberOfItems,
-            Given given,
-            KubernetesClient kubernetesClient
-    ) {
+    public DefaultPrivilegeCreate(int numberOfItems, Given given, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.given = given;
         this.kubernetesClient = kubernetesClient;
@@ -88,11 +84,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
 
         var item = new DefaultPrivilege();
 
-        item.setMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .withNamespace(namespace)
-                .build()
-        );
+        item.setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(getClusterConnectionName());
@@ -107,9 +99,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
 
         spec.setObjectType(withObjectType);
 
-        if (withObjectType != DefaultPrivilegeObjectType.SCHEMA
-                || withSchema != null
-        ) {
+        if (withObjectType != DefaultPrivilegeObjectType.SCHEMA || withSchema != null) {
             spec.setSchema(getSchema());
         }
 
@@ -117,20 +107,18 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
 
         item.setSpec(spec);
 
-        kubernetesClient.resources(DefaultPrivilege.class)
-                .inNamespace(namespace)
-                .resource(item)
-                .serverSideApply();
+        kubernetesClient.resources(DefaultPrivilege.class).inNamespace(namespace).resource(item).serverSideApply();
 
         //noinspection ConstantConditions
-        return kubernetesClient.resources(DefaultPrivilege.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .waitUntilCondition(
-                        defaultPrivilege -> defaultPrivilege != null && defaultPrivilege.getStatus() != null,
-                        5,
-                        TimeUnit.SECONDS
-                );
+        return kubernetesClient
+            .resources(DefaultPrivilege.class)
+            .inNamespace(namespace)
+            .withName(name)
+            .waitUntilCondition(
+                defaultPrivilege -> defaultPrivilege != null && defaultPrivilege.getStatus() != null,
+                5,
+                TimeUnit.SECONDS
+            );
     }
 
     private @Nullable String getNamespace() {
@@ -162,10 +150,7 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withClusterConnectionName;
         }
 
-        var clusterConnection = given.one()
-                .clusterConnection()
-                .withName("%s-conn".formatted(getName()))
-                .returnFirst();
+        var clusterConnection = given.one().clusterConnection().withName("%s-conn".formatted(getName())).returnFirst();
 
         withClusterConnectionNamespace = clusterConnection.getMetadata().getNamespace();
 
@@ -177,12 +162,13 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withDatabase;
         }
 
-        var item = given.one()
-                .database()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+        var item = given
+            .one()
+            .database()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
         withDatabase = item.getSpec().getName();
 
@@ -194,11 +180,12 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withRole;
         }
 
-        var item = given.one()
-                .role()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .returnFirst();
+        var item = given
+            .one()
+            .role()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .returnFirst();
 
         withRole = item.getSpec().getName();
 
@@ -210,11 +197,12 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withOwner;
         }
 
-        var item = given.one()
-                .role()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .returnFirst();
+        var item = given
+            .one()
+            .role()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .returnFirst();
 
         withOwner = item.getSpec().getName();
 
@@ -226,13 +214,14 @@ public class DefaultPrivilegeCreate extends TestDataCreator<DefaultPrivilege> {
             return withSchema;
         }
 
-        var item = given.one()
-                .schema()
-                .withClusterConnectionName(getClusterConnectionName())
-                .withClusterConnectionNamespace(withClusterConnectionNamespace)
-                .withDatabase(getDatabase())
-                .withReclaimPolicy(DELETE)
-                .returnFirst();
+        var item = given
+            .one()
+            .schema()
+            .withClusterConnectionName(getClusterConnectionName())
+            .withClusterConnectionNamespace(withClusterConnectionNamespace)
+            .withDatabase(getDatabase())
+            .withReclaimPolicy(DELETE)
+            .returnFirst();
 
         withSchema = item.getSpec().getName();
 

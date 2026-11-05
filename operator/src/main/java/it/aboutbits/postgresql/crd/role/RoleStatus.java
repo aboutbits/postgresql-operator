@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 @Accessors(chain = true)
 @NullMarked
 public class RoleStatus extends CRStatus {
+
     /// Keyed fingerprint (HMAC-SHA256) of the password the operator applied last.
     ///
     /// The operator cannot read the password hash from `pg_authid` without superuser rights,

@@ -13,29 +13,24 @@ import org.jspecify.annotations.Nullable;
 @Setter
 @NullMarked
 public class SchemaSpec {
+
     @Required
     private ResourceRef clusterRef = new ResourceRef();
 
     @Required
     @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Schema database is immutable. Moving a schema to another database requires dumping and restoring the schema to the new database."
+        value = "self == oldSelf",
+        message = "The Schema database is immutable. Moving a schema to another database requires dumping and restoring the schema to the new database."
     )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Schema database must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Schema database must not be empty.")
     private String database = "";
 
     @Required
     @ValidationRule(
-            value = "self == oldSelf",
-            message = "The Schema name is immutable. Allowing to rename the Schema name using 'alter schema <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
+        value = "self == oldSelf",
+        message = "The Schema name is immutable. Allowing to rename the Schema name using 'alter schema <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
     )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Schema name must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Schema name must not be empty.")
     private String name = "";
 
     /// Whether the schema should be retained or deleted when the [Schema] CR instance is deleted.

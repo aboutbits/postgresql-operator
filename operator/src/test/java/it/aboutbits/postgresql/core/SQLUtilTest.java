@@ -1,5 +1,9 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.sql;
+
+import java.util.List;
 import org.jooq.QueryPart;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -8,15 +12,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.jooq.impl.DSL.sql;
-
 @NullMarked
 class SQLUtilTest {
+
     @Nested
     class ConcatenateQueryPartsWithSpaces {
+
         @Test
         @DisplayName("when empty, should return empty string")
         void whenEmpty_shouldReturnEmptyString() {
@@ -56,6 +57,7 @@ class SQLUtilTest {
 
     @Nested
     class ConcatenateQueryPartsWithComma {
+
         @Test
         @DisplayName("when empty, should return empty string")
         void whenEmpty_shouldReturnEmptyString() {

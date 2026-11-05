@@ -7,5 +7,5 @@ public enum CRPhase {
     PENDING,
     READY,
     ERROR,
-    DELETING
+    DELETING,
 }

@@ -12,35 +12,22 @@ import org.jspecify.annotations.NullMarked;
 
 @Version("v1")
 @Group("postgresql.aboutbits.it")
+@AdditionalPrinterColumn(name = "Name", jsonPath = ".status.name", type = AdditionalPrinterColumn.Type.STRING)
+@AdditionalPrinterColumn(name = "Phase", jsonPath = ".status.phase", type = AdditionalPrinterColumn.Type.STRING)
+@AdditionalPrinterColumn(name = "Message", jsonPath = ".status.message", type = AdditionalPrinterColumn.Type.STRING)
 @AdditionalPrinterColumn(
-        name = "Name",
-        jsonPath = ".status.name",
-        type = AdditionalPrinterColumn.Type.STRING
+    name = "Since",
+    jsonPath = ".status.lastPhaseTransitionTime",
+    type = AdditionalPrinterColumn.Type.DATE
 )
 @AdditionalPrinterColumn(
-        name = "Phase",
-        jsonPath = ".status.phase",
-        type = AdditionalPrinterColumn.Type.STRING
-)
-@AdditionalPrinterColumn(
-        name = "Message",
-        jsonPath = ".status.message",
-        type = AdditionalPrinterColumn.Type.STRING
-)
-@AdditionalPrinterColumn(
-        name = "Since",
-        jsonPath = ".status.lastPhaseTransitionTime",
-        type = AdditionalPrinterColumn.Type.DATE
-)
-@AdditionalPrinterColumn(
-        name = "Age",
-        jsonPath = ".metadata.creationTimestamp",
-        type = AdditionalPrinterColumn.Type.DATE
+    name = "Age",
+    jsonPath = ".metadata.creationTimestamp",
+    type = AdditionalPrinterColumn.Type.DATE
 )
 @NullMarked
-public class DefaultPrivilege
-        extends CustomResource<DefaultPrivilegeSpec, CRStatus>
-        implements Namespaced, Named {
+public class DefaultPrivilege extends CustomResource<DefaultPrivilegeSpec, CRStatus> implements Namespaced, Named {
+
     @Override
     @JsonIgnore
     public String getName() {
