@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.axionReleasePlugin)
     alias(libs.plugins.errorPronePlugin)
     alias(libs.plugins.jooqPlugin).apply(false)
+    alias(libs.plugins.spotlessPlugin)
 }
 
 description = "AboutBits PostgreSQL Operator"
@@ -25,6 +26,28 @@ scmVersion {
 }
 
 version = scmVersion.version
+
+spotless {
+    java {
+        // The generated module holds jOOQ code, which is not formatted by hand
+        target("operator/src/**/*.java")
+
+        // Needs Node.js and npm, Spotless installs the npm packages itself
+        prettier(
+            mapOf(
+                "prettier" to libs.versions.prettier.get(),
+                "prettier-plugin-java" to libs.versions.prettierPluginJava.get(),
+            ),
+        ).config(
+            mapOf(
+                "parser" to "java",
+                "plugins" to listOf("prettier-plugin-java"),
+                "printWidth" to 120,
+                "tabWidth" to 4,
+            ),
+        )
+    }
+}
 
 allprojects {
     group = "it.aboutbits.postgresql"
