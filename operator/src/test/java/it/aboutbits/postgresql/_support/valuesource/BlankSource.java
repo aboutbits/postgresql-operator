@@ -14,5 +14,4 @@ import java.lang.annotation.Target;
 @Documented
 @ValueSource(strings = {"", " ", "         ", "\t", "\r", "\n", "\r\n", "\f", "\u000B"})
 @NullMarked
-public @interface BlankSource {
-}
+public @interface BlankSource {}

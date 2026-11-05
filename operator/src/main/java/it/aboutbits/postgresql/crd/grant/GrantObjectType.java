@@ -1,16 +1,5 @@
 package it.aboutbits.postgresql.crd.grant;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import it.aboutbits.postgresql.core.Privilege;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-import org.jooq.Keyword;
-import org.jspecify.annotations.NullMarked;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
 import static it.aboutbits.postgresql.core.Privilege.CONNECT;
 import static it.aboutbits.postgresql.core.Privilege.CREATE;
 import static it.aboutbits.postgresql.core.Privilege.DELETE;
@@ -23,45 +12,32 @@ import static it.aboutbits.postgresql.core.Privilege.TRIGGER;
 import static it.aboutbits.postgresql.core.Privilege.TRUNCATE;
 import static it.aboutbits.postgresql.core.Privilege.UPDATE;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
+
 import static org.jooq.impl.DSL.keyword;
+
+import com.fasterxml.jackson.annotation.JsonValue;
+
+import it.aboutbits.postgresql.core.Privilege;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+import org.jooq.Keyword;
+import org.jspecify.annotations.NullMarked;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
 @Getter
 @Accessors(fluent = true)
 @NullMarked
 public enum GrantObjectType {
-    DATABASE(
-            List.of(
-                    CREATE,
-                    CONNECT,
-                    TEMPORARY
-            )
-    ),
-    SCHEMA(
-            List.of(
-                    USAGE,
-                    CREATE
-            )
-    ),
-    TABLE(
-            List.of(
-                    SELECT,
-                    INSERT,
-                    UPDATE,
-                    DELETE,
-                    TRUNCATE,
-                    REFERENCES,
-                    TRIGGER,
-                    MAINTAIN
-            )
-    ),
-    SEQUENCE(
-            List.of(
-                    USAGE,
-                    SELECT,
-                    UPDATE
-            )
-    );
+    DATABASE(List.of(CREATE, CONNECT, TEMPORARY)),
+    SCHEMA(List.of(USAGE, CREATE)),
+    TABLE(List.of(SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN)),
+    SEQUENCE(List.of(USAGE, SELECT, UPDATE));
 
     @SuppressWarnings("ImmutableEnumChecker")
     private final List<Privilege> privileges;
@@ -69,9 +45,7 @@ public enum GrantObjectType {
     @SuppressWarnings("ImmutableEnumChecker")
     private final Set<Privilege> privilegesSet;
 
-    GrantObjectType(
-            List<Privilege> privileges
-    ) {
+    GrantObjectType(List<Privilege> privileges) {
         this.privileges = privileges;
         this.privilegesSet = Set.copyOf(privileges);
     }
@@ -82,8 +56,6 @@ public enum GrantObjectType {
     }
 
     public Keyword objectType() {
-        return keyword(
-                name().toLowerCase(Locale.ROOT)
-        );
+        return keyword(name().toLowerCase(Locale.ROOT));
     }
 }

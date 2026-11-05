@@ -1,23 +1,26 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
+
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
+
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 @EnableKubernetesMockClient(crud = true)
 @NullMarked
@@ -49,10 +52,7 @@ class PasswordFingerprintServiceTest {
             service.fingerprint("password", PasswordEncryption.SCRAM_SHA_256);
 
             // then
-            var secret = client.secrets()
-                    .inNamespace(client.getNamespace())
-                    .withName(SECRET_NAME)
-                    .get();
+            var secret = client.secrets().inNamespace(client.getNamespace()).withName(SECRET_NAME).get();
 
             assertThat(secret).isNotNull();
             assertThat(secret.getType()).isEqualTo("Opaque");
@@ -77,16 +77,12 @@ class PasswordFingerprintServiceTest {
 
         @Test
         @DisplayName(
-                "When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change"
-        )
+                "When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change")
         void whenSecretLost_shouldCreateNewKey() {
             // given
             var fingerprint = newService().fingerprint("password", PasswordEncryption.SCRAM_SHA_256);
 
-            client.secrets()
-                    .inNamespace(client.getNamespace())
-                    .withName(SECRET_NAME)
-                    .delete();
+            client.secrets().inNamespace(client.getNamespace()).withName(SECRET_NAME).delete();
 
             // when: the operator restarts
             var fingerprintWithNewKey = newService().fingerprint("password", PasswordEncryption.SCRAM_SHA_256);
@@ -101,13 +97,16 @@ class PasswordFingerprintServiceTest {
             // given
             client.secrets()
                     .inNamespace(client.getNamespace())
-                    .resource(new SecretBuilder()
-                            .withNewMetadata()
-                            .withName(SECRET_NAME)
-                            .endMetadata()
-                            .addToData("other", Base64.getEncoder().encodeToString("value".getBytes(StandardCharsets.UTF_8)))
-                            .build()
-                    )
+                    .resource(
+                            new SecretBuilder()
+                                    .withNewMetadata()
+                                    .withName(SECRET_NAME)
+                                    .endMetadata()
+                                    .addToData(
+                                            "other",
+                                            Base64.getEncoder()
+                                                    .encodeToString("value".getBytes(StandardCharsets.UTF_8)))
+                                    .build())
                     .create();
 
             var service = newService();
@@ -172,14 +171,15 @@ class PasswordFingerprintServiceTest {
             // given
             var fingerprint = newService().fingerprint("password", PasswordEncryption.SCRAM_SHA_256);
 
-            var key = Base64.getDecoder().decode(
-                    client.secrets()
-                            .inNamespace(client.getNamespace())
-                            .withName(SECRET_NAME)
-                            .require()
-                            .getData()
-                            .get(PasswordFingerprintService.SECRET_DATA_KEY)
-            );
+            var key =
+                    Base64.getDecoder()
+                            .decode(
+                                    client.secrets()
+                                            .inNamespace(client.getNamespace())
+                                            .withName(SECRET_NAME)
+                                            .require()
+                                            .getData()
+                                            .get(PasswordFingerprintService.SECRET_DATA_KEY));
 
             // when
             var mac = Mac.getInstance("HmacSHA256");

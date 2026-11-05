@@ -1,18 +1,20 @@
 package it.aboutbits.postgresql._support.testdata.base;
 
+import static org.awaitility.Awaitility.await;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.database.Database;
 import it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilege;
 import it.aboutbits.postgresql.crd.grant.Grant;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.schema.Schema;
+
 import org.jspecify.annotations.NullMarked;
 
 import java.time.Duration;
-
-import static org.awaitility.Awaitility.await;
 
 @NullMarked
 public final class TestUtil {
@@ -26,10 +28,7 @@ public final class TestUtil {
         deleteResource(kubernetesClient, ClusterConnection.class);
     }
 
-    public static void deleteResource(
-            KubernetesClient kubernetesClient,
-            Class<? extends HasMetadata> resourceClass
-    ) {
+    public static void deleteResource(KubernetesClient kubernetesClient, Class<? extends HasMetadata> resourceClass) {
         // Async call to the Kubernetes API Server that triggers the Operator Controllers
         kubernetesClient.resources(resourceClass).delete();
 
@@ -39,6 +38,5 @@ public final class TestUtil {
                 .until(() -> kubernetesClient.resources(resourceClass).list().getItems().isEmpty());
     }
 
-    private TestUtil() {
-    }
+    private TestUtil() {}
 }

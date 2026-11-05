@@ -1,7 +1,9 @@
 package it.aboutbits.postgresql.core;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+
 import lombok.RequiredArgsConstructor;
+
 import org.jspecify.annotations.NullMarked;
 
 @RequiredArgsConstructor

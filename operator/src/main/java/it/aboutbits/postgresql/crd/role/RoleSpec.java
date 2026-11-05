@@ -2,10 +2,13 @@ package it.aboutbits.postgresql.crd.role;
 
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
+
 import it.aboutbits.postgresql.core.ResourceRef;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -17,67 +20,51 @@ import java.util.List;
 @Setter
 @NullMarked
 public class RoleSpec {
-    @Required
-    private ResourceRef clusterRef = new ResourceRef();
+    @Required private ResourceRef clusterRef = new ResourceRef();
 
     @Required
     @ValidationRule(
             value = "self == oldSelf",
-            message = "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
-    )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Role name must not be empty."
-    )
+            message =
+                    "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the Operator.")
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Role name must not be empty.")
     private String name = "";
 
-    @io.fabric8.generator.annotation.Nullable
-    private @Nullable String comment;
+    @io.fabric8.generator.annotation.Nullable private @Nullable String comment;
 
-    @io.fabric8.generator.annotation.Nullable
-    private @Nullable ResourceRef passwordSecretRef;
+    @io.fabric8.generator.annotation.Nullable private @Nullable ResourceRef passwordSecretRef;
 
     /// How the operator sends the password to PostgreSQL. Defaults to an operator-side SCRAM-SHA-256 verifier.
     @io.fabric8.generator.annotation.Nullable
     private PasswordEncryption passwordEncryption = PasswordEncryption.SCRAM_SHA_256;
 
-    @io.fabric8.generator.annotation.Nullable
-    private Flags flags = new Flags();
+    @io.fabric8.generator.annotation.Nullable private Flags flags = new Flags();
 
     @Getter
     @Setter
     @EqualsAndHashCode
-    // The Fabric8 @Nullable annotation is relevant for generating nullable annotations in the resulting CRD YAML JSON Schema
+    // The Fabric8 @Nullable annotation is relevant for generating nullable annotations in the resulting CRD YAML JSON
+    // Schema
     @SuppressWarnings({"NullablePrimitive"})
     public static class Flags {
-        @io.fabric8.generator.annotation.Nullable
-        private boolean superuser = false;
+        @io.fabric8.generator.annotation.Nullable private boolean superuser = false;
 
-        @io.fabric8.generator.annotation.Nullable
-        private boolean createdb = false;
+        @io.fabric8.generator.annotation.Nullable private boolean createdb = false;
 
-        @io.fabric8.generator.annotation.Nullable
-        private boolean createrole = false;
+        @io.fabric8.generator.annotation.Nullable private boolean createrole = false;
 
-        @io.fabric8.generator.annotation.Nullable
-        private boolean inherit = true;
+        @io.fabric8.generator.annotation.Nullable private boolean inherit = true;
 
-        @io.fabric8.generator.annotation.Nullable
-        private boolean replication = false;
+        @io.fabric8.generator.annotation.Nullable private boolean replication = false;
 
-        @io.fabric8.generator.annotation.Nullable
-        private boolean bypassrls = false;
+        @io.fabric8.generator.annotation.Nullable private boolean bypassrls = false;
 
-        @io.fabric8.generator.annotation.Nullable
-        private int connectionLimit = -1;
+        @io.fabric8.generator.annotation.Nullable private int connectionLimit = -1;
 
-        @io.fabric8.generator.annotation.Nullable
-        private @Nullable OffsetDateTime validUntil = null;
+        @io.fabric8.generator.annotation.Nullable private @Nullable OffsetDateTime validUntil = null;
 
-        @io.fabric8.generator.annotation.Nullable
-        private List<String> inRole = new ArrayList<>();
+        @io.fabric8.generator.annotation.Nullable private List<String> inRole = new ArrayList<>();
 
-        @io.fabric8.generator.annotation.Nullable
-        private List<String> role = new ArrayList<>();
+        @io.fabric8.generator.annotation.Nullable private List<String> role = new ArrayList<>();
     }
 }

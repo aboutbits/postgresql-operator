@@ -5,11 +5,14 @@ import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
+
 import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.core.schema_customizer.HostCustomizer;
+
 import lombok.Getter;
 import lombok.Setter;
+
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -21,15 +24,11 @@ import java.util.Map;
 @SchemaCustomizer(value = HostCustomizer.class, input = "host")
 @ValidationRule(
         value = "has(self.adminSecretRef) != has(self.adminSecretFileRef)",
-        message = "Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided"
-)
+        message = "Exactly one of 'adminSecretRef' or 'adminSecretFileRef' must be provided")
 @NullMarked
 public class ClusterConnectionSpec {
     @Required
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The ClusterConnection host must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The ClusterConnection host must not be empty.")
     private String host = "";
 
     @Required
@@ -38,18 +37,12 @@ public class ClusterConnectionSpec {
     private int port = -1;
 
     @Required
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The ClusterConnection database must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The ClusterConnection database must not be empty.")
     private String database = "postgres";
 
-    @io.fabric8.generator.annotation.Nullable
-    private @Nullable ResourceRef adminSecretRef;
+    @io.fabric8.generator.annotation.Nullable private @Nullable ResourceRef adminSecretRef;
 
-    @io.fabric8.generator.annotation.Nullable
-    private @Nullable FileRef adminSecretFileRef;
+    @io.fabric8.generator.annotation.Nullable private @Nullable FileRef adminSecretFileRef;
 
-    @io.fabric8.generator.annotation.Nullable
-    private Map<String, String> parameters = new HashMap<>();
+    @io.fabric8.generator.annotation.Nullable private Map<String, String> parameters = new HashMap<>();
 }

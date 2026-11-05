@@ -1,14 +1,15 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
+
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @NullMarked
 class CRStatusTest {
@@ -43,14 +44,12 @@ class CRStatusTest {
         @DisplayName("Changing the phase again should replace the previous transition time")
         void secondPhaseChange_replacesTransitionTime() {
             // given
-            var json = """
-                       {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
-                       """;
+            var json =
+                    """
+                    {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
+                    """;
 
-            var status = new KubernetesSerialization().unmarshal(
-                    json,
-                    CRStatus.class
-            );
+            var status = new KubernetesSerialization().unmarshal(json, CRStatus.class);
 
             // when
             status.updatePhase(CRPhase.ERROR);
@@ -67,14 +66,12 @@ class CRStatusTest {
         void samePhase_keepsTransitionTime() {
             // given
             // A fixed time in the past, so the test fails if the time is overwritten with now.
-            var json = """
-                       {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
-                       """;
+            var json =
+                    """
+                    {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
+                    """;
 
-            var status = new KubernetesSerialization().unmarshal(
-                    json,
-                    CRStatus.class
-            );
+            var status = new KubernetesSerialization().unmarshal(json, CRStatus.class);
 
             // when
             status.updatePhase(CRPhase.READY);
@@ -89,9 +86,7 @@ class CRStatusTest {
         @DisplayName("Updating the phase should be chainable with the remaining status setters")
         void updatePhase_isChainable() {
             // when
-            var status = new CRStatus()
-                    .updatePhase(CRPhase.ERROR)
-                    .setMessage("Something went wrong");
+            var status = new CRStatus().updatePhase(CRPhase.ERROR).setMessage("Something went wrong");
 
             // then
             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
@@ -106,15 +101,13 @@ class CRStatusTest {
         void statusFromCluster_keepsTransitionTime() {
             // given
             // The API server sends the status keys in alphabetical order.
-            var json = """
-                       {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
-                       """;
+            var json =
+                    """
+                    {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
+                    """;
 
             // when
-            var status = new KubernetesSerialization().unmarshal(
-                    json,
-                    CRStatus.class
-            );
+            var status = new KubernetesSerialization().unmarshal(json, CRStatus.class);
 
             // then
             assertThat(status.getPhase()).isEqualTo(CRPhase.READY);

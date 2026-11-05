@@ -1,6 +1,7 @@
 package it.aboutbits.postgresql._support.testdata.base;
 
 import net.datafaker.Faker;
+
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -38,9 +39,7 @@ public abstract class TestDataCreator<T> {
         var result = new ArrayList<T>();
 
         for (var index = 0; index < numberOfItems; index++) {
-            result.add(
-                    create(index)
-            );
+            result.add(create(index));
         }
 
         return result;
@@ -53,12 +52,8 @@ public abstract class TestDataCreator<T> {
 
         if (name.length() > 60) {
             throw new IllegalArgumentException(
-                    "The name is too long (must be <= 60 to allow '-' + at least 2 random chars, max %d total) [name=%s, length=%d]".formatted(
-                            maxLength,
-                            name,
-                            name.length()
-                    )
-            );
+                    "The name is too long (must be <= 60 to allow '-' + at least 2 random chars, max %d total) [name=%s, length=%d]"
+                            .formatted(maxLength, name, name.length()));
         }
 
         var separator = "-";

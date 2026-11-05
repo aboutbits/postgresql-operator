@@ -1,11 +1,11 @@
 package it.aboutbits.postgresql.core;
 
+import static org.jooq.impl.DSL.sql;
+
 import org.jooq.QueryPart;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
-
-import static org.jooq.impl.DSL.sql;
 
 @NullMarked
 public final class SQLUtil {
@@ -18,10 +18,7 @@ public final class SQLUtil {
     }
 
     /// Concatenate [QueryPart]s with the requested separator
-    private static QueryPart concatenateQueryParts(
-            List<? extends QueryPart> items,
-            String separator
-    ) {
+    private static QueryPart concatenateQueryParts(List<? extends QueryPart> items, String separator) {
         var size = items.size();
 
         if (items.isEmpty()) {
@@ -40,12 +37,8 @@ public final class SQLUtil {
             template.append(separator).append('{').append(i).append('}');
         }
 
-        return sql(
-                template.toString(),
-                items.toArray(QueryPart[]::new)
-        );
+        return sql(template.toString(), items.toArray(QueryPart[]::new));
     }
 
-    private SQLUtil() {
-    }
+    private SQLUtil() {}
 }
