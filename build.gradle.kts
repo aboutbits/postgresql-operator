@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.axionReleasePlugin)
     alias(libs.plugins.errorPronePlugin)
     alias(libs.plugins.jooqPlugin).apply(false)
+    alias(libs.plugins.spotlessPlugin)
 }
 
 description = "AboutBits PostgreSQL Operator"
@@ -25,6 +26,14 @@ scmVersion {
 }
 
 version = scmVersion.version
+
+spotless {
+    java {
+        // The generated module holds jOOQ code, which is not formatted by hand
+        target("operator/src/**/*.java")
+        princeOfSpace(libs.versions.princeOfSpace.get()).lineLength(120).javaLanguageLevel(25)
+    }
+}
 
 allprojects {
     group = "it.aboutbits.postgresql"
