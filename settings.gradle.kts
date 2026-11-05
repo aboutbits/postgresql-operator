@@ -4,6 +4,9 @@ include("operator")
 include("generated")
 
 pluginManagement {
+    // Convention plugins of this build, for example the Java format with Spotless
+    includeBuild("build-logic")
+
     val quarkusPluginVersion = providers.gradleProperty("quarkusPluginVersion").get()
     val quarkusPluginId = providers.gradleProperty("quarkusPluginId").get()
     repositories {

@@ -9,7 +9,8 @@ plugins {
     alias(libs.plugins.axionReleasePlugin)
     alias(libs.plugins.errorPronePlugin)
     alias(libs.plugins.jooqPlugin).apply(false)
-    alias(libs.plugins.spotlessPlugin)
+    // Spotless with Google Java Format (AOSP) and our layout step, see build-logic
+    id("it.aboutbits.java-format")
 }
 
 description = "AboutBits PostgreSQL Operator"
@@ -33,13 +34,12 @@ spotless {
         target("operator/src/**/*.java")
 
         toggleOffOn("@formatter:off", "@formatter:on")
-
-        googleJavaFormat(libs.versions.googleJavaFormat.get())
-            .aosp()
-            .reorderImports(true)
-            // Same width as max_line_length in .editorconfig
-            .maxLineLength(120)
     }
+}
+
+// The tests of an included build do not run with the check of the main build without this
+tasks.check {
+    dependsOn(gradle.includedBuild("build-logic").task(":test"))
 }
 
 allprojects {

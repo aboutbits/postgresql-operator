@@ -18,6 +18,8 @@ assertj = "3.27.7"
 datafaker = "2.7.0"
 errorProne = "2.51.0"
 errorPronePlugin = "5.1.1"
+# Only for the tests of the build-logic included build, the operator gets JUnit from the Quarkus BOM
+junit = "6.0.3"
 nullAway = "0.14.3"
 
 [plugins]
@@ -29,17 +31,19 @@ axionReleasePlugin = { id = "pl.allegro.tech.build.axion-release", version.ref =
 # https://mvnrepository.com/artifact/net.ltgt.errorprone/net.ltgt.errorprone.gradle.plugin
 errorPronePlugin = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
 
-# https://github.com/diffplug/spotless/tree/main/plugin-gradle
-# https://plugins.gradle.org/plugin/com.diffplug.spotless
-# The formatter version is googleJavaFormat, see https://github.com/google/google-java-format
-spotlessPlugin = { id = "com.diffplug.spotless", version.ref = "spotlessPlugin" }
-
 # https://www.jooq.org/doc/latest/manual/code-generation/codegen-execution/codegen-gradle/
 # https://github.com/jOOQ/jOOQ/tree/main/jOOQ-codegen-gradle
 # https://mvnrepository.com/artifact/org.jooq.jooq-codegen-gradle/org.jooq.jooq-codegen-gradle.gradle.plugin
 jooqPlugin = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq" }
 
 [libraries]
+# Spotless #
+# https://github.com/diffplug/spotless/tree/main/plugin-gradle
+# https://plugins.gradle.org/plugin/com.diffplug.spotless
+# The build-logic included build applies it, the formatter version is googleJavaFormat,
+# see https://github.com/google/google-java-format
+spotlessPluginGradle = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotlessPlugin" }
+
 # jOOQ #
 # https://www.jooq.org/
 # https://www.jooq.org/download/versions
@@ -89,6 +93,11 @@ assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj
 # https://github.com/datafaker-net/datafaker
 # https://mvnrepository.com/artifact/net.datafaker/datafaker
 datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }
+
+# https://junit.org/
+# https://github.com/junit-team/junit-framework
+# https://mvnrepository.com/artifact/org.junit/junit-bom
+junitBom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
 
 # https://errorprone.info/
 # https://github.com/google/error-prone
