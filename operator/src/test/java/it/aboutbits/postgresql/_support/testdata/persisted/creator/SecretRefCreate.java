@@ -6,14 +6,11 @@ import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_A
 
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql.core.ResourceRef;
-
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

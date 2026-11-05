@@ -2,10 +2,8 @@ package it.aboutbits.postgresql.core;
 
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-
 import lombok.Getter;
 import lombok.Setter;
-
 import org.jspecify.annotations.NullMarked;
 
 /// A reference to a file inside the operator container.

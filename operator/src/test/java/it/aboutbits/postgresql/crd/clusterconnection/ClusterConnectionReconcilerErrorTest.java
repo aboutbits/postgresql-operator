@@ -9,19 +9,15 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
-
 import org.jooq.CloseableDSLContext;
 import org.jooq.exception.DataAccessException;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
 
 @QuarkusTest
 @RequiredArgsConstructor

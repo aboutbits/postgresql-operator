@@ -5,7 +5,6 @@ import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import io.fabric8.kubernetes.api.model.ConfigBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -15,14 +14,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.process.ProcessBuilder;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jspecify.annotations.NullMarked;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +24,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jspecify.annotations.NullMarked;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /// See
 /// https://github.com/quarkiverse/quarkus-operator-sdk/blob/7.7.4/samples/exposedapp/src/test/java/io/halkyon/HelmDeploymentE2EIT.java

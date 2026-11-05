@@ -5,19 +5,15 @@ import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Min;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-
 import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.core.schema_customizer.HostCustomizer;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 @Setter

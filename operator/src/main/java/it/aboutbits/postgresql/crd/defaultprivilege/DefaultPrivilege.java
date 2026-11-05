@@ -1,16 +1,13 @@
 package it.aboutbits.postgresql.crd.defaultprivilege;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import io.fabric8.crd.generator.annotation.AdditionalPrinterColumn;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
-
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.Named;
-
 import org.jspecify.annotations.NullMarked;
 
 @Version("v1")

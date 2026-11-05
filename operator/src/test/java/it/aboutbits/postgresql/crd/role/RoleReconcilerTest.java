@@ -3,7 +3,6 @@ package it.aboutbits.postgresql.crd.role;
 import static it.aboutbits.postgresql._support.testdata.base.TestDataCreator.randomKubernetesNameSuffix;
 import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.jooq.impl.DSL.inline;
@@ -14,7 +13,6 @@ import static org.jooq.impl.DSL.val;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
-
 import it.aboutbits.postgresql._support.PostgreSQLPasswordVerifier;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
@@ -22,9 +20,16 @@ import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.ResourceRef;
-
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
-
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jspecify.annotations.NullMarked;
@@ -35,16 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 @QuarkusTest
 @RequiredArgsConstructor

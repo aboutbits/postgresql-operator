@@ -6,7 +6,6 @@ import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_NAMESPACE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.SEQUENCE;
 import static it.aboutbits.postgresql.crd.grant.GrantObjectType.TABLE;
-
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.query;
@@ -17,21 +16,18 @@ import static org.jooq.impl.DSL.val;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.core.SQLUtil;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
-
 import jakarta.inject.Singleton;
-
-import org.jooq.DSLContext;
-import org.jooq.DataType;
-import org.jooq.impl.SQLDataType;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jooq.DSLContext;
+import org.jooq.DataType;
+import org.jooq.impl.SQLDataType;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Singleton
 @NullMarked

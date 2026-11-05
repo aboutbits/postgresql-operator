@@ -3,13 +3,11 @@ package it.aboutbits.postgresql.core.schema_customizer;
 import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
-
-import org.jspecify.annotations.NullMarked;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.NullMarked;
 
 /// A [SchemaCustomizer.Customizer] that adds a Kubernetes name validation `pattern` (RFC 1123 DNS label) to string
 /// properties in the generated CRD JSON Schema.

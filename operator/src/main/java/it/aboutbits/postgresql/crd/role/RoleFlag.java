@@ -3,7 +3,6 @@ package it.aboutbits.postgresql.crd.role;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-
 import org.jspecify.annotations.NullMarked;
 
 @Getter

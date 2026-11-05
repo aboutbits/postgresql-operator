@@ -15,25 +15,21 @@ import io.javaoperatorsdk.operator.processing.event.source.SecondaryToPrimaryMap
 import io.javaoperatorsdk.operator.processing.event.source.informer.InformerEventSource;
 import io.quarkiverse.operatorsdk.annotations.AdditionalRBACRules;
 import io.quarkiverse.operatorsdk.annotations.RBACRule;
-
 import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.KubernetesService;
 import it.aboutbits.postgresql.core.PasswordFingerprintService;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Slf4j
 @AdditionalRBACRules({

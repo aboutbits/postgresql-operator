@@ -6,21 +6,17 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
-
 import it.aboutbits.postgresql.core.BaseReconciler;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
 import it.aboutbits.postgresql.core.ReclaimPolicy;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
-
 import java.time.Duration;
 import java.util.Objects;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
+import org.jspecify.annotations.NullMarked;
 
 @Slf4j
 @RequiredArgsConstructor

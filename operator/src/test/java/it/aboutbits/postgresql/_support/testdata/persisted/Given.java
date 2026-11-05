@@ -1,7 +1,6 @@
 package it.aboutbits.postgresql._support.testdata.persisted;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import it.aboutbits.postgresql._support.testdata.persisted.creator.ClusterConnectionCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.DatabaseCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.DefaultPrivilegeCreate;
@@ -9,16 +8,12 @@ import it.aboutbits.postgresql._support.testdata.persisted.creator.GrantCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.RoleCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SchemaCreate;
 import it.aboutbits.postgresql._support.testdata.persisted.creator.SecretRefCreate;
-
 import jakarta.enterprise.context.ApplicationScoped;
-
+import java.net.URI;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jspecify.annotations.NullMarked;
-
-import java.net.URI;
 
 @ApplicationScoped
 @RequiredArgsConstructor

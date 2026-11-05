@@ -1,13 +1,8 @@
 package it.aboutbits.postgresql.core;
 
 import com.ongres.scram.common.StringPreparation;
-
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
-
 import jakarta.inject.Singleton;
-
-import org.jspecify.annotations.NullMarked;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -15,11 +10,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.jspecify.annotations.NullMarked;
 
 /// Builds the password literal that the operator sends to PostgreSQL in `CREATE ROLE` and `ALTER ROLE`.
 ///

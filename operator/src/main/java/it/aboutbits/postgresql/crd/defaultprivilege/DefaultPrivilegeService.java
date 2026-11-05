@@ -3,7 +3,6 @@ package it.aboutbits.postgresql.crd.defaultprivilege;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.ACLEXPLODE;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_DEFAULT_ACL;
 import static it.aboutbits.postgresql.crd.defaultprivilege.DefaultPrivilegeObjectType.SCHEMA;
-
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.query;
@@ -15,15 +14,12 @@ import static org.jooq.impl.DSL.val;
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.core.SQLUtil;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
-
 import jakarta.inject.Singleton;
-
+import java.util.Set;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.impl.SQLDataType;
 import org.jspecify.annotations.NullMarked;
-
-import java.util.Set;
 
 @Singleton
 @NullMarked

@@ -12,22 +12,17 @@ import static it.aboutbits.postgresql.core.Privilege.TRIGGER;
 import static it.aboutbits.postgresql.core.Privilege.TRUNCATE;
 import static it.aboutbits.postgresql.core.Privilege.UPDATE;
 import static it.aboutbits.postgresql.core.Privilege.USAGE;
-
 import static org.jooq.impl.DSL.keyword;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import it.aboutbits.postgresql.core.Privilege;
-
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
-import org.jooq.Keyword;
-import org.jspecify.annotations.NullMarked;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import org.jooq.Keyword;
+import org.jspecify.annotations.NullMarked;
 
 /// [PostgreSQL: Documentation: GRANT](https://www.postgresql.org/docs/current/sql-grant.html)
 @Getter

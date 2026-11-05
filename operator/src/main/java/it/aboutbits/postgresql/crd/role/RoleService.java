@@ -2,7 +2,6 @@ package it.aboutbits.postgresql.crd.role;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTH_MEMBERS;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_ROLES;
-
 import static org.jooq.impl.DSL.currentUser;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.keyword;
@@ -16,9 +15,12 @@ import static org.jooq.impl.DSL.val;
 
 import it.aboutbits.postgresql.core.SQLUtil;
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
-
 import jakarta.inject.Singleton;
-
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.jooq.QueryPart;
@@ -26,12 +28,6 @@ import org.jooq.Record1;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 /// Reads and writes PostgreSQL roles.
 ///

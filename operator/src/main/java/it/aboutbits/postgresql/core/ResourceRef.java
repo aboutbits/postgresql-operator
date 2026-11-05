@@ -4,12 +4,9 @@ import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.generator.annotation.Max;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-
 import it.aboutbits.postgresql.core.schema_customizer.KubernetesNameCustomizer;
-
 import lombok.Getter;
 import lombok.Setter;
-
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

@@ -4,20 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
-
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
-
+import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Readiness;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Map;
-import java.util.Objects;
 
 @QuarkusTest
 @RequiredArgsConstructor

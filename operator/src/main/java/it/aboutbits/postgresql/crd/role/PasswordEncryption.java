@@ -1,9 +1,7 @@
 package it.aboutbits.postgresql.crd.role;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import lombok.RequiredArgsConstructor;
-
 import org.jspecify.annotations.NullMarked;
 
 /// Controls how the operator sends the password of a `Role` to PostgreSQL.

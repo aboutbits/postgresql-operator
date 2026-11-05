@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.within;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.quarkus.test.junit.QuarkusTest;
-
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql._support.valuesource.BlankSource;
@@ -16,9 +15,15 @@ import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.FileRef;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
@@ -28,15 +33,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 @QuarkusTest
 @RequiredArgsConstructor

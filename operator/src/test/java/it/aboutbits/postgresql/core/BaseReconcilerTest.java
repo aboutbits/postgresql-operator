@@ -5,19 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
-
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
 import it.aboutbits.postgresql.crd.database.Database;
-
+import java.util.Optional;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
 
 @EnableKubernetesMockClient(crud = true)
 @NullMarked

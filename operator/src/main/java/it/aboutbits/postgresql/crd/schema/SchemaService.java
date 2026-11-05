@@ -1,16 +1,13 @@
 package it.aboutbits.postgresql.crd.schema;
 
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_NAMESPACE;
-
 import static org.jooq.impl.DSL.query;
 import static org.jooq.impl.DSL.quotedName;
 import static org.jooq.impl.DSL.role;
 import static org.jooq.impl.DSL.selectOne;
 
 import it.aboutbits.postgresql.core.infrastructure.persistence.Routines;
-
 import jakarta.inject.Singleton;
-
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 

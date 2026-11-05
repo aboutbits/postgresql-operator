@@ -2,22 +2,18 @@ package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.ResourceRef;
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import it.aboutbits.postgresql.crd.role.Role;
 import it.aboutbits.postgresql.crd.role.RoleSpec;
-
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.TimeUnit;
 
 @Setter
 @Accessors(fluent = true, chain = true)

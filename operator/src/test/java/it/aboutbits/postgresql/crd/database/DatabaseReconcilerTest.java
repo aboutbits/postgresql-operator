@@ -1,28 +1,23 @@
 package it.aboutbits.postgresql.crd.database;
 
 import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
-
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
 import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
-
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
 
 @QuarkusTest
 @RequiredArgsConstructor

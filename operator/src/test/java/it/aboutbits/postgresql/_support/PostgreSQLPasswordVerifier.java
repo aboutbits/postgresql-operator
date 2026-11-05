@@ -3,21 +3,18 @@ package it.aboutbits.postgresql._support;
 import static it.aboutbits.postgresql.core.infrastructure.persistence.Tables.PG_AUTHID;
 
 import com.ongres.scram.common.StringPreparation;
-
-import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import org.jooq.DSLContext;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /// Test helper that verifies a cleartext password against the verifier stored in `pg_authid`.
 ///

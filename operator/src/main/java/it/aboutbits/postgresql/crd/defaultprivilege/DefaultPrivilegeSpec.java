@@ -2,21 +2,16 @@ package it.aboutbits.postgresql.crd.defaultprivilege;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-
 import it.aboutbits.postgresql.core.Privilege;
 import it.aboutbits.postgresql.core.ResourceRef;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 @Setter

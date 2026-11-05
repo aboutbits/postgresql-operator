@@ -3,13 +3,11 @@ package it.aboutbits.postgresql.core;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
-
+import java.time.OffsetDateTime;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
 
 @NullMarked
 class CRStatusTest {

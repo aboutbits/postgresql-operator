@@ -3,19 +3,15 @@ package it.aboutbits.postgresql.core;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
-
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Slf4j
 @NullMarked

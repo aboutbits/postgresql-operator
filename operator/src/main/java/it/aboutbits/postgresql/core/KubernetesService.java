@@ -2,24 +2,18 @@ package it.aboutbits.postgresql.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-
 import jakarta.inject.Singleton;
-
-import lombok.RequiredArgsConstructor;
-
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Base64;
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Singleton
 @RequiredArgsConstructor

@@ -1,13 +1,11 @@
 package it.aboutbits.postgresql._support.testdata.base;
 
-import net.datafaker.Faker;
-
-import org.jspecify.annotations.NullMarked;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.datafaker.Faker;
+import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public abstract class TestDataCreator<T> {

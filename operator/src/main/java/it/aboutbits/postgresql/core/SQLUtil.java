@@ -2,10 +2,9 @@ package it.aboutbits.postgresql.core;
 
 import static org.jooq.impl.DSL.sql;
 
+import java.util.List;
 import org.jooq.QueryPart;
 import org.jspecify.annotations.NullMarked;
-
-import java.util.List;
 
 @NullMarked
 public final class SQLUtil {

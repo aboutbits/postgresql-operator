@@ -2,13 +2,10 @@ package it.aboutbits.postgresql.crd.database;
 
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
-
 import it.aboutbits.postgresql.core.ReclaimPolicy;
 import it.aboutbits.postgresql.core.ResourceRef;
-
 import lombok.Getter;
 import lombok.Setter;
-
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

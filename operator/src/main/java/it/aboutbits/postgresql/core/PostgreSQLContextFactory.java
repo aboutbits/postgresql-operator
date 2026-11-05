@@ -1,19 +1,14 @@
 package it.aboutbits.postgresql.core;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-
 import jakarta.enterprise.context.ApplicationScoped;
-
+import java.util.Properties;
 import lombok.RequiredArgsConstructor;
-
 import org.jooq.CloseableDSLContext;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jspecify.annotations.NullMarked;
-
-import java.util.Properties;
 
 @ApplicationScoped
 @RequiredArgsConstructor
