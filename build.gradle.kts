@@ -36,7 +36,6 @@ spotless {
 
         googleJavaFormat(libs.versions.googleJavaFormat.get())
             .aosp()
-            .reorderImports(true)
             // Same width as max_line_length in .editorconfig
             .maxLineLength(120)
     }
