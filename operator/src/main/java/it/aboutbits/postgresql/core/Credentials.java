@@ -4,8 +4,4 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 @NullMarked
-public record Credentials(
-        @Nullable String username,
-        String password
-) {
-}
+public record Credentials(@Nullable String username, String password) {}

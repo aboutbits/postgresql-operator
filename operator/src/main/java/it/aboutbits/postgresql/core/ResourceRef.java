@@ -39,9 +39,6 @@ public class ResourceRef {
 
     @Required
     @Max(63)
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The name must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The name must not be empty.")
     private String name = "";
 }

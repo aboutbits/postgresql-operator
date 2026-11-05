@@ -3,15 +3,14 @@ package it.aboutbits.postgresql.crd.role;
 import io.fabric8.generator.annotation.Required;
 import io.fabric8.generator.annotation.ValidationRule;
 import it.aboutbits.postgresql.core.ResourceRef;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -23,12 +22,9 @@ public class RoleSpec {
     @Required
     @ValidationRule(
             value = "self == oldSelf",
-            message = "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the Operator."
-    )
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The Role name must not be empty."
-    )
+            message =
+                    "The Role name is immutable. Allowing to rename the Role name using 'alter role <old_name> rename to <new_name>' would add unwanted side-effects to the Operator.")
+    @ValidationRule(value = "self.trim().size() > 0", message = "The Role name must not be empty.")
     private String name = "";
 
     @io.fabric8.generator.annotation.Nullable
@@ -47,7 +43,8 @@ public class RoleSpec {
     @Getter
     @Setter
     @EqualsAndHashCode
-    // The Fabric8 @Nullable annotation is relevant for generating nullable annotations in the resulting CRD YAML JSON Schema
+    // The Fabric8 @Nullable annotation is relevant for generating nullable annotations in the resulting CRD YAML JSON
+    // Schema
     @SuppressWarnings({"NullablePrimitive"})
     public static class Flags {
         @io.fabric8.generator.annotation.Nullable

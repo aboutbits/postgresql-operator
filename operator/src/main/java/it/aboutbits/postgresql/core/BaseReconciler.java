@@ -4,15 +4,14 @@ import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
-import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @Slf4j
 @NullMarked
@@ -35,10 +34,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
         return status;
     }
 
-    public String getResourceNamespaceOrOwn(
-            CR resource,
-            @Nullable String resourceNamespace
-    ) {
+    public String getResourceNamespaceOrOwn(CR resource, @Nullable String resourceNamespace) {
         if (resourceNamespace != null) {
             return resourceNamespace;
         }
@@ -49,14 +45,12 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     /// Returns empty when the ClusterConnection does not exist, is not READY, or is READY for an older generation.
     /// Callers treat this as "not yet", not "broken", and try again after 60 seconds.
     public Optional<ClusterConnection> getReferencedClusterConnection(
-            KubernetesClient kubernetesClient,
-            CR resource,
-            ResourceRef clusterRef
-    ) {
+            KubernetesClient kubernetesClient, CR resource, ResourceRef clusterRef) {
         var connectionName = clusterRef.getName();
         var connectionNamespace = getResourceNamespaceOrOwn(resource, clusterRef.getNamespace());
 
-        var clusterConnection = kubernetesClient.resources(ClusterConnection.class)
+        var clusterConnection = kubernetesClient
+                .resources(ClusterConnection.class)
                 .inNamespace(connectionNamespace)
                 .withName(connectionName)
                 .get();
@@ -66,8 +60,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
             log.error(
                     "The specified ClusterConnection does not exist [resource={}/{}]",
                     connectionNamespace,
-                    connectionName
-            );
+                    connectionName);
 
             return Optional.empty();
         }
@@ -80,8 +73,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
             log.warn(
                     "The specified ClusterConnection has not been probed yet [resource={}/{}]",
                     connectionNamespace,
-                    connectionName
-            );
+                    connectionName);
 
             return Optional.empty();
         }
@@ -94,8 +86,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                     "The specified ClusterConnection is not ready yet [resource={}/{}, status.phase={}]",
                     connectionNamespace,
                     connectionName,
-                    currentPhase
-            );
+                    currentPhase);
 
             return Optional.empty();
         }
@@ -107,8 +98,7 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
                     connectionNamespace,
                     connectionName,
                     status.getObservedGeneration(),
-                    clusterConnection.getMetadata().getGeneration()
-            );
+                    clusterConnection.getMetadata().getGeneration());
 
             return Optional.empty();
         }
@@ -117,40 +107,27 @@ public abstract class BaseReconciler<CR extends CustomResource<?, S> & Named, S 
     }
 
     /// Sets the phase to [CRPhase#ERROR] for a failure without an exception, and logs the message.
-    public void setErrorPhase(
-            CR resource,
-            S status,
-            String message
-    ) {
+    public void setErrorPhase(CR resource, S status, String message) {
         log.warn(
                 "Failed to reconcile {} [resource={}/{}, message={}]",
                 resource.getKind(),
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
-                message
-        );
+                message);
 
-        status.updatePhase(CRPhase.ERROR)
-                .setMessage(message);
+        status.updatePhase(CRPhase.ERROR).setMessage(message);
     }
 
-    public <E extends Exception> UpdateControl<CR> handleError(
-            CR resource,
-            S status,
-            E exception
-    ) {
+    public <E extends Exception> UpdateControl<CR> handleError(CR resource, S status, E exception) {
         log.error(
                 "Failed to reconcile {} [resource={}/{}]",
                 resource.getKind(),
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
-                exception
-        );
+                exception);
 
-        status.updatePhase(CRPhase.ERROR)
-                .setMessage(exception.getMessage());
+        status.updatePhase(CRPhase.ERROR).setMessage(exception.getMessage());
 
-        return UpdateControl.patchStatus(resource)
-                .rescheduleAfter(Duration.ofSeconds(60));
+        return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
     }
 }

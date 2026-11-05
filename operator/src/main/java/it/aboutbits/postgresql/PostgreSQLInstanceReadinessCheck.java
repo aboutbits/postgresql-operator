@@ -24,38 +24,27 @@ public class PostgreSQLInstanceReadinessCheck implements HealthCheck {
     public HealthCheckResponse call() {
         var builder = HealthCheckResponse.builder().name("PostgreSQL Instances");
 
-        var connections = kubernetesClient.resources(ClusterConnection.class).list().getItems();
+        var connections =
+                kubernetesClient.resources(ClusterConnection.class).list().getItems();
 
         boolean allUp = connections.stream()
-                .map(connection -> checkInstance(
-                        connection,
-                        builder
-                ))
+                .map(connection -> checkInstance(connection, builder))
                 .reduce(true, Boolean::logicalAnd);
 
         return builder.status(allUp).build();
     }
 
-    private boolean checkInstance(
-            ClusterConnection clusterConnection,
-            HealthCheckResponseBuilder builder
-    ) {
+    private boolean checkInstance(ClusterConnection clusterConnection, HealthCheckResponseBuilder builder) {
         var name = clusterConnection.getMetadata().getName();
 
         try (var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection)) {
             var version = dsl.fetchSingle("select version()").into(String.class);
 
-            builder.withData(
-                    name,
-                    "UP (%s)".formatted(version)
-            );
+            builder.withData(name, "UP (%s)".formatted(version));
 
             return true;
         } catch (RuntimeException _) {
-            builder.withData(
-                    name,
-                    "DOWN"
-            );
+            builder.withData(name, "DOWN");
 
             return false;
         }

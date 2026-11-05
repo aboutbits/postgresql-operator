@@ -1,21 +1,20 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
 import it.aboutbits.postgresql.crd.database.Database;
+import java.util.Optional;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @EnableKubernetesMockClient(crud = true)
 @NullMarked
@@ -69,11 +68,7 @@ class BaseReconcilerTest {
         @DisplayName("When the ClusterConnection is not READY, it should return empty")
         void clusterConnectionNotReady_returnsEmpty() {
             // given
-            createClusterConnection(
-                    new CRStatus()
-                            .updatePhase(CRPhase.ERROR)
-                            .setObservedGeneration(GENERATION)
-            );
+            createClusterConnection(new CRStatus().updatePhase(CRPhase.ERROR).setObservedGeneration(GENERATION));
 
             // when
             var result = getReferencedClusterConnection();
@@ -86,11 +81,7 @@ class BaseReconcilerTest {
         @DisplayName("When the ClusterConnection is READY for an older generation, it should return empty")
         void clusterConnectionReadyForOlderGeneration_returnsEmpty() {
             // given: the spec changed, and the ClusterConnection has not been probed again yet
-            createClusterConnection(
-                    new CRStatus()
-                            .updatePhase(CRPhase.READY)
-                            .setObservedGeneration(GENERATION - 1)
-            );
+            createClusterConnection(new CRStatus().updatePhase(CRPhase.READY).setObservedGeneration(GENERATION - 1));
 
             // when
             var result = getReferencedClusterConnection();
@@ -103,11 +94,7 @@ class BaseReconcilerTest {
         @DisplayName("When the ClusterConnection is READY for its current generation, it should return it")
         void clusterConnectionReady_returnsClusterConnection() {
             // given
-            createClusterConnection(
-                    new CRStatus()
-                            .updatePhase(CRPhase.READY)
-                            .setObservedGeneration(GENERATION)
-            );
+            createClusterConnection(new CRStatus().updatePhase(CRPhase.READY).setObservedGeneration(GENERATION));
 
             // when
             var result = getReferencedClusterConnection();
@@ -115,7 +102,8 @@ class BaseReconcilerTest {
             // then
             assertThat(result)
                     .get()
-                    .extracting(clusterConnection -> clusterConnection.getMetadata().getName())
+                    .extracting(
+                            clusterConnection -> clusterConnection.getMetadata().getName())
                     .isEqualTo(CONNECTION_NAME);
         }
     }
@@ -125,17 +113,12 @@ class BaseReconcilerTest {
         database.setMetadata(new ObjectMetaBuilder()
                 .withName("test-database")
                 .withNamespace(NAMESPACE)
-                .build()
-        );
+                .build());
 
         var clusterRef = new ResourceRef();
         clusterRef.setName(CONNECTION_NAME);
 
-        return reconciler.getReferencedClusterConnection(
-                client,
-                database,
-                clusterRef
-        );
+        return reconciler.getReferencedClusterConnection(client, database, clusterRef);
     }
 
     private void createClusterConnection(@Nullable CRStatus status) {
@@ -148,8 +131,7 @@ class BaseReconcilerTest {
         clusterConnection.setMetadata(new ObjectMetaBuilder()
                 .withName(CONNECTION_NAME)
                 .withNamespace(NAMESPACE)
-                .build()
-        );
+                .build());
         clusterConnection.setSpec(spec);
         clusterConnection.setStatus(status);
 

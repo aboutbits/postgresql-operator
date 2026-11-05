@@ -1,5 +1,9 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.sql;
+
+import java.util.List;
 import org.jooq.QueryPart;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -7,11 +11,6 @@ import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.jooq.impl.DSL.sql;
 
 @NullMarked
 class SQLUtilTest {

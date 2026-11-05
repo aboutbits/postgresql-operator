@@ -5,20 +5,19 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import it.aboutbits.postgresql.crd.role.PasswordEncryption;
 import jakarta.inject.Singleton;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /// Computes keyed fingerprints (HMAC-SHA256) of `Role` passwords.
 ///
@@ -54,10 +53,7 @@ public class PasswordFingerprintService {
 
     /// Fingerprint of the password together with the requested encryption,
     /// so that a change of either re-applies the password.
-    public String fingerprint(
-            String password,
-            PasswordEncryption passwordEncryption
-    ) {
+    public String fingerprint(String password, PasswordEncryption passwordEncryption) {
         var encryption = passwordEncryption.toValue().getBytes(StandardCharsets.UTF_8);
         var secret = password.getBytes(StandardCharsets.UTF_8);
 
@@ -91,13 +87,11 @@ public class PasswordFingerprintService {
         var namespace = kubernetesClient.getNamespace();
         if (namespace == null) {
             throw new IllegalStateException(
-                    "Cannot determine the operator namespace to store the password fingerprint key Secret [secret.name=%s]".formatted(secretName)
-            );
+                    "Cannot determine the operator namespace to store the password fingerprint key Secret [secret.name=%s]"
+                            .formatted(secretName));
         }
 
-        var secrets = kubernetesClient.secrets()
-                .inNamespace(namespace)
-                .withName(secretName);
+        var secrets = kubernetesClient.secrets().inNamespace(namespace).withName(secretName);
 
         var secret = secrets.get();
         if (secret == null) {
@@ -114,7 +108,8 @@ public class PasswordFingerprintService {
                     .build();
 
             try {
-                secret = kubernetesClient.secrets()
+                secret = kubernetesClient
+                        .secrets()
                         .inNamespace(namespace)
                         .resource(newSecret)
                         .create();
@@ -122,8 +117,7 @@ public class PasswordFingerprintService {
                 log.info(
                         "Created password fingerprint key Secret [secret.namespace={}, secret.name={}]",
                         namespace,
-                        secretName
-                );
+                        secretName);
             } catch (KubernetesClientException e) {
                 if (e.getCode() != HttpURLConnection.HTTP_CONFLICT) {
                     throw e;
@@ -135,17 +129,11 @@ public class PasswordFingerprintService {
         }
 
         var data = secret.getData();
-        var keyBase64 = data == null
-                ? null
-                : data.get(SECRET_DATA_KEY);
+        var keyBase64 = data == null ? null : data.get(SECRET_DATA_KEY);
         if (keyBase64 == null || keyBase64.isBlank()) {
             throw new IllegalStateException(
-                    "The password fingerprint key Secret is missing required data '%s' [secret.namespace=%s, secret.name=%s]".formatted(
-                            SECRET_DATA_KEY,
-                            namespace,
-                            secretName
-                    )
-            );
+                    "The password fingerprint key Secret is missing required data '%s' [secret.namespace=%s, secret.name=%s]"
+                            .formatted(SECRET_DATA_KEY, namespace, secretName));
         }
 
         return Base64.getDecoder().decode(keyBase64);

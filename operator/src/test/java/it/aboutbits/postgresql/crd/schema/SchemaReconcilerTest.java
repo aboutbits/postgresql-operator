@@ -1,5 +1,8 @@
 package it.aboutbits.postgresql.crd.schema;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
@@ -7,18 +10,14 @@ import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
-
-import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @RequiredArgsConstructor
@@ -70,16 +69,10 @@ class SchemaReconcilerTest {
                 .returnFirst();
 
         // then
-        var expectedStatus = new CRStatus()
-                .setName(schemaName)
-                .updatePhase(CRPhase.READY)
-                .setObservedGeneration(1L);
+        var expectedStatus =
+                new CRStatus().setName(schemaName).updatePhase(CRPhase.READY).setObservedGeneration(1L);
 
-        assertThatSchemaHasExpectedStatus(
-                schema,
-                expectedStatus,
-                now
-        );
+        assertThatSchemaHasExpectedStatus(schema, expectedStatus, now);
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnectionDb);
 
@@ -181,7 +174,8 @@ class SchemaReconcilerTest {
         schema.getMetadata().setManagedFields(null);
         schema.getMetadata().setResourceVersion(null);
 
-        var applied = kubernetesClient.resources(Schema.class)
+        var applied = kubernetesClient
+                .resources(Schema.class)
                 .inNamespace(namespace)
                 .resource(schema)
                 .serverSideApply();
@@ -189,31 +183,23 @@ class SchemaReconcilerTest {
         var generation = applied.getMetadata().getGeneration();
 
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Schema.class)
+        return kubernetesClient
+                .resources(Schema.class)
                 .inNamespace(namespace)
                 .withName(applied.getMetadata().getName())
                 .waitUntilCondition(
                         s -> s.getStatus() != null && s.getStatus().getObservedGeneration() >= generation,
                         5,
-                        TimeUnit.SECONDS
-                );
+                        TimeUnit.SECONDS);
     }
 
-    private static void assertThatSchemaHasExpectedStatus(
-            Schema schema,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
+    private static void assertThatSchemaHasExpectedStatus(Schema schema, CRStatus expectedStatus, OffsetDateTime now) {
         assertThat(schema)
                 .isNotNull()
                 .extracting(Schema::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isAfter(
-                            now
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
-                            now
-                    );
+                    assertThat(status.getLastProbeTime()).isAfter(now);
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(now);
                 })
                 .usingRecursiveComparison()
                 .ignoringFields("lastProbeTime", "lastPhaseTransitionTime")

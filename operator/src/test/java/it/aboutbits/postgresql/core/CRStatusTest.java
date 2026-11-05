@@ -1,14 +1,13 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
+import java.time.OffsetDateTime;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @NullMarked
 class CRStatusTest {
@@ -47,10 +46,7 @@ class CRStatusTest {
                        {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
                        """;
 
-            var status = new KubernetesSerialization().unmarshal(
-                    json,
-                    CRStatus.class
-            );
+            var status = new KubernetesSerialization().unmarshal(json, CRStatus.class);
 
             // when
             status.updatePhase(CRPhase.ERROR);
@@ -71,10 +67,7 @@ class CRStatusTest {
                        {"lastPhaseTransitionTime":"2026-01-01T00:00:00Z","phase":"READY"}
                        """;
 
-            var status = new KubernetesSerialization().unmarshal(
-                    json,
-                    CRStatus.class
-            );
+            var status = new KubernetesSerialization().unmarshal(json, CRStatus.class);
 
             // when
             status.updatePhase(CRPhase.READY);
@@ -89,9 +82,7 @@ class CRStatusTest {
         @DisplayName("Updating the phase should be chainable with the remaining status setters")
         void updatePhase_isChainable() {
             // when
-            var status = new CRStatus()
-                    .updatePhase(CRPhase.ERROR)
-                    .setMessage("Something went wrong");
+            var status = new CRStatus().updatePhase(CRPhase.ERROR).setMessage("Something went wrong");
 
             // then
             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
@@ -111,10 +102,7 @@ class CRStatusTest {
                        """;
 
             // when
-            var status = new KubernetesSerialization().unmarshal(
-                    json,
-                    CRStatus.class
-            );
+            var status = new KubernetesSerialization().unmarshal(json, CRStatus.class);
 
             // then
             assertThat(status.getPhase()).isEqualTo(CRPhase.READY);

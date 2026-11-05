@@ -1,14 +1,13 @@
 package it.aboutbits.postgresql.core;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 /// Status Object for the Custom Resources.
 ///

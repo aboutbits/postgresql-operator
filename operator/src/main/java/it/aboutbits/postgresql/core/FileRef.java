@@ -17,9 +17,6 @@ public class FileRef {
     /// The path to the file.
     /// Must not be blank.
     @Required
-    @ValidationRule(
-            value = "self.trim().size() > 0",
-            message = "The path must not be empty."
-    )
+    @ValidationRule(value = "self.trim().size() > 0", message = "The path must not be empty.")
     private String path = "";
 }

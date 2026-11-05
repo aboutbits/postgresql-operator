@@ -1,5 +1,8 @@
 package it.aboutbits.postgresql.crd.database;
 
+import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.junit.QuarkusTest;
 import it.aboutbits.postgresql._support.testdata.base.TestUtil;
@@ -7,18 +10,14 @@ import it.aboutbits.postgresql._support.testdata.persisted.Given;
 import it.aboutbits.postgresql.core.CRPhase;
 import it.aboutbits.postgresql.core.CRStatus;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.concurrent.TimeUnit;
-
-import static it.aboutbits.postgresql.core.ReclaimPolicy.DELETE;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 @RequiredArgsConstructor
@@ -57,16 +56,10 @@ class DatabaseReconcilerTest {
                 .returnFirst();
 
         // then
-        var expectedStatus = new CRStatus()
-                .setName(dbName)
-                .updatePhase(CRPhase.READY)
-                .setObservedGeneration(1L);
+        var expectedStatus =
+                new CRStatus().setName(dbName).updatePhase(CRPhase.READY).setObservedGeneration(1L);
 
-        assertThatDatabaseHasExpectedStatus(
-                database,
-                expectedStatus,
-                now
-        );
+        assertThatDatabaseHasExpectedStatus(database, expectedStatus, now);
 
         var dsl = postgreSQLContextFactory.getDSLContext(clusterConnection);
 
@@ -75,8 +68,7 @@ class DatabaseReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY"
-    )
+            "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY")
     void upToDateDatabase_afterPendingClusterConnection_setsReady() {
         // given: a reconciled Database
         var clusterConnection = given.one()
@@ -144,7 +136,8 @@ class DatabaseReconcilerTest {
         database.getMetadata().setManagedFields(null);
         database.getMetadata().setResourceVersion(null);
 
-        var applied = kubernetesClient.resources(Database.class)
+        var applied = kubernetesClient
+                .resources(Database.class)
                 .inNamespace(namespace)
                 .resource(database)
                 .serverSideApply();
@@ -152,31 +145,24 @@ class DatabaseReconcilerTest {
         var generation = applied.getMetadata().getGeneration();
 
         //noinspection ConstantConditions
-        return kubernetesClient.resources(Database.class)
+        return kubernetesClient
+                .resources(Database.class)
                 .inNamespace(namespace)
                 .withName(applied.getMetadata().getName())
                 .waitUntilCondition(
                         d -> d.getStatus() != null && d.getStatus().getObservedGeneration() >= generation,
                         5,
-                        TimeUnit.SECONDS
-                );
+                        TimeUnit.SECONDS);
     }
 
     private static void assertThatDatabaseHasExpectedStatus(
-            Database database,
-            CRStatus expectedStatus,
-            OffsetDateTime now
-    ) {
+            Database database, CRStatus expectedStatus, OffsetDateTime now) {
         assertThat(database)
                 .isNotNull()
                 .extracting(Database::getStatus)
                 .satisfies(status -> {
-                    assertThat(status.getLastProbeTime()).isAfter(
-                            now
-                    );
-                    assertThat(status.getLastPhaseTransitionTime()).isAfter(
-                            now
-                    );
+                    assertThat(status.getLastProbeTime()).isAfter(now);
+                    assertThat(status.getLastPhaseTransitionTime()).isAfter(now);
                 })
                 .usingRecursiveComparison()
                 .ignoringFields("lastProbeTime", "lastPhaseTransitionTime")

@@ -1,5 +1,9 @@
 package it.aboutbits.postgresql._support.testdata.persisted.creator;
 
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_USERNAME_KEY;
+import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_AUTH;
+
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import it.aboutbits.postgresql._support.testdata.base.TestDataCreator;
@@ -9,10 +13,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-
-import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_PASSWORD_KEY;
-import static it.aboutbits.postgresql.core.KubernetesService.SECRET_DATA_BASIC_AUTH_USERNAME_KEY;
-import static it.aboutbits.postgresql.core.KubernetesService.SECRET_TYPE_BASIC_AUTH;
 
 @Setter
 @Accessors(fluent = true, chain = true)
@@ -37,10 +37,7 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
     @Setter(AccessLevel.NONE)
     private boolean withoutPassword = false;
 
-    public SecretRefCreate(
-            int numberOfItems,
-            KubernetesClient kubernetesClient
-    ) {
+    public SecretRefCreate(int numberOfItems, KubernetesClient kubernetesClient) {
         super(numberOfItems);
         this.kubernetesClient = kubernetesClient;
     }
@@ -78,10 +75,7 @@ public class SecretRefCreate extends TestDataCreator<ResourceRef> {
                 .addToStringData(SECRET_DATA_BASIC_AUTH_PASSWORD_KEY, getPassword())
                 .build();
 
-        kubernetesClient.secrets()
-                .inNamespace(namespace)
-                .resource(secret)
-                .serverSideApply();
+        kubernetesClient.secrets().inNamespace(namespace).resource(secret).serverSideApply();
 
         var secretRef = new ResourceRef();
         secretRef.setName(name);

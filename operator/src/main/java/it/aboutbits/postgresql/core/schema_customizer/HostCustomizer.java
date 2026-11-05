@@ -3,13 +3,12 @@ package it.aboutbits.postgresql.core.schema_customizer;
 import io.fabric8.crdv2.generator.v1.SchemaCustomizer;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.JSONSchemaProps;
 import io.fabric8.kubernetes.client.utils.KubernetesSerialization;
-import org.jspecify.annotations.NullMarked;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.NullMarked;
 
 /// A [SchemaCustomizer.Customizer] that sets the `format` of string properties
 /// to `{"anyOf":[{"format":"hostname"},{"format":"ipv4"},{"format":"ipv6"}]}`
@@ -55,10 +54,7 @@ import java.util.stream.Collectors;
 public class HostCustomizer implements SchemaCustomizer.Customizer {
     @Override
     public JSONSchemaProps apply(
-            JSONSchemaProps jsonSchemaProps,
-            String input,
-            KubernetesSerialization kubernetesSerialization
-    ) {
+            JSONSchemaProps jsonSchemaProps, String input, KubernetesSerialization kubernetesSerialization) {
         var properties = jsonSchemaProps.getProperties();
         if (properties == null) {
             return jsonSchemaProps;
@@ -66,15 +62,12 @@ public class HostCustomizer implements SchemaCustomizer.Customizer {
 
         var targetFields = input.isBlank()
                 ? Set.<String>of()
-                : Arrays.stream(input.split(","))
-                        .map(String::trim)
-                        .collect(Collectors.toSet());
+                : Arrays.stream(input.split(",")).map(String::trim).collect(Collectors.toSet());
 
         for (var entry : properties.entrySet()) {
             var prop = entry.getValue();
             if (Objects.equals(prop.getType(), "string")
-                    && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))
-            ) {
+                    && (targetFields.isEmpty() || targetFields.contains(entry.getKey()))) {
                 prop.setFormat(null);
 
                 var hostnameProp = new JSONSchemaProps();
@@ -86,11 +79,7 @@ public class HostCustomizer implements SchemaCustomizer.Customizer {
                 var ipv6Prop = new JSONSchemaProps();
                 ipv6Prop.setFormat("ipv6");
 
-                prop.setAnyOf(List.of(
-                        hostnameProp,
-                        ipv4Prop,
-                        ipv6Prop
-                ));
+                prop.setAnyOf(List.of(hostnameProp, ipv4Prop, ipv6Prop));
             }
         }
 

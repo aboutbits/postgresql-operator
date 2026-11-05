@@ -21,32 +21,29 @@ import it.aboutbits.postgresql.core.KubernetesService;
 import it.aboutbits.postgresql.core.PasswordFingerprintService;
 import it.aboutbits.postgresql.core.PostgreSQLAuthenticationService;
 import it.aboutbits.postgresql.core.PostgreSQLContextFactory;
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 @Slf4j
 @AdditionalRBACRules({
-        @RBACRule(
-                apiGroups = {""},
-                resources = {"secrets"},
-                // `create` for the password fingerprint key Secret is granted by a namespaced Role in the operator namespace,
-                // see `quarkus.kubernetes.rbac` in application.yml. It does not belong in this ClusterRole.
-                verbs = {"get", "list", "watch"}
-        )
+    @RBACRule(
+            apiGroups = {""},
+            resources = {"secrets"},
+            // `create` for the password fingerprint key Secret is granted by a namespaced Role in the operator
+            // namespace,
+            // see `quarkus.kubernetes.rbac` in application.yml. It does not belong in this ClusterRole.
+            verbs = {"get", "list", "watch"})
 })
 @RequiredArgsConstructor
 @NullMarked
-public class RoleReconciler
-        extends BaseReconciler<Role, RoleStatus>
-        implements Reconciler<Role>, Cleaner<Role> {
+public class RoleReconciler extends BaseReconciler<Role, RoleStatus> implements Reconciler<Role>, Cleaner<Role> {
     private final RoleService roleService;
     private final KubernetesService kubernetesService;
     private final PostgreSQLAuthenticationService postgreSQLAuthenticationService;
@@ -56,41 +53,28 @@ public class RoleReconciler
     private final PostgreSQLContextFactory contextFactory;
 
     @Override
-    public UpdateControl<Role> reconcile(
-            Role resource,
-            Context<Role> context
-    ) {
+    public UpdateControl<Role> reconcile(Role resource, Context<Role> context) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
 
-        log.info(
-                "Reconciling Role [resource={}/{}, status.phase={}]",
-                namespace,
-                name,
-                status.getPhase()
-        );
+        log.info("Reconciling Role [resource={}/{}, status.phase={}]", namespace, name, status.getPhase());
 
         var clusterRef = spec.getClusterRef();
         var expectedFlags = spec.getFlags();
 
-        var clusterConnectionOptional = getReferencedClusterConnection(
-                kubernetesClient,
-                resource,
-                clusterRef
-        );
+        var clusterConnectionOptional = getReferencedClusterConnection(kubernetesClient, resource, clusterRef);
 
         if (clusterConnectionOptional.isEmpty()) {
             status.updatePhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName()
-                    ));
+                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]"
+                            .formatted(
+                                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                                    clusterRef.getName()));
 
-            return UpdateControl.patchStatus(resource)
-                    .rescheduleAfter(Duration.ofSeconds(60));
+            return UpdateControl.patchStatus(resource).rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -106,54 +90,37 @@ public class RoleReconciler
         try (var dsl = contextFactory.getDSLContext(clusterConnection)) {
             // Read the Secret inside the try block, so that a missing or invalid Secret sets the phase to ERROR
             var password = passwordSecretRef != null
-                    ? kubernetesService.getSecretRefCredentials(
-                    kubernetesClient,
-                    passwordSecretRef,
-                    namespace
-            ).password()
+                    ? kubernetesService
+                            .getSecretRefCredentials(kubernetesClient, passwordSecretRef, namespace)
+                            .password()
                     : null;
             var passwordEncryption = spec.getPasswordEncryption();
 
             // The password hash in pg_authid is readable by superusers only.
             // Managed PostgreSQL services of cloud providers do not grant that,
             // so the operator tracks a keyed fingerprint of the applied password in the status.
-            var expectedFingerprint = password != null
-                    ? passwordFingerprintService.fingerprint(password, passwordEncryption)
-                    : null;
+            var expectedFingerprint =
+                    password != null ? passwordFingerprintService.fingerprint(password, passwordEncryption) : null;
             var serverPassword = password != null
                     ? postgreSQLAuthenticationService.toServerPassword(password, passwordEncryption)
                     : null;
 
             // Run everything in a single transaction
             updateControl = dsl.transactionResult(
-                    cfg -> reconcileInTransaction(
-                            cfg.dsl(),
-                            resource,
-                            status,
-                            expectedFingerprint,
-                            serverPassword
-                    )
-            );
+                    cfg -> reconcileInTransaction(cfg.dsl(), resource, status, expectedFingerprint, serverPassword));
 
             // Record the fingerprint only after the commit. A failed commit must not leave
             // the fingerprint of a password that PostgreSQL never stored.
             status.setPasswordFingerprint(expectedFingerprint);
         } catch (RuntimeException e) {
-            return handleError(
-                    resource,
-                    status,
-                    e
-            );
+            return handleError(resource, status, e);
         }
 
         return updateControl;
     }
 
     @Override
-    public DeleteControl cleanup(
-            Role resource,
-            Context<Role> context
-    ) {
+    public DeleteControl cleanup(Role resource, Context<Role> context) {
         var spec = resource.getSpec();
         var status = initializeStatus(resource);
 
@@ -165,37 +132,27 @@ public class RoleReconciler
                 namespace,
                 name,
                 spec.getName(),
-                status.getPhase()
-        );
+                status.getPhase());
 
         if (status.getPhase() != CRPhase.DELETING) {
-            status.updatePhase(CRPhase.DELETING)
-                    .setMessage("Role deletion in progress");
+            status.updatePhase(CRPhase.DELETING).setMessage("Role deletion in progress");
 
             context.getClient().resource(resource).patchStatus();
 
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofMillis(100));
+            return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofMillis(100));
         }
 
         var clusterRef = spec.getClusterRef();
 
-        var clusterConnectionOptional = getReferencedClusterConnection(
-                kubernetesClient,
-                resource,
-                clusterRef
-        );
+        var clusterConnectionOptional = getReferencedClusterConnection(kubernetesClient, resource, clusterRef);
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
-                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                    clusterRef.getName()
-            ));
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]"
+                    .formatted(getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()), clusterRef.getName()));
 
             context.getClient().resource(resource).patchStatus();
 
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofSeconds(60));
+            return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofSeconds(60));
         }
 
         var clusterConnection = clusterConnectionOptional.get();
@@ -206,21 +163,15 @@ public class RoleReconciler
             return DeleteControl.defaultDelete();
         } catch (RuntimeException e) {
             log.error(
-                    "Failed to delete Role [resource=%s/%s, spec.name=%s, status.phase=%s]".formatted(
-                            namespace,
-                            name,
-                            spec.getName(),
-                            status.getPhase()
-                    ),
-                    e
-            );
+                    "Failed to delete Role [resource=%s/%s, spec.name=%s, status.phase=%s]"
+                            .formatted(namespace, name, spec.getName(), status.getPhase()),
+                    e);
 
             status.setMessage("Deletion failed: %s".formatted(e.getMessage()));
 
             context.getClient().resource(resource).patchStatus();
 
-            return DeleteControl.noFinalizerRemoval()
-                    .rescheduleAfter(Duration.ofSeconds(60));
+            return DeleteControl.noFinalizerRemoval().rescheduleAfter(Duration.ofSeconds(60));
         }
     }
 
@@ -239,16 +190,14 @@ public class RoleReconciler
         // 2. Build the Event Source Configuration which binds the InformerConfig + Mapper
         var eventSourceConfig = InformerEventSourceConfiguration.from(Secret.class, Role.class)
                 .withSecondaryToPrimaryMapper(secretToRoleMapper)
-                // or .withWatchAllNamespaces() if we want to have the secret in another namespace than the Role CR instance
+                // or .withWatchAllNamespaces() if we want to have the secret in another namespace than the Role CR
+                // instance
                 .withNamespacesInheritedFromController()
                 .build();
 
         // 3. Create the Event Source
         // This will watch for Secret changes and run the mapper
-        var secretEventSource = new InformerEventSource<>(
-                eventSourceConfig,
-                context
-        );
+        var secretEventSource = new InformerEventSource<>(eventSourceConfig, context);
 
         return List.of(secretEventSource);
     }
@@ -266,8 +215,7 @@ public class RoleReconciler
             Role resource,
             RoleStatus status,
             @Nullable String expectedFingerprint,
-            @Nullable String serverPassword
-    ) {
+            @Nullable String serverPassword) {
         var namespace = resource.getMetadata().getNamespace();
         var name = resource.getMetadata().getName();
 
@@ -278,20 +226,11 @@ public class RoleReconciler
 
         // Create and return the role if it doesn't exist yet
         if (!roleService.roleExists(tx, spec)) {
-            log.info(
-                    "Creating Role [resource={}/{}]",
-                    namespace,
-                    name
-            );
+            log.info("Creating Role [resource={}/{}]", namespace, name);
 
-            roleService.createRole(
-                    tx,
-                    spec,
-                    serverPassword
-            );
+            roleService.createRole(tx, spec, serverPassword);
 
-            status.updatePhase(CRPhase.READY)
-                    .setMessage(null);
+            status.updatePhase(CRPhase.READY).setMessage(null);
 
             return UpdateControl.patchStatus(resource);
         }
@@ -304,70 +243,38 @@ public class RoleReconciler
         var passwordMatches = Objects.equals(expectedFingerprint, status.getPasswordFingerprint());
 
         if (roleLoginMatches && passwordMatches && flagsMatch && commentMatches) {
-            log.info(
-                    "Role up-to-date [resource={}/{}]",
-                    namespace,
-                    name
-            );
+            log.info("Role up-to-date [resource={}/{}]", namespace, name);
 
-            status.updatePhase(CRPhase.READY)
-                    .setMessage(null);
+            status.updatePhase(CRPhase.READY).setMessage(null);
 
             return UpdateControl.patchStatus(resource);
         }
 
         var changePassword = loginExpected && !passwordMatches;
 
-        log.info(
-                "Updating Role [resource={}/{}]",
-                namespace,
-                name
-        );
+        log.info("Updating Role [resource={}/{}]", namespace, name);
 
         if (!roleLoginMatches || changePassword || !flagsMatch) {
-            roleService.alterRole(
-                    tx,
-                    spec,
-                    currentFlags,
-                    currentCanLogin,
-                    changePassword,
-                    serverPassword
-            );
+            roleService.alterRole(tx, spec, currentFlags, currentCanLogin, changePassword, serverPassword);
         }
 
         if (!flagsMatch) {
-            log.info(
-                    "Updating Role membership [resource={}/{}]",
-                    namespace,
-                    name
-            );
+            log.info("Updating Role membership [resource={}/{}]", namespace, name);
 
-            roleService.reconcileRoleMembership(
-                    tx,
-                    spec,
-                    expectedFlags,
-                    currentFlags
-            );
+            roleService.reconcileRoleMembership(tx, spec, expectedFlags, currentFlags);
         }
 
         if (!commentMatches) {
-            roleService.updateComment(
-                    tx,
-                    spec
-            );
+            roleService.updateComment(tx, spec);
         }
 
-        status.updatePhase(CRPhase.READY)
-                .setMessage(null);
+        status.updatePhase(CRPhase.READY).setMessage(null);
 
         return UpdateControl.patchStatus(resource);
     }
 
     /// Checks if the given [Role]'s [RoleSpec#getPasswordSecretRef()] points to the changed [Secret].
-    private boolean isReferencedBy(
-            Role role,
-            Secret secret
-    ) {
+    private boolean isReferencedBy(Role role, Secret secret) {
         var ref = role.getSpec().getPasswordSecretRef();
 
         if (ref == null) {

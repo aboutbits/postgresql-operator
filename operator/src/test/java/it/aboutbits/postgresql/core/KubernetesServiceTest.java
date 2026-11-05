@@ -1,5 +1,8 @@
 package it.aboutbits.postgresql.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -8,6 +11,12 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnection;
 import it.aboutbits.postgresql.crd.clusterconnection.ClusterConnectionSpec;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.util.Map;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,16 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Base64;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @EnableKubernetesMockClient(crud = true)
 @NullMarked
@@ -51,12 +50,9 @@ class KubernetesServiceTest {
         void whenBothUsernameAndPassword_shouldReturnCredentials() throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
-            Files.writeString(
-                    file,
-                    """
+            Files.writeString(file, """
                     {"username": "admin", "password": "s3cret"}
-                    """
-            );
+                    """);
 
             var fileRef = new FileRef();
             fileRef.setPath(file.toString());
@@ -74,9 +70,7 @@ class KubernetesServiceTest {
         void whenFileHasExtraKeys_shouldIgnoreThem() throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
-            Files.writeString(
-                    file,
-                    """
+            Files.writeString(file, """
                     {
                       "engine": "postgres",
                       "host": "db.example.com",
@@ -85,8 +79,7 @@ class KubernetesServiceTest {
                       "dbname": "postgres",
                       "port": 5432
                     }
-                    """
-            );
+                    """);
 
             var fileRef = new FileRef();
             fileRef.setPath(file.toString());
@@ -100,10 +93,7 @@ class KubernetesServiceTest {
         }
 
         @ParameterizedTest(name = "when username {0}, should throw")
-        @ValueSource(strings = {
-                "{\"password\": \"s3cret\"}",
-                "{\"username\": null, \"password\": \"s3cret\"}"
-        })
+        @ValueSource(strings = {"{\"password\": \"s3cret\"}", "{\"username\": null, \"password\": \"s3cret\"}"})
         void whenUsernameMissingOrNull_shouldThrow(String json) throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
@@ -119,10 +109,7 @@ class KubernetesServiceTest {
         }
 
         @ParameterizedTest(name = "when password {0}, should throw")
-        @ValueSource(strings = {
-                "{\"username\": \"admin\"}",
-                "{\"username\": \"admin\", \"password\": null}"
-        })
+        @ValueSource(strings = {"{\"username\": \"admin\"}", "{\"username\": \"admin\", \"password\": null}"})
         void whenPasswordMissingOrNull_shouldThrow(String json) throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
@@ -138,12 +125,13 @@ class KubernetesServiceTest {
         }
 
         @ParameterizedTest(name = "when field has wrong type {0}, should throw")
-        @ValueSource(strings = {
-                "{\"username\": {}, \"password\": \"s3cret\"}",
-                "{\"username\": [], \"password\": \"s3cret\"}",
-                "{\"username\": \"admin\", \"password\": {}}",
-                "{\"username\": \"admin\", \"password\": []}"
-        })
+        @ValueSource(
+                strings = {
+                    "{\"username\": {}, \"password\": \"s3cret\"}",
+                    "{\"username\": [], \"password\": \"s3cret\"}",
+                    "{\"username\": \"admin\", \"password\": {}}",
+                    "{\"username\": \"admin\", \"password\": []}"
+                })
         void whenFieldHasWrongType_shouldThrow(String json) throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
@@ -211,7 +199,8 @@ class KubernetesServiceTest {
             // given — no secret created
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() ->
+                            service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Secret reference not found");
         }
@@ -221,14 +210,18 @@ class KubernetesServiceTest {
         void whenSecretWrongType_shouldThrow() {
             // given
             var secret = new SecretBuilder()
-                    .withNewMetadata().withNamespace("my-ns").withName("my-secret").endMetadata()
+                    .withNewMetadata()
+                    .withNamespace("my-ns")
+                    .withName("my-secret")
+                    .endMetadata()
                     .withType("Opaque")
                     .addToData("password", base64("s3cret"))
                     .build();
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() ->
+                            service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("wrong type");
         }
@@ -238,13 +231,17 @@ class KubernetesServiceTest {
         void whenSecretHasNoData_shouldThrow() {
             // given
             var secret = new SecretBuilder()
-                    .withNewMetadata().withNamespace("my-ns").withName("my-secret").endMetadata()
+                    .withNewMetadata()
+                    .withNamespace("my-ns")
+                    .withName("my-secret")
+                    .endMetadata()
                     .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
                     .build();
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() ->
+                            service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("has no data set");
         }
@@ -269,14 +266,18 @@ class KubernetesServiceTest {
         void whenSecretHasEmptyDataMap_shouldThrow() {
             // given
             var secret = new SecretBuilder()
-                    .withNewMetadata().withNamespace("my-ns").withName("my-secret").endMetadata()
+                    .withNewMetadata()
+                    .withNamespace("my-ns")
+                    .withName("my-secret")
+                    .endMetadata()
                     .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
                     .withData(Map.of())
                     .build();
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() ->
+                            service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("has no data set");
         }
@@ -286,14 +287,18 @@ class KubernetesServiceTest {
         void whenSecretHasUsernameOnly_shouldThrow() {
             // given
             var secret = new SecretBuilder()
-                    .withNewMetadata().withNamespace("my-ns").withName("my-secret").endMetadata()
+                    .withNewMetadata()
+                    .withNamespace("my-ns")
+                    .withName("my-secret")
+                    .endMetadata()
                     .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
                     .addToData("username", base64("admin"))
                     .build();
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() ->
+                            service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("missing required data password");
         }
@@ -303,7 +308,10 @@ class KubernetesServiceTest {
         void whenSecretHasPasswordOnly_shouldReturnNullUsername() {
             // given
             var secret = new SecretBuilder()
-                    .withNewMetadata().withNamespace("my-ns").withName("my-secret").endMetadata()
+                    .withNewMetadata()
+                    .withNamespace("my-ns")
+                    .withName("my-secret")
+                    .endMetadata()
                     .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
                     .addToData("password", base64("s3cret"))
                     .build();
@@ -345,12 +353,9 @@ class KubernetesServiceTest {
         void whenOnlyAdminSecretFileRefSet_shouldDelegateToFileRef() throws IOException {
             // given
             var file = tempDir.resolve("secret.json");
-            Files.writeString(
-                    file,
-                    """
+            Files.writeString(file, """
                     {"username": "file-admin", "password": "file-s3cret"}
-                    """
-            );
+                    """);
 
             var fileRef = new FileRef();
             fileRef.setPath(file.toString());
@@ -373,7 +378,10 @@ class KubernetesServiceTest {
         void whenAdminSecretRefMissingUsername_shouldThrowWithMessage() {
             // given
             var secret = new SecretBuilder()
-                    .withNewMetadata().withNamespace("my-ns").withName("my-secret").endMetadata()
+                    .withNewMetadata()
+                    .withNamespace("my-ns")
+                    .withName("my-secret")
+                    .endMetadata()
                     .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
                     .addToData("password", base64("s3cret"))
                     .build();
@@ -423,12 +431,12 @@ class KubernetesServiceTest {
         return ref;
     }
 
-    private static Secret basicAuthSecret(
-            String namespace, String name,
-            @Nullable String username, String password
-    ) {
+    private static Secret basicAuthSecret(String namespace, String name, @Nullable String username, String password) {
         var builder = new SecretBuilder()
-                .withNewMetadata().withNamespace(namespace).withName(name).endMetadata()
+                .withNewMetadata()
+                .withNamespace(namespace)
+                .withName(name)
+                .endMetadata()
                 .withType(KubernetesService.SECRET_TYPE_BASIC_AUTH)
                 .addToData("password", base64(password));
         if (username != null) {
