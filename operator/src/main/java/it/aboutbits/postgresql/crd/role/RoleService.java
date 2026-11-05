@@ -186,7 +186,8 @@ public final class RoleService {
                         PG_ROLES.ROLREPLICATION.as("replication"),
                         PG_ROLES.ROLBYPASSRLS.as("bypassrls"),
                         PG_ROLES.ROLCONNLIMIT.as("connectionLimit"),
-                        field("nullif({0}, 'infinity')", PG_ROLES.ROLVALIDUNTIL.getDataType(), PG_ROLES.ROLVALIDUNTIL).as("validUntil"),
+                        field("nullif({0}, 'infinity')", PG_ROLES.ROLVALIDUNTIL.getDataType(), PG_ROLES.ROLVALIDUNTIL)
+                                .as("validUntil"),
                         multiset(
                                 select(parent.ROLNAME)
                                         .from(PG_AUTH_MEMBERS)
@@ -394,12 +395,32 @@ public final class RoleService {
             options.add(val(password));
         }
 
-        addFlagIfChanged(options, flags.isSuperuser(), currentFlags.isSuperuser(), RoleFlag.SUPERUSER, RoleFlag.NO_SUPERUSER);
-        addFlagIfChanged(options, flags.isCreatedb(), currentFlags.isCreatedb(), RoleFlag.CREATEDB, RoleFlag.NO_CREATEDB);
-        addFlagIfChanged(options, flags.isCreaterole(), currentFlags.isCreaterole(), RoleFlag.CREATEROLE, RoleFlag.NO_CREATEROLE);
+        addFlagIfChanged(options,
+                flags.isSuperuser(),
+                currentFlags.isSuperuser(),
+                RoleFlag.SUPERUSER,
+                RoleFlag.NO_SUPERUSER);
+        addFlagIfChanged(options,
+                flags.isCreatedb(),
+                currentFlags.isCreatedb(),
+                RoleFlag.CREATEDB,
+                RoleFlag.NO_CREATEDB);
+        addFlagIfChanged(options,
+                flags.isCreaterole(),
+                currentFlags.isCreaterole(),
+                RoleFlag.CREATEROLE,
+                RoleFlag.NO_CREATEROLE);
         addFlagIfChanged(options, flags.isInherit(), currentFlags.isInherit(), RoleFlag.INHERIT, RoleFlag.NO_INHERIT);
-        addFlagIfChanged(options, flags.isReplication(), currentFlags.isReplication(), RoleFlag.REPLICATION, RoleFlag.NO_REPLICATION);
-        addFlagIfChanged(options, flags.isBypassrls(), currentFlags.isBypassrls(), RoleFlag.BYPASSRLS, RoleFlag.NO_BYPASSRLS);
+        addFlagIfChanged(options,
+                flags.isReplication(),
+                currentFlags.isReplication(),
+                RoleFlag.REPLICATION,
+                RoleFlag.NO_REPLICATION);
+        addFlagIfChanged(options,
+                flags.isBypassrls(),
+                currentFlags.isBypassrls(),
+                RoleFlag.BYPASSRLS,
+                RoleFlag.NO_BYPASSRLS);
 
         if (flags.getConnectionLimit() != currentFlags.getConnectionLimit()) {
             options.add(keyword(RoleFlag.CONNECTION_LIMIT.flag()));

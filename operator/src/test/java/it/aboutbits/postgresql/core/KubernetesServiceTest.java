@@ -211,7 +211,9 @@ class KubernetesServiceTest {
             // given — no secret created
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() -> service.getSecretRefCredentials(client,
+                    secretRef("my-ns", "my-secret"),
+                    "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Secret reference not found");
         }
@@ -228,7 +230,9 @@ class KubernetesServiceTest {
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() -> service.getSecretRefCredentials(client,
+                    secretRef("my-ns", "my-secret"),
+                    "default-ns"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("wrong type");
         }
@@ -244,7 +248,9 @@ class KubernetesServiceTest {
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() -> service.getSecretRefCredentials(client,
+                    secretRef("my-ns", "my-secret"),
+                    "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("has no data set");
         }
@@ -276,7 +282,9 @@ class KubernetesServiceTest {
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() -> service.getSecretRefCredentials(client,
+                    secretRef("my-ns", "my-secret"),
+                    "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("has no data set");
         }
@@ -293,7 +301,9 @@ class KubernetesServiceTest {
             client.secrets().inNamespace("my-ns").resource(secret).create();
 
             // when / then
-            assertThatThrownBy(() -> service.getSecretRefCredentials(client, secretRef("my-ns", "my-secret"), "default-ns"))
+            assertThatThrownBy(() -> service.getSecretRefCredentials(client,
+                    secretRef("my-ns", "my-secret"),
+                    "default-ns"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("missing required data password");
         }
@@ -424,8 +434,10 @@ class KubernetesServiceTest {
     }
 
     private static Secret basicAuthSecret(
-            String namespace, String name,
-            @Nullable String username, String password
+            String namespace,
+            String name,
+            @Nullable String username,
+            String password
     ) {
         var builder = new SecretBuilder()
                 .withNewMetadata().withNamespace(namespace).withName(name).endMetadata()

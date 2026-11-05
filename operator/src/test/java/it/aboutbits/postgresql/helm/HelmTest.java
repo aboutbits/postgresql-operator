@@ -80,7 +80,9 @@ class HelmTest {
         var chartPath = chartPath();
 
         assertThat(chartPath)
-                .withFailMessage("Helm chart not found at %s. Ensure that the chart is generated before running this test.", chartPath)
+                .withFailMessage(
+                        "Helm chart not found at %s. Ensure that the chart is generated before running this test.",
+                        chartPath)
                 .exists();
 
         var serialization = kubernetesClient.getKubernetesSerialization();
@@ -115,7 +117,9 @@ class HelmTest {
         // `operator/src/main/helm/values.yaml` provides these defaults.
         for (var listValue : LIST_VALUES) {
             assertThat(appValues.get(listValue))
-                    .withFailMessage("app.%s should default to an empty list, but was %s", listValue, appValues.get(listValue))
+                    .withFailMessage("app.%s should default to an empty list, but was %s",
+                            listValue,
+                            appValues.get(listValue))
                     .isEqualTo(List.of());
         }
 
@@ -198,14 +202,17 @@ class HelmTest {
             // Helm 4 installs CRDs with server-side apply, which conflicts with that field manager on `.spec.versions`.
             // Helm 3 skipped a CRD that already existed, so `--skip-crds` keeps that behavior on both versions.
             ProcessBuilder.newBuilder(
-                            "helm",
-                            "install", releaseName, chartPath.toAbsolutePath().toString(),
-                            "--skip-crds",
-                            "--set", rootValuesAlias + ".image=postgresql-operator:test"
-                    ).environment(Map.of(
-                            ENV_VAR_KUBECONFIG,
-                            kubeConfigPath.toAbsolutePath().toString()
-                    ))
+                    "helm",
+                    "install",
+                    releaseName,
+                    chartPath.toAbsolutePath().toString(),
+                    "--skip-crds",
+                    "--set",
+                    rootValuesAlias + ".image=postgresql-operator:test"
+            ).environment(Map.of(
+                    ENV_VAR_KUBECONFIG,
+                    kubeConfigPath.toAbsolutePath().toString()
+            ))
                     .exitCodeChecker(ec -> {
                         holder.exitCode = ec;
                         return true;
@@ -232,8 +239,10 @@ class HelmTest {
                             .isNotNull()
                             .satisfies(metadata -> assertThat(metadata.getLabels())
                                     .containsAllEntriesOf(Map.of(
-                                            "app.kubernetes.io/name", releaseName,
-                                            "app.kubernetes.io/managed-by", "Helm"
+                                            "app.kubernetes.io/name",
+                                            releaseName,
+                                            "app.kubernetes.io/managed-by",
+                                            "Helm"
                                     ))
                             );
 
@@ -267,12 +276,13 @@ class HelmTest {
             } finally {
                 // 5. Cleanup the created resources using 'helm uninstall'
                 ProcessBuilder.newBuilder(
-                                "helm",
-                                "uninstall", releaseName
-                        ).environment(Map.of(
-                                ENV_VAR_KUBECONFIG,
-                                kubeConfigPath.toAbsolutePath().toString()
-                        ))
+                        "helm",
+                        "uninstall",
+                        releaseName
+                ).environment(Map.of(
+                        ENV_VAR_KUBECONFIG,
+                        kubeConfigPath.toAbsolutePath().toString()
+                ))
                         .error().consumeLinesWith(
                                 8192,
                                 log::error
@@ -291,7 +301,9 @@ class HelmTest {
         var chartPath = chartPath();
 
         assertThat(chartPath)
-                .withFailMessage("Helm chart not found at %s. Ensure that the chart is generated before running this test.", chartPath)
+                .withFailMessage(
+                        "Helm chart not found at %s. Ensure that the chart is generated before running this test.",
+                        chartPath)
                 .exists();
 
         var valuesPath = createTempValuesWithVolumes();
@@ -305,10 +317,13 @@ class HelmTest {
 
             // when
             ProcessBuilder.newBuilder(
-                            "helm",
-                            "template", "volumes-render-test", chartPath.toAbsolutePath().toString(),
-                            "--values", valuesPath.toAbsolutePath().toString()
-                    )
+                    "helm",
+                    "template",
+                    "volumes-render-test",
+                    chartPath.toAbsolutePath().toString(),
+                    "--values",
+                    valuesPath.toAbsolutePath().toString()
+            )
                     .exitCodeChecker(ec -> {
                         holder.exitCode = ec;
                         return true;
@@ -324,8 +339,8 @@ class HelmTest {
                     .isZero();
 
             var deployments = kubernetesClient.load(new ByteArrayInputStream(
-                            renderedOutput.toString().getBytes(StandardCharsets.UTF_8)
-                    ))
+                    renderedOutput.toString().getBytes(StandardCharsets.UTF_8)
+            ))
                     .items()
                     .stream()
                     .filter(Deployment.class::isInstance)
@@ -385,8 +400,7 @@ class HelmTest {
     }
 
     private static Path createTempValuesWithVolumes() throws IOException {
-        var values =
-                """
+        var values = """
                 app:
                   image: postgresql-operator:test
                   imagePullSecrets:

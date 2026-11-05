@@ -293,10 +293,10 @@ public class GrantService {
                  *   and c.relkind in ('r', 'p', 'v', 'm', 'f')
                  */
                 var isOwnerCondition = PG_CLASS.RELOWNER.eq(field(
-                                ROLE_OID_SQL,
-                                OID_DATA_TYPE,
-                                val(role)
-                        )
+                        ROLE_OID_SQL,
+                        OID_DATA_TYPE,
+                        val(role)
+                )
                 );
 
                 var existingObjectsOwner = tx
@@ -348,10 +348,10 @@ public class GrantService {
                  *   and c.relkind = 'S'
                  */
                 var isOwnerCondition = PG_CLASS.RELOWNER.eq(field(
-                                ROLE_OID_SQL,
-                                OID_DATA_TYPE,
-                                val(role)
-                        )
+                        ROLE_OID_SQL,
+                        OID_DATA_TYPE,
+                        val(role)
+                )
                 );
 
                 var existingObjectsOwner = tx

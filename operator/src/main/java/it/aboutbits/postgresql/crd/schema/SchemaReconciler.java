@@ -58,10 +58,11 @@ public class SchemaReconciler
 
         if (clusterConnectionOptional.isEmpty()) {
             status.updatePhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName()
-                    ));
+                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]"
+                            .formatted(
+                                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                                    clusterRef.getName()
+                            ));
 
             return UpdateControl.patchStatus(resource)
                     .rescheduleAfter(Duration.ofSeconds(60));
@@ -139,10 +140,11 @@ public class SchemaReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
-                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                    clusterRef.getName()
-            ));
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]"
+                    .formatted(
+                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                            clusterRef.getName()
+                    ));
 
             context.getClient().resource(resource).patchStatus();
 

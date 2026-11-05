@@ -76,13 +76,14 @@ public class GrantReconciler
             setErrorPhase(
                     resource,
                     status,
-                    "Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
-                            namespace,
-                            name,
-                            objectType,
-                            invalid,
-                            objectType.privileges()
-                    )
+                    "Grant contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]"
+                            .formatted(
+                                    namespace,
+                                    name,
+                                    objectType,
+                                    invalid,
+                                    objectType.privileges()
+                            )
             );
 
             return UpdateControl.patchStatus(resource);
@@ -90,10 +91,11 @@ public class GrantReconciler
 
         if (clusterConnectionOptional.isEmpty()) {
             status.updatePhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName()
-                    ));
+                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]"
+                            .formatted(
+                                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                                    clusterRef.getName()
+                            ));
 
             return UpdateControl.patchStatus(resource)
                     .rescheduleAfter(Duration.ofSeconds(60));
@@ -161,10 +163,11 @@ public class GrantReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
-                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                    clusterRef.getName()
-            ));
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]"
+                    .formatted(
+                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                            clusterRef.getName()
+                    ));
 
             context.getClient().resource(resource).patchStatus();
 
@@ -242,8 +245,7 @@ public class GrantReconciler
 
         var expectedPrivileges = Set.copyOf(spec.getPrivileges());
 
-        int databaseMajorVersion = tx.connectionResult(connection ->
-                connection.getMetaData().getDatabaseMajorVersion()
+        int databaseMajorVersion = tx.connectionResult(connection -> connection.getMetaData().getDatabaseMajorVersion()
         );
 
         var unsupportedPrivileges = expectedPrivileges.stream()
@@ -259,12 +261,13 @@ public class GrantReconciler
             setErrorPhase(
                     resource,
                     status,
-                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
-                            databaseMajorVersion,
-                            unsupportedPrivileges,
-                            namespace,
-                            name
-                    )
+                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]"
+                            .formatted(
+                                    databaseMajorVersion,
+                                    unsupportedPrivileges,
+                                    namespace,
+                                    name
+                            )
             );
 
             return UpdateControl.patchStatus(resource);
@@ -294,12 +297,13 @@ public class GrantReconciler
             setErrorPhase(
                     resource,
                     status,
-                    "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n  • %s".formatted(
-                            objectType,
-                            namespace,
-                            name,
-                            String.join("\n  • ", missingObjects)
-                    )
+                    "Did not grant or revoke any privileges as the listed %s objects do not exist [resource=%s/%s]%n  • %s"
+                            .formatted(
+                                    objectType,
+                                    namespace,
+                                    name,
+                                    String.join("\n  • ", missingObjects)
+                            )
             );
 
             return UpdateControl.patchStatus(resource)
@@ -413,12 +417,13 @@ public class GrantReconciler
 
         String message = null;
         if (!ownedObjects.isEmpty()) {
-            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s".formatted(
-                    objectType,
-                    namespace,
-                    name,
-                    String.join("\n  • ", ownedObjects)
-            );
+            message = "The role is the owner of the listed %s objects and thus we did not need to grant or revoke any privileges from them. [resource=%s/%s]%n  • %s"
+                    .formatted(
+                            objectType,
+                            namespace,
+                            name,
+                            String.join("\n  • ", ownedObjects)
+                    );
         }
 
         status.updatePhase(CRPhase.READY)

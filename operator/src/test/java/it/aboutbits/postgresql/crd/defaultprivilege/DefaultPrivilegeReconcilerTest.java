@@ -69,13 +69,13 @@ class DefaultPrivilegeReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withDatabase(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .defaultPrivilege()
+                        .withDatabase(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The DefaultPrivilege database must not be empty.");
             }
 
@@ -87,13 +87,13 @@ class DefaultPrivilegeReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withRole(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .defaultPrivilege()
+                        .withRole(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The DefaultPrivilege role must not be empty.");
             }
 
@@ -105,13 +105,13 @@ class DefaultPrivilegeReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withOwner(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .defaultPrivilege()
+                        .withOwner(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The DefaultPrivilege owner must not be empty.");
             }
 
@@ -123,13 +123,13 @@ class DefaultPrivilegeReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withSchema(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .defaultPrivilege()
+                        .withSchema(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The DefaultPrivilege schema must not be empty.");
             }
 
@@ -138,12 +138,12 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenPrivilegesAreAnEmptyList() {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(List.of())
-                                .apply()
+                // given / when
+                given.one()
+                        .defaultPrivilege()
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(List.of())
+                        .apply()
                 ).withMessageContaining("The DefaultPrivilege privileges must not be empty.");
             }
         }
@@ -268,13 +268,13 @@ class DefaultPrivilegeReconcilerTest {
             void failWhenDatabaseHasSchema() {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .defaultPrivilege()
-                                .withSchema("some-schema")
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .returnFirst()
+                // given / when
+                given.one()
+                        .defaultPrivilege()
+                        .withSchema("some-schema")
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .returnFirst()
                 ).withMessageContaining("The DefaultPrivilege schema must be not set if objectType is 'schema'");
             }
 
@@ -296,7 +296,8 @@ class DefaultPrivilegeReconcilerTest {
                         .satisfies(status -> {
                             assertThat(status.getPhase()).isEqualTo(CRPhase.ERROR);
                             assertThat(status.getMessage())
-                                    .startsWith("DefaultPrivilege contains invalid privileges for the specified objectType")
+                                    .startsWith(
+                                            "DefaultPrivilege contains invalid privileges for the specified objectType")
                                     .contains("[resource=%s/%s,".formatted(
                                             defaultPrivilege.getMetadata().getNamespace(),
                                             defaultPrivilege.getMetadata().getName()
@@ -311,7 +312,7 @@ class DefaultPrivilegeReconcilerTest {
                     disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
             )
             @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
+                "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
             )
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given
@@ -718,7 +719,7 @@ class DefaultPrivilegeReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY"
+        "When the ClusterConnection of an up-to-date DefaultPrivilege is back, the DefaultPrivilege should be reconciled to READY"
     )
     void upToDateDefaultPrivilege_afterPendingClusterConnection_setsReady() {
         // given: a reconciled DefaultPrivilege

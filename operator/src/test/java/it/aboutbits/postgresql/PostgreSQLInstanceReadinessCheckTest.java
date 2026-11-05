@@ -115,10 +115,14 @@ class PostgreSQLInstanceReadinessCheckTest {
                     assertThat(dbStatus.toString()).startsWith("UP (PostgreSQL");
 
                     assertThat(data).containsAllEntriesOf(Map.of(
-                            "db-2", "DOWN",
-                            "db-3", "DOWN",
-                            "db-4", "DOWN",
-                            "db-5", "DOWN"
+                            "db-2",
+                            "DOWN",
+                            "db-3",
+                            "DOWN",
+                            "db-4",
+                            "DOWN",
+                            "db-5",
+                            "DOWN"
                     ));
                 });
     }

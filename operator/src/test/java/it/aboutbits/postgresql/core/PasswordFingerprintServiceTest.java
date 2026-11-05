@@ -77,7 +77,7 @@ class PasswordFingerprintServiceTest {
 
         @Test
         @DisplayName(
-                "When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change"
+            "When the key Secret is lost and the operator restarts, should create a new key and the fingerprints change"
         )
         void whenSecretLost_shouldCreateNewKey() {
             // given
@@ -105,7 +105,8 @@ class PasswordFingerprintServiceTest {
                             .withNewMetadata()
                             .withName(SECRET_NAME)
                             .endMetadata()
-                            .addToData("other", Base64.getEncoder().encodeToString("value".getBytes(StandardCharsets.UTF_8)))
+                            .addToData("other",
+                                    Base64.getEncoder().encodeToString("value".getBytes(StandardCharsets.UTF_8)))
                             .build()
                     )
                     .create();

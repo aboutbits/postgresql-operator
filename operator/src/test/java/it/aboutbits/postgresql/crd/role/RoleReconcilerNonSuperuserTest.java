@@ -87,7 +87,8 @@ class RoleReconcilerNonSuperuserTest {
         assertThat(role.getStatus().getPasswordFingerprint()).isNotBlank();
         assertThat(roleService.roleExists(adminDsl, role.getSpec())).isTrue();
         assertThat(roleService.roleLoginMatches(adminDsl, role.getSpec())).isTrue();
-        assertThat(roleService.fetchCurrentRoleComment(adminDsl, roleName)).isEqualTo("created by a non-superuser admin");
+        assertThat(roleService.fetchCurrentRoleComment(adminDsl, roleName)).isEqualTo(
+                "created by a non-superuser admin");
         assertThat(PostgreSQLPasswordVerifier.passwordMatches(
                 rootDsl,
                 roleName,
@@ -215,7 +216,7 @@ class RoleReconcilerNonSuperuserTest {
 
     @Test
     @DisplayName(
-            "When the admin is not a superuser, its implicit membership in a created Role should be ignored and kept"
+        "When the admin is not a superuser, its implicit membership in a created Role should be ignored and kept"
     )
     void nonSuperuserAdmin_implicitAdminMembership_isIgnoredAndKept() {
         // given
@@ -265,7 +266,7 @@ class RoleReconcilerNonSuperuserTest {
     @ParameterizedTest(name = "flag {0}")
     @MethodSource("provideSuperuserOnlyFlags")
     @DisplayName(
-            "When the admin is not a superuser and the Role asks for a superuser-only flag, the status should be ERROR"
+        "When the admin is not a superuser and the Role asks for a superuser-only flag, the status should be ERROR"
     )
     void nonSuperuserAdmin_superuserOnlyFlag_setsError(
             String flagName,
@@ -274,7 +275,8 @@ class RoleReconcilerNonSuperuserTest {
         // given
         var rootConnection = givenRootClusterConnection("test-connection-root-%s-flag".formatted(flagName));
         var rootDsl = postgreSQLContextFactory.getDSLContext(rootConnection);
-        var adminConnection = givenNonSuperuserClusterConnection(rootDsl, "test-connection-non-superuser-%s-flag".formatted(flagName));
+        var adminConnection = givenNonSuperuserClusterConnection(rootDsl,
+                "test-connection-non-superuser-%s-flag".formatted(flagName));
 
         var roleName = "test-non-superuser-role-%s-flag".formatted(flagName);
 
@@ -306,13 +308,14 @@ class RoleReconcilerNonSuperuserTest {
 
     @Test
     @DisplayName(
-            "When the admin is not a superuser and passwordEncryption is 'server', the server should hash the password"
+        "When the admin is not a superuser and passwordEncryption is 'server', the server should hash the password"
     )
     void nonSuperuserAdmin_serverPasswordEncryption_letsTheServerHash() {
         // given
         var rootConnection = givenRootClusterConnection("test-connection-root-server-encryption");
         var rootDsl = postgreSQLContextFactory.getDSLContext(rootConnection);
-        var adminConnection = givenNonSuperuserClusterConnection(rootDsl, "test-connection-non-superuser-server-encryption");
+        var adminConnection = givenNonSuperuserClusterConnection(rootDsl,
+                "test-connection-non-superuser-server-encryption");
 
         var roleName = "test-non-superuser-role-server-encryption";
         var password = "server-side-password";
@@ -342,7 +345,7 @@ class RoleReconcilerNonSuperuserTest {
 
     @Test
     @DisplayName(
-            "When the admin is not a superuser and the Secret contains a SCRAM-SHA-256 verifier, it should be stored verbatim"
+        "When the admin is not a superuser and the Secret contains a SCRAM-SHA-256 verifier, it should be stored verbatim"
     )
     void nonSuperuserAdmin_preHashedPassword_isStoredVerbatim() {
         // given

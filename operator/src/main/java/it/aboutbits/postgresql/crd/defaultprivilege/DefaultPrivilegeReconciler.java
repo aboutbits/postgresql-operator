@@ -71,13 +71,14 @@ public class DefaultPrivilegeReconciler
             setErrorPhase(
                     resource,
                     status,
-                    "DefaultPrivilege contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]".formatted(
-                            namespace,
-                            name,
-                            objectType,
-                            invalid,
-                            objectType.privileges()
-                    )
+                    "DefaultPrivilege contains invalid privileges for the specified objectType. [resource=%s/%s, objectType=%s, invalidPrivileges=%s, allowedPrivilegesForObjectType=%s]"
+                            .formatted(
+                                    namespace,
+                                    name,
+                                    objectType,
+                                    invalid,
+                                    objectType.privileges()
+                            )
             );
 
             return UpdateControl.patchStatus(resource);
@@ -85,10 +86,11 @@ public class DefaultPrivilegeReconciler
 
         if (clusterConnectionOptional.isEmpty()) {
             status.updatePhase(CRPhase.PENDING)
-                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]".formatted(
-                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                            clusterRef.getName()
-                    ));
+                    .setMessage("The specified ClusterConnection does not exist or is not ready yet [resource=%s/%s]"
+                            .formatted(
+                                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                                    clusterRef.getName()
+                            ));
 
             return UpdateControl.patchStatus(resource)
                     .rescheduleAfter(Duration.ofSeconds(60));
@@ -156,10 +158,11 @@ public class DefaultPrivilegeReconciler
         );
 
         if (clusterConnectionOptional.isEmpty()) {
-            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]".formatted(
-                    getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
-                    clusterRef.getName()
-            ));
+            status.setMessage("The specified ClusterConnection no longer exists or is not ready yet [resource=%s/%s]"
+                    .formatted(
+                            getResourceNamespaceOrOwn(resource, clusterRef.getNamespace()),
+                            clusterRef.getName()
+                    ));
 
             context.getClient().resource(resource).patchStatus();
 
@@ -222,8 +225,7 @@ public class DefaultPrivilegeReconciler
 
         var expectedPrivileges = Set.copyOf(spec.getPrivileges());
 
-        int databaseMajorVersion = tx.connectionResult(connection ->
-                connection.getMetaData().getDatabaseMajorVersion()
+        int databaseMajorVersion = tx.connectionResult(connection -> connection.getMetaData().getDatabaseMajorVersion()
         );
 
         var unsupportedPrivileges = expectedPrivileges.stream()
@@ -239,12 +241,13 @@ public class DefaultPrivilegeReconciler
             setErrorPhase(
                     resource,
                     status,
-                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]".formatted(
-                            databaseMajorVersion,
-                            unsupportedPrivileges,
-                            namespace,
-                            name
-                    )
+                    "The following privileges require a newer PostgreSQL version (current: %d): %s [resource=%s/%s]"
+                            .formatted(
+                                    databaseMajorVersion,
+                                    unsupportedPrivileges,
+                                    namespace,
+                                    name
+                            )
             );
 
             return UpdateControl.patchStatus(resource);

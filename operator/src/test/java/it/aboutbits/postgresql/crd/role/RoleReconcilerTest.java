@@ -285,7 +285,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName(
-            "When a Role (LOGIN) references a secret and that secret changes, it should trigger a re-reconciliation"
+        "When a Role (LOGIN) references a secret and that secret changes, it should trigger a re-reconciliation"
     )
     void secretChange_triggersReconciliation() {
         // given
@@ -352,7 +352,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName(
-            "When a Role (LOGIN) changes its secret reference, it should trigger a re-reconciliation"
+        "When a Role (LOGIN) changes its secret reference, it should trigger a re-reconciliation"
     )
     void secretRefChange_triggersReconciliation() {
         // given
@@ -414,7 +414,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName(
-            "When an existing Role has no password fingerprint in its status, the Secret password should be applied once"
+        "When an existing Role has no password fingerprint in its status, the Secret password should be applied once"
     )
     void missingPasswordFingerprint_appliesSecretPasswordOnce() {
         // given: a Role created by the operator
@@ -528,7 +528,7 @@ class RoleReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the password Secret of a Role does not exist, the status should be ERROR until the Secret exists"
+        "When the password Secret of a Role does not exist, the status should be ERROR until the Secret exists"
     )
     void missingPasswordSecret_setsErrorUntilSecretExists() {
         // given: a reconciled login Role
@@ -1194,9 +1194,11 @@ class RoleReconcilerTest {
         return Stream.of(
                 Arguments.of(PG_ROLES.ROLSUPER, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setSuperuser),
                 Arguments.of(PG_ROLES.ROLCREATEDB, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreatedb),
-                Arguments.of(PG_ROLES.ROLCREATEROLE, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreaterole),
+                Arguments.of(PG_ROLES.ROLCREATEROLE,
+                        (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setCreaterole),
                 Arguments.of(PG_ROLES.ROLINHERIT, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setInherit),
-                Arguments.of(PG_ROLES.ROLREPLICATION, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
+                Arguments.of(PG_ROLES.ROLREPLICATION,
+                        (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setReplication),
                 Arguments.of(PG_ROLES.ROLBYPASSRLS, (BiConsumer<RoleSpec.Flags, Boolean>) RoleSpec.Flags::setBypassrls)
         );
     }

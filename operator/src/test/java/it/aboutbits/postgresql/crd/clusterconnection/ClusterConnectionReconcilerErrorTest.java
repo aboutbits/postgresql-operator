@@ -73,8 +73,7 @@ class ClusterConnectionReconcilerErrorTest {
                 .isPresent()
                 .get()
                 .extracting(ClusterConnection::getStatus)
-                .satisfies(status ->
-                        assertThat(status.getMessage()).contains(errorMessage)
+                .satisfies(status -> assertThat(status.getMessage()).contains(errorMessage)
                 );
     }
 
@@ -101,8 +100,7 @@ class ClusterConnectionReconcilerErrorTest {
                 .isPresent()
                 .get()
                 .extracting(ClusterConnection::getStatus)
-                .satisfies(status ->
-                        assertThat(status.getMessage()).contains(errorMessage)
+                .satisfies(status -> assertThat(status.getMessage()).contains(errorMessage)
                 );
     }
 }

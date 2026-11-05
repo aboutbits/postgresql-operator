@@ -91,7 +91,8 @@ public class PasswordFingerprintService {
         var namespace = kubernetesClient.getNamespace();
         if (namespace == null) {
             throw new IllegalStateException(
-                    "Cannot determine the operator namespace to store the password fingerprint key Secret [secret.name=%s]".formatted(secretName)
+                    "Cannot determine the operator namespace to store the password fingerprint key Secret [secret.name=%s]"
+                            .formatted(secretName)
             );
         }
 
@@ -140,11 +141,12 @@ public class PasswordFingerprintService {
                 : data.get(SECRET_DATA_KEY);
         if (keyBase64 == null || keyBase64.isBlank()) {
             throw new IllegalStateException(
-                    "The password fingerprint key Secret is missing required data '%s' [secret.namespace=%s, secret.name=%s]".formatted(
-                            SECRET_DATA_KEY,
-                            namespace,
-                            secretName
-                    )
+                    "The password fingerprint key Secret is missing required data '%s' [secret.namespace=%s, secret.name=%s]"
+                            .formatted(
+                                    SECRET_DATA_KEY,
+                                    namespace,
+                                    secretName
+                            )
             );
         }
 

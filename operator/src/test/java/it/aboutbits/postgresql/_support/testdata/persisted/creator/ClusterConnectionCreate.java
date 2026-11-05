@@ -118,7 +118,8 @@ public class ClusterConnectionCreate extends TestDataCreator<ClusterConnection> 
                 .waitUntilCondition(
                         clusterConnection -> clusterConnection != null
                                 && clusterConnection.getStatus() != null
-                                && clusterConnection.getStatus().getObservedGeneration() == clusterConnection.getMetadata().getGeneration(),
+                                && clusterConnection.getStatus().getObservedGeneration() == clusterConnection
+                                        .getMetadata().getGeneration(),
                         5,
                         TimeUnit.SECONDS
                 );

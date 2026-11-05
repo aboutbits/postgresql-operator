@@ -62,13 +62,12 @@ public class ClusterConnection
 
         var stringJoiner = new StringJoiner("&", jdbcUrl + "?", "");
 
-        spec.getParameters().forEach((key, value) ->
-                stringJoiner.add("%s=%s".formatted(
-                        URLEncoder.encode(key, StandardCharsets.UTF_8)
-                                .replace("+", "%20"),
-                        URLEncoder.encode(value, StandardCharsets.UTF_8)
-                                .replace("+", "%20")
-                ))
+        spec.getParameters().forEach((key, value) -> stringJoiner.add("%s=%s".formatted(
+                URLEncoder.encode(key, StandardCharsets.UTF_8)
+                        .replace("+", "%20"),
+                URLEncoder.encode(value, StandardCharsets.UTF_8)
+                        .replace("+", "%20")
+        ))
         );
 
         return stringJoiner.toString();

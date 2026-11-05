@@ -74,13 +74,13 @@ class GrantReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withDatabase(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .grant()
+                        .withDatabase(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The Grant database must not be empty.");
             }
 
@@ -92,13 +92,13 @@ class GrantReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withRole(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .grant()
+                        .withRole(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The Grant role must not be empty.");
             }
 
@@ -110,13 +110,13 @@ class GrantReconcilerTest {
             ) {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withSchema(blankOrEmptyString)
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(USAGE)
-                                .apply()
+                // given / when
+                given.one()
+                        .grant()
+                        .withSchema(blankOrEmptyString)
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(USAGE)
+                        .apply()
                 ).withMessageContaining("The Grant schema must not be empty.");
             }
 
@@ -125,12 +125,12 @@ class GrantReconcilerTest {
             void failWhenPrivilegesAreAnEmptyList() {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withObjectType(SCHEMA)
-                                .withPrivileges(List.of())
-                                .apply()
+                // given / when
+                given.one()
+                        .grant()
+                        .withObjectType(SCHEMA)
+                        .withPrivileges(List.of())
+                        .apply()
                 ).withMessageContaining("The Grant privileges must not be empty.");
             }
         }
@@ -233,13 +233,13 @@ class GrantReconcilerTest {
             void failWhenDatabaseHasSchema() {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withSchema("some-schema")
-                                .withObjectType(DATABASE)
-                                .withPrivileges(CONNECT)
-                                .returnFirst()
+                // given / when
+                given.one()
+                        .grant()
+                        .withSchema("some-schema")
+                        .withObjectType(DATABASE)
+                        .withPrivileges(CONNECT)
+                        .returnFirst()
                 ).withMessageContaining("The Grant schema must be not set if objectType is 'database'");
             }
 
@@ -248,14 +248,15 @@ class GrantReconcilerTest {
             void failWhenDatabaseHasObjects() {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withObjectType(DATABASE)
-                                .withObjects("some_object", "other_object")
-                                .withPrivileges(CONNECT)
-                                .returnFirst()
-                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                // given / when
+                given.one()
+                        .grant()
+                        .withObjectType(DATABASE)
+                        .withObjects("some_object", "other_object")
+                        .withPrivileges(CONNECT)
+                        .returnFirst()
+                ).withMessageContaining(
+                        "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
@@ -263,14 +264,15 @@ class GrantReconcilerTest {
             void failWhenSchemaHasObjects() {
                 // then
                 assertThatExceptionOfType(KubernetesClientException.class).isThrownBy(() ->
-                        // given / when
-                        given.one()
-                                .grant()
-                                .withObjectType(SCHEMA)
-                                .withObjects("some_object", "other_object")
-                                .withPrivileges(USAGE)
-                                .returnFirst()
-                ).withMessageContaining("The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
+                // given / when
+                given.one()
+                        .grant()
+                        .withObjectType(SCHEMA)
+                        .withObjects("some_object", "other_object")
+                        .withPrivileges(USAGE)
+                        .returnFirst()
+                ).withMessageContaining(
+                        "The Grant objects must be not set if objectType is 'database' or 'schema', for all other objectType's a list is required.");
             }
 
             @Test
@@ -306,7 +308,7 @@ class GrantReconcilerTest {
                     disabledReason = "PostgreSQL 15 and 16 do not support the MAINTAIN privilege"
             )
             @DisplayName(
-                    "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
+                "Should reconcile to ERROR when the PostgreSQL version does not support the MAINTAIN table privilege"
             )
             void errorWhenUnsupportedMaintainTablePrivilege() {
                 // given

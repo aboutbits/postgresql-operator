@@ -75,7 +75,7 @@ class DatabaseReconcilerTest {
 
     @Test
     @DisplayName(
-            "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY"
+        "When the ClusterConnection of an up-to-date Database is back, the Database should be reconciled to READY"
     )
     void upToDateDatabase_afterPendingClusterConnection_setsReady() {
         // given: a reconciled Database
