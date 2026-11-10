@@ -116,7 +116,7 @@ subprojects {
                 val excludePatterns = project.property("excludeTests").toString().split(",")
                 excludePatterns.forEach { pattern ->
                     excludeTestsMatching(pattern.trim())
-                    // Since Gradle 9.6, excluding a class no longer excludes its @Nested classes
+                    // An exact class name does not match its @Nested classes (Outer$Inner), so exclude them explicitly
                     excludeTestsMatching("${pattern.trim()}\$*")
                 }
             }
