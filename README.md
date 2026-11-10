@@ -239,7 +239,7 @@ make init
 
 # or
 
-../gradlew :operator:quarkusBuild
+../gradlew --console=colored :operator:quarkusBuild
 ```
 
 ### Development
@@ -251,7 +251,7 @@ make run
 
 # or
 
-./gradlew :operator:quarkusDev
+./gradlew --console=colored :operator:quarkusDev
 ```
 
 The app service will be available at [http://localhost:8080](http://localhost:8080).
@@ -266,7 +266,7 @@ make test
 
 # or
 
-./gradlew :operator:test
+./gradlew --console=colored :operator:test
 ```
 
 #### Run the project as a service in IntelliJ
@@ -285,7 +285,7 @@ make run
 
 # or
 
-./gradlew :operator:quarkusDev
+./gradlew --console=colored :operator:quarkusDev
 ```
 
 Once the application is running (and the database is available on port 5432), run the following command:
@@ -295,7 +295,7 @@ make generate-jooq
 
 # or
 
-./gradlew :generated:jooqCodegen
+./gradlew --console=colored :generated:jooqCodegen
 ```
 
 The generator writes JSpecify nullability annotations into the generated sources, so NullAway reads the real nullness of every generated column accessor instead of guessing.  
@@ -325,7 +325,7 @@ See [Docker Environment](docs/docker-environment.md) for setting up a local deve
 The application can be packaged using:
 
 ```bash
-./gradlew :operator:build
+./gradlew --console=colored :operator:build
 ```
 
 It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
@@ -336,7 +336,7 @@ The application is now runnable using `java -jar build/quarkus-app/quarkus-run.j
 If you want to build an _über-jar_, execute the following command:
 
 ```bash
-./gradlew :operator:build -Dquarkus.package.jar.type=uber-jar
+./gradlew --console=colored :operator:build -Dquarkus.package.jar.type=uber-jar
 ```
 
 The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
@@ -346,13 +346,13 @@ The application, packaged as an _über-jar_, is now runnable using `java -jar bu
 You can create a native executable using:
 
 ```bash
-./gradlew :operator:build -Dquarkus.native.enabled=true
+./gradlew --console=colored :operator:build -Dquarkus.native.enabled=true
 ```
 
 Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
 
 ```bash
-./gradlew :operator:build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
+./gradlew --console=colored :operator:build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
 ```
 
 You can then execute your native executable with: `./build/postgresql-operator-1.0.0-SNAPSHOT-runner`
