@@ -14,7 +14,7 @@ scram-client = "3.3"
 assertj = "3.27.7"
 datafaker = "2.7.0"
 errorProne = "2.51.0"
-errorPronePlugin = "5.1.1"
+errorPronePlugin = "5.2.0"
 nullAway = "0.14.3"
 
 [plugins]
