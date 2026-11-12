@@ -25,4 +25,5 @@ jobs:
           persist-credentials: false
       - uses: aboutbits/github-actions-java/dependency-submission-with-gradle@v4
         with:
+          java-version: 25
           project-type: quarkus
