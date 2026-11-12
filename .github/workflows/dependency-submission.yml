@@ -1,0 +1,28 @@
+name: Dependency Submission
+
+on:
+  schedule:
+    # Mondays at 05:17 UTC. Dependencies change less than once a week, and GitHub checks new advisories against the
+    # last submitted dependency graph without a new run. Run it manually after a dependency update.
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  dependency-submission:
+    name: Dependency Submission
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: aboutbits/github-actions-java/dependency-submission-with-gradle@v4
+        with:
+          project-type: quarkus
