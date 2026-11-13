@@ -1,10 +1,21 @@
 name: Dependency Submission
 
 on:
-  schedule:
-    # Mondays at 05:17 UTC. Dependencies change less than once a week, and GitHub checks new advisories against the
-    # last submitted dependency graph without a new run. Run it manually after a dependency update.
-    - cron: '17 5 * * 1'
+  push:
+    branches:
+      - main
+    # Every file that can change the resolved dependencies or the Gradle version, and this workflow. GitHub checks new
+    # advisories against the last submitted dependency graph, so the workflow needs no run without such a change.
+    # After a new release of the dependency-submission-with-gradle action, start the workflow by hand.
+    paths:
+      - '**/*.gradle'
+      - '**/*.gradle.kts'
+      - '**/gradle.properties'
+      - '**/*.versions.toml'
+      - '**/*.lockfile'
+      - 'buildSrc/**'
+      - 'gradle/wrapper/gradle-wrapper.properties'
+      - '.github/workflows/dependency-submission.yml'
   workflow_dispatch:
 
 concurrency:
