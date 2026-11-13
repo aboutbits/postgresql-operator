@@ -17,6 +17,7 @@ on:
 permissions: {}
 
 env:
+  JAVA_VERSION: 25
   OCI_IMAGE: ghcr.io/${{ github.repository }}
   HELM_CHART_NAME: postgresql-operator
   HELM_CHART_REPOSITORY: ghcr.io/${{ github.repository_owner }}/helm-charts
@@ -46,7 +47,7 @@ jobs:
       - uses: aboutbits/github-actions-base/git-setup@v2
       - uses: aboutbits/github-actions-java/setup-with-gradle@v4
         with:
-          java-version: 25
+          java-version: ${{ env.JAVA_VERSION }}
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       - name: Increment version
         env:

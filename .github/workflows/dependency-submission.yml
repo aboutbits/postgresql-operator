@@ -18,6 +18,9 @@ on:
       - '.github/workflows/dependency-submission.yml'
   workflow_dispatch:
 
+env:
+  JAVA_VERSION: 25
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -36,5 +39,5 @@ jobs:
           persist-credentials: false
       - uses: aboutbits/github-actions-java/dependency-submission-with-gradle@v4
         with:
-          java-version: 25
+          java-version: ${{ env.JAVA_VERSION }}
           project-type: quarkus
