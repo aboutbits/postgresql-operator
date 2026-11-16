@@ -17,7 +17,7 @@ See [Admin privileges](docs/cluster-connection.md#admin-privileges).
 
 ## Architecture
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                            Kubernetes Cluster                            │
 │  ┌────────────────────────┐   ┌────────────────────────────────────────┐ │
@@ -83,7 +83,7 @@ If you manage the Custom Resources with Terraform, please also read:
 The Operator leverages the power of Kubernetes Custom Resource Definitions (CRDs) to manage PostgreSQL resources declaratively.  
 This means the Operator continuously reconciles the state of the cluster to match your desired state defined in the CRs.
 
-**Updates**
+#### Updates
 
 If you modify a mutable field in a Custom Resource, the Operator automatically applies these changes to the PostgreSQL cluster.  
 The operator, for example, handles:
@@ -93,7 +93,7 @@ The operator, for example, handles:
 - Updating `Grant`/`DefaultPrivilege` objects or privileges.
 - Changing a `Schema` or `Database` owner.
 
-**Deletions**
+#### Deletions
 
 Deleting a Custom Resource triggers the cleanup of the corresponding PostgreSQL object:
 
@@ -229,6 +229,7 @@ To build the project, the following prerequisites must be met:
 - Java JDK (e.g. [OpenJDK](https://openjdk.java.net/))
 - [Gradle](https://gradle.org/) (Optional)
 - [Docker](https://www.docker.com/)
+- Markdown linter [`rumdl`](https://github.com/rvben/rumdl), for `make lint` and the Git pre-commit hook: `brew install rumdl`
 
 ### Setup
 
@@ -241,6 +242,14 @@ make init
 
 ../gradlew --console=colored :operator:quarkusBuild
 ```
+
+Enable the Git pre-commit hook, which runs the linters and compiles the Java sources before each commit:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Run `make lint` to run the linters by hand, and `make lint-fix` to fix the Markdown problems that rumdl can fix.
 
 ### Development
 
@@ -313,7 +322,7 @@ Three consequences are worth knowing:
   No operator code calls them today, because the operator uses the table field constants and `Routines.aclexplode` instead.  
   A declaration annotation for `nullableAnnotationType` would fix the positioning, because such an annotation always applies to the method. That is a design change.
 - Every generated class carries `@SuppressWarnings({"all", ...})`, which Error Prone honours.  
-  That suppression, and nothing else, is why the generated sources are exempt from the checks in  `errorprone.args`, including `RequireExplicitNullMarking`.  
+  That suppression, and nothing else, is why the generated sources are exempt from the checks in `errorprone.args`, including `RequireExplicitNullMarking`.  
   Do not add `NullAway:TreatGeneratedAsUnannotated`: it would make NullAway discard the nullability annotations that this generator now writes.
 
 ### Docker Environment

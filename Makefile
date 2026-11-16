@@ -30,5 +30,13 @@ test-pg16:
 test-pg15:
 	./gradlew --console=colored :operator:clean :operator:test --rerun-tasks -Dquarkus.test.profile=test-pg15
 
+### UTILITIES
+
+lint:
+	rumdl check .
+
+lint-fix:
+	rumdl check --fix .
+
 # Flag targets as phony, to tell `make` that these are no file targets
-.PHONY: init install run generate-jooq test test-pg18 test-pg17 test-pg16 test-pg15
+.PHONY: init install run generate-jooq test test-pg18 test-pg17 test-pg16 test-pg15 lint lint-fix
