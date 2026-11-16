@@ -249,6 +249,8 @@ Enable the Git pre-commit hook, which runs the linters and compiles the Java sou
 git config core.hooksPath .githooks
 ```
 
+Run `make lint` to run the linters by hand, and `make lint-fix` to fix the Markdown problems that rumdl can fix.
+
 ### Development
 
 You can run your application in dev mode that enables live coding and continuous testing using:
