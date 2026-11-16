@@ -1,0 +1,4 @@
+# rumdl configuration, see https://github.com/rvben/rumdl
+[global]
+# Markdown lines are not wrapped, see max_line_length in .editorconfig
+disable = ["MD013"]
