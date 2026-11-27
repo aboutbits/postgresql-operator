@@ -1,0 +1,24 @@
+name: Review Freshness
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited, labeled]
+
+jobs:
+  review-freshness:
+    if: >-
+      contains(github.event.pull_request.body, '<!-- self-review:')
+      || contains(github.event.pull_request.labels.*.name, 'risk:low')
+      || contains(github.event.pull_request.labels.*.name, 'self-review:stale')
+    concurrency:
+      group: review-freshness-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Keep the self-review labels in step with the code
+        uses: aboutbits/github-actions-ai/github-pr-review-freshness@v2
